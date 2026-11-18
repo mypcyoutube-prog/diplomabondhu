@@ -410,6 +410,31 @@ Typecheck: **clean** · Production build: **success** · `npm audit --omit=dev`:
 - Reset-code delivery is out-of-band by admin (phone/in-person) until email
   infrastructure is approved (KI-12). The API and UI flows are complete.
 
+## Report: v0.11.10 — Per-semester dates + cleared referred subjects
+
+| Field | Value |
+|---|---|
+| Date | 2026-11-18 |
+| Scope | `GET /results/timeline` (per-semester publishedAt, cumulative GPA, server-computed cleared flag), Flutter master-timeline result view with cleared green rows |
+| Commands executed | `cd backend && npx tsc --noEmit && npx vitest run` · `cd mobile_app && flutter analyze && flutter test` |
+
+| Suite | Passed | Failed | Skipped |
+|---|---|---|---|
+| Backend vitest | 148 (+3 new) | 0 | 0 |
+| Flutter widget tests | 29 (−1 obsolete, +1 new) | 0 | 0 |
+| Android device run | — | — | Not run (KI-10) |
+
+| Check | Result |
+|---|---|
+| Still-referred subject stays listed with `cleared` falsy; bannerSubjects 1 | Pass |
+| Cleared subject (code absent from latest record + semester GPA known) → `cleared: true`, bannerSubjects 0 | Pass |
+| Each semester's `publishedAt` comes only from its own exam record — dates differ (15 June vs 10 November) | Pass |
+| Semester cards sorted descending; missing semester GPA → red dash | Pass |
+| Cleared row renders green with check + "Passed later"; pending rows stay red | Pass |
+| Semester whose backlog is fully cleared shows "✓ Passed" | Pass |
+| Auth 401 / invalid roll 400 / unknown roll 404 on `/results/timeline` | Pass |
+| Typecheck (tsc + flutter analyze) | Pass |
+
 ## Report: v0.11.8 — Result view restructured to the reference layout
 
 | Field | Value |

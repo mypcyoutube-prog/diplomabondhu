@@ -42,7 +42,7 @@ class ResultCheckerScreen extends ConsumerStatefulWidget {
 
 class _ResultCheckerScreenState extends ConsumerState<ResultCheckerScreen> {
   final _rollController = TextEditingController();
-  List<ResultRecord> _records = const [];
+  ResultTimeline? _timeline;
   bool _checking = false;
   bool _notFound = false;
   String? _error;
@@ -59,7 +59,7 @@ class _ResultCheckerScreenState extends ConsumerState<ResultCheckerScreen> {
     if (!RegExp(r'^\d{6,10}$').hasMatch(roll)) {
       setState(() {
         _error = l10n.rollInvalid;
-        _records = const [];
+        _timeline = null;
         _notFound = false;
       });
       return;
@@ -68,13 +68,13 @@ class _ResultCheckerScreenState extends ConsumerState<ResultCheckerScreen> {
       _checking = true;
       _error = null;
       _notFound = false;
-      _records = const [];
+      _timeline = null;
     });
     try {
-      final records = await ref
+      final timeline = await ref
           .read(resultRepositoryProvider)
-          .history(roll: roll);
-      setState(() => _records = records);
+          .timeline(roll: roll);
+      setState(() => _timeline = timeline);
     } on ApiException catch (e) {
       setState(() {
         if (e.code == 'NOT_FOUND') {
@@ -140,22 +140,11 @@ class _ResultCheckerScreenState extends ConsumerState<ResultCheckerScreen> {
             DbErrorView(message: _error!, onRetry: _check)
           else if (_notFound)
             DbEmptyView(message: l10n.noResultFound, icon: Icons.search_off_rounded)
-          else if (_records.isNotEmpty) ...[
-            if (_records.length > 1)
-              Padding(
-                padding: const EdgeInsets.only(bottom: DbSpacing.sm),
-                child: Text(
-                  AppLocalizations.of(context)!.resultExamCount(_records.length),
-                  style: theme.textTheme.bodySmall,
-                ),
-              ),
-            for (var i = 0; i < _records.length; i++)
-              _FadeInUp(
-                key: ValueKey(_records[i].examId + _records[i].roll),
-                index: i.clamp(0, 6),
-                child: _ResultRecordCard(record: _records[i]),
-              ),
-          ],
+          else if (_timeline != null)
+            _FadeInUp(
+              key: ValueKey('timeline-${_timeline!.roll}'),
+              child: _TimelineCard(timeline: _timeline!),
+            ),
         ],
       ),
     );
@@ -239,9 +228,6 @@ String _semesterLabel(BuildContext context, int semester) {
   return isBn ? '$semester সেমিস্টার' : 'Semester $semester';
 }
 
-int _semesterIndex(String key) =>
-    int.tryParse(key.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0;
-
 /// Letter grade derived from the BTEB grade scale by picking the highest
 /// grade point not exceeding the GPA (matches the reference board PDFs:
 /// GPA printed only, e.g. 3.73 -> A-, 3.45 -> B+).
@@ -266,35 +252,31 @@ String? _letterFromGpa(double? gpa) {
   return null;
 }
 
-class _ResultRecordCard extends StatelessWidget {
-  final ResultRecord record;
+class _TimelineCard extends StatelessWidget {
+  final ResultTimeline timeline;
 
-  const _ResultRecordCard({required this.record});
+  const _TimelineCard({required this.timeline});
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
-    final status = _statusOf(record.status);
+    final status = _statusOf(timeline.status);
+    final pending = timeline.bannerSubjects;
 
-    final showBacklog = record.subjects.isNotEmpty &&
+    final showBacklog = pending > 0 &&
         (status == _ResultStatus.referred || status == _ResultStatus.pass);
     final statusText = switch (status) {
-      _ResultStatus.pass when showBacklog =>
-        l10n.resultSubjectsYetToPass(record.subjects.length),
+      _ResultStatus.pass when showBacklog => l10n.resultSubjectsYetToPass(pending),
       _ResultStatus.pass => l10n.resultPassed,
-      _ResultStatus.referred when record.subjects.isNotEmpty =>
-        l10n.resultSubjectsYetToPass(record.subjects.length),
+      _ResultStatus.referred when pending > 0 => l10n.resultSubjectsYetToPass(pending),
       _ResultStatus.referred => l10n.resultReferred,
       _ResultStatus.dropped => l10n.resultDropped,
       _ResultStatus.expelled => l10n.resultExpelled,
       _ResultStatus.fail => l10n.resultFail,
-      _ResultStatus.unknown => record.status ?? '',
+      _ResultStatus.unknown => timeline.status ?? '',
     };
-    final showBanner = !(status == _ResultStatus.pass && record.subjects.isEmpty);
-
-    final failed = _subjectsBySemester(record);
-    final cards = _semesterCards(record, failed);
+    final showBanner = !(status == _ResultStatus.pass && pending == 0);
 
     return Card(
       margin: const EdgeInsets.only(bottom: DbSpacing.md),
@@ -318,19 +300,19 @@ class _ResultRecordCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Text('#${record.roll}',
+                Text('#${timeline.roll}',
                     textAlign: TextAlign.center,
                     style: theme.textTheme.headlineSmall?.copyWith(
                         color: Colors.white,
                         fontWeight: FontWeight.w800,
                         letterSpacing: 0.5)),
-                if (record.title != null && record.title!.isNotEmpty) ...[
+                if (timeline.title != null && timeline.title!.isNotEmpty) ...[
                   const SizedBox(height: 4),
-                  _headerTitleLines(record.title!),
+                  _headerTitleLines(timeline.title!),
                 ],
-                if (record.institute != null && record.institute!.isNotEmpty) ...[
+                if (timeline.institute != null && timeline.institute!.isNotEmpty) ...[
                   const SizedBox(height: 2),
-                  Text(record.institute!,
+                  Text(timeline.institute!,
                       textAlign: TextAlign.center,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
@@ -349,36 +331,36 @@ class _ResultRecordCard extends StatelessWidget {
                   _StatusBanner(text: statusText, color: _statusColorOf(status, showBacklog)),
                   const SizedBox(height: DbSpacing.sm + 4),
                 ],
-                for (var i = 0; i < cards.length; i++)
+                for (var i = 0; i < timeline.semesters.length; i++)
                   _FadeInUp(
-                    key: ValueKey('${record.examId}-sem-${cards[i].semester}-$i'),
+                    key: ValueKey('timeline-sem-${timeline.semesters[i].semester}-$i'),
                     index: (i + 1).clamp(0, 8),
                     child: Padding(
                       padding: const EdgeInsets.only(bottom: DbSpacing.sm),
                       child: _SemesterCard(
-                        semester: cards[i].semester,
-                        semesterName: _semesterLabel(context, cards[i].semester),
-                        gpa: cards[i].gpa,
-                        failedSubjects: cards[i].failed,
-                        publishedAt: record.publishedAt,
+                        semester: timeline.semesters[i].semester,
+                        semesterName: _semesterLabel(context, timeline.semesters[i].semester),
+                        gpa: timeline.semesters[i].gpa,
+                        failedSubjects: timeline.semesters[i].subjects,
+                        publishedAt: timeline.semesters[i].publishedAt,
                       ),
                     ),
                   ),
-                if (record.cgpa != null) ...[
+                if (timeline.cgpa != null) ...[
                   const SizedBox(height: DbSpacing.sm),
-                  _CgpaHighlight(cgpa: record.cgpa!, label: l10n.cgpa),
+                  _CgpaHighlight(cgpa: timeline.cgpa!, label: l10n.cgpa),
                 ],
-                if (record.name != null || record.registrationNo != null) ...[
+                if (timeline.name != null || timeline.registrationNo != null) ...[
                   const SizedBox(height: DbSpacing.sm),
-                  if (record.name != null)
-                    DbInfoRow(label: 'Name', value: record.name!),
-                  if (record.registrationNo != null) ...[
-                    if (record.name != null) const SizedBox(height: 4),
-                    DbInfoRow(label: 'Registration', value: record.registrationNo!),
+                  if (timeline.name != null)
+                    DbInfoRow(label: 'Name', value: timeline.name!),
+                  if (timeline.registrationNo != null) ...[
+                    if (timeline.name != null) const SizedBox(height: 4),
+                    DbInfoRow(label: 'Registration', value: timeline.registrationNo!),
                   ],
                 ],
                 const SizedBox(height: DbSpacing.sm),
-                Text(record.disclaimer,
+                Text(timeline.disclaimer,
                     style: theme.textTheme.bodySmall
                         ?.copyWith(fontStyle: FontStyle.italic)),
               ],
@@ -545,7 +527,8 @@ class _SemesterCard extends StatelessWidget {
     final missing = gpa == null;
     final valueColor = missing ? _statusRed : _gpaGreen;
     final letter = missing ? null : _letterFromGpa(gpa);
-    final hasBacklog = failedSubjects.isNotEmpty;
+    final pendingCount = failedSubjects.where((s) => s.cleared != true).length;
+    final hasBacklog = pendingCount > 0;
     final hasDate = publishedAt != null && publishedAt!.trim().isNotEmpty;
 
     return Container(
@@ -570,7 +553,7 @@ class _SemesterCard extends StatelessWidget {
               ),
               if (hasBacklog)
                 Text(
-                  l10n.resultSubjectsYetToPass(failedSubjects.length),
+                  l10n.resultSubjectsYetToPass(pendingCount),
                   style: const TextStyle(
                       color: _statusRed,
                       fontWeight: FontWeight.w700,
@@ -670,13 +653,54 @@ class _FailedSubjectRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
+    final cleared = subject.cleared == true;
+    final code = subject.code ?? '—';
+
+    if (cleared) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+        decoration: BoxDecoration(
+          color: _gpaGreen.withValues(alpha: 0.07),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Row(
+          children: [
+            Text('$code${subject.titleSuffix}',
+                style: const TextStyle(
+                    color: _gpaGreen,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 13,
+                    fontFeatures: [FontFeature.tabularFigures()])),
+            const SizedBox(width: 6),
+            Expanded(
+              child: Text(
+                subject.name ?? '',
+                style: TextStyle(
+                    color: _gpaGreen.withValues(alpha: 0.95),
+                    fontWeight: FontWeight.w600,
+                    fontSize: 12.5,
+                    height: 1.25),
+              ),
+            ),
+            const Icon(Icons.check_circle_rounded, size: 14, color: _gpaGreen),
+            const SizedBox(width: 4),
+            Text(l10n.resultCleared,
+                style: TextStyle(
+                    color: _gpaGreen,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 11.5)),
+          ],
+        ),
+      );
+    }
+
     final label = switch (subject.type) {
       'T' => l10n.subjectTypeTheory,
       'P' => l10n.subjectTypePractical,
       'T+P' => l10n.subjectTypeTheoryPractical,
       _ => null,
     };
-    final code = subject.code ?? '—';
 
     return Container(
       width: double.infinity,
@@ -715,45 +739,6 @@ class _FailedSubjectRow extends StatelessWidget {
       ),
     );
   }
-}
-
-class _SubjectsForSemester {
-  final int semester;
-  final double? gpa;
-  final List<ResultSubject> failed;
-
-  const _SubjectsForSemester(this.semester, this.gpa, this.failed);
-}
-
-Map<int, List<ResultSubject>> _subjectsBySemester(ResultRecord record) {
-  final map = <int, List<ResultSubject>>{};
-  for (final s in record.subjects) {
-    final sem = (s.semester != null && s.semester! >= 1)
-        ? s.semester!
-        : (record.examSemester ?? 0);
-    if (sem <= 0) continue;
-    map.putIfAbsent(sem, () => []).add(s);
-  }
-  return map;
-}
-
-List<_SubjectsForSemester> _semesterCards(
-  ResultRecord record,
-  Map<int, List<ResultSubject>> failed,
-) {
-  final semesters = <int>{
-    for (final e in record.semesterGpas.keys) _semesterIndex(e),
-    ...failed.keys,
-  }.where((s) => s > 0).toList()
-    ..sort((a, b) => b.compareTo(a));
-  return [
-    for (final sem in semesters)
-      _SubjectsForSemester(
-        sem,
-        record.semesterGpas['gpa$sem'] ?? record.semesterGpas['GPA$sem'],
-        failed[sem] ?? const [],
-      ),
-  ];
 }
 
 String _formatDateLine(BuildContext context, String iso) {

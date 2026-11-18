@@ -30,8 +30,16 @@ class ResultSubject {
   final String? type;
   final String? name;
   final int? semester;
+  final bool? cleared;
 
-  const ResultSubject({this.code, this.grade, this.type, this.name, this.semester});
+  const ResultSubject({
+    this.code,
+    this.grade,
+    this.type,
+    this.name,
+    this.semester,
+    this.cleared,
+  });
 
   factory ResultSubject.fromJson(Map<String, dynamic> json) => ResultSubject(
         code: json['code'] as String?,
@@ -39,6 +47,7 @@ class ResultSubject {
         type: json['type'] as String?,
         name: json['name'] as String?,
         semester: (json['semester'] as num?)?.toInt(),
+        cleared: json['cleared'] as bool?,
       );
 
   String get titleSuffix {
@@ -121,4 +130,71 @@ class ResultRecord {
     });
     return entries;
   }
+}
+
+class TimelineSemester {
+  final int semester;
+  final double? gpa;
+  final String? publishedAt;
+  final List<ResultSubject> subjects;
+
+  const TimelineSemester({
+    required this.semester,
+    this.gpa,
+    this.publishedAt,
+    this.subjects = const [],
+  });
+
+  factory TimelineSemester.fromJson(Map<String, dynamic> json) => TimelineSemester(
+        semester: (json['semester'] as num).toInt(),
+        gpa: (json['gpa'] as num?)?.toDouble(),
+        publishedAt: json['publishedAt'] as String?,
+        subjects: (json['subjects'] as List? ?? [])
+            .map((e) => ResultSubject.fromJson(e as Map<String, dynamic>))
+            .toList(),
+      );
+}
+
+class ResultTimeline {
+  final String roll;
+  final String? name;
+  final String? registrationNo;
+  final String? institute;
+  final String? title;
+  final String? status;
+  final double? cgpa;
+  final int? examSemester;
+  final int bannerSubjects;
+  final List<TimelineSemester> semesters;
+  final String disclaimer;
+
+  const ResultTimeline({
+    required this.roll,
+    this.name,
+    this.registrationNo,
+    this.institute,
+    this.title,
+    this.status,
+    this.cgpa,
+    this.examSemester,
+    this.bannerSubjects = 0,
+    this.semesters = const [],
+    required this.disclaimer,
+  });
+
+  factory ResultTimeline.fromJson(Map<String, dynamic> json) => ResultTimeline(
+        roll: json['roll'] as String,
+        name: json['name'] as String?,
+        registrationNo: json['registrationNo'] as String?,
+        institute: json['institute'] as String?,
+        title: json['title'] as String?,
+        status: json['status'] as String?,
+        cgpa: (json['cgpa'] as num?)?.toDouble(),
+        examSemester: (json['examSemester'] as num?)?.toInt(),
+        bannerSubjects: (json['bannerSubjects'] as num?)?.toInt() ?? 0,
+        semesters: (json['semesters'] as List? ?? [])
+            .map((e) => TimelineSemester.fromJson(e as Map<String, dynamic>))
+            .toList(),
+        disclaimer: json['disclaimer'] as String? ?? '',
+      );
 }

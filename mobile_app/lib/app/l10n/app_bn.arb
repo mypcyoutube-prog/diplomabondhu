@@ -53,6 +53,7 @@
   "resultExpelled": "বহিষ্কৃত",
   "resultFail": "অকৃতকার্য",
   "resultSubjectsYetToPass": "{count, plural, one{১টি সাবজেক্ট এখনো পাস করেননি} other{{count}টি সাবজেক্ট এখনো পাস করেননি}}",
+  "resultCleared": "পরে পাস করেছে",
   "resultThisExam": "এই পরীক্ষা",
   "resultGpa": "জিপিএ",
   "resultSubjectsList": "সাবজেক্ট",

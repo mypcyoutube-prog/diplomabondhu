@@ -1,5 +1,41 @@
 # CHANGELOG.md — DiplomaBondhu
 
+## [0.11.10] — Per-semester publication dates + cleared referred subjects
+
+Owner request: every semester exam is published on its own date (~6 months
+apart), so all cards showed the same "1 day ago"; and once the owner uploads
+earlier PDFs, a subject referred in an older semester must stay listed but
+turn **not red** when the student passes it in a later semester.
+
+### Backend
+- New `GET /results/timeline?roll=` (auth + rate limit; `/history` kept for
+  compatibility) — server-side computation, client trusts nothing:
+  - **Per-semester `publishedAt`**: taken only from the record whose own
+    `examSemester` matches (its exam's `updatedAt`) — different semesters
+    now show different dates. No record → no date row.
+  - **Latest cumulative GPA per semester**: the most recent non-null value
+    across cumulative sheets adds up (gpa5 cleared when a later sheet prints it).
+  - **Cleared referred subjects**: backlog subjects are grouped under their own
+    semester (catalog semester, fallback exam semester) and deduped (latest
+    occurrence wins). A subject renders as cleared when its semester's
+    cumulative GPA is known in a later sheet AND its code is absent from the
+    latest record's pending subjects. Cleared flag is computed server-side.
+- Response: `{ roll, name, registrationNo, institute, title, status, cgpa,
+  examSemester, bannerSubjects, semesters: [{ semester, gpa, publishedAt,
+  subjects: [{ code, grade, type, name, semester, cleared }] }], disclaimer }`.
+- 3 new tests (still-referred red + distinct dates; cleared green;
+  auth/validation/404). Backend 148/148.
+
+### Flutter
+- Result Checker now calls `/results/timeline` and renders **one master card**
+  (header, banner, CGPA, name/registration, disclaimer) with per-semester
+  cards carrying their own date + relative time-ago.
+- Cleared referred subject: same row, **light-green** with a check icon +
+  "Passed later" (bn: "পরে পাস করেছে"); pending subjects stay light-red.
+  A semester whose backlog is fully cleared shows "✓ Passed" again.
+- New l10n key `resultCleared`; flutter analyze clean, 29/29 widget tests
+  (one obsolete multi-exam-header test removed with the old view).
+
 ## [0.11.9] — Result card styling matched line-by-line to the reference screenshots
 
 Owner follow-up on 0.11.8: the per-semester cards still kept my own styling

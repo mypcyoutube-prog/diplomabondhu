@@ -416,6 +416,12 @@ abstract class AppLocalizations {
   /// **'{count, plural, one{1 subject yet to pass} other{{count} subjects yet to pass}}'**
   String resultSubjectsYetToPass(num count);
 
+  /// No description provided for @resultCleared.
+  ///
+  /// In en, this message translates to:
+  /// **'Passed later'**
+  String get resultCleared;
+
   /// No description provided for @resultThisExam.
   ///
   /// In en, this message translates to:

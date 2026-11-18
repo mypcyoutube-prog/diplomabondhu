@@ -53,6 +53,7 @@
   "resultExpelled": "Expelled",
   "resultFail": "Failed",
   "resultSubjectsYetToPass": "{count, plural, one{1 subject yet to pass} other{{count} subjects yet to pass}}",
+  "resultCleared": "Passed later",
   "resultThisExam": "This exam",
   "resultGpa": "GPA",
   "resultSubjectsList": "Subjects",

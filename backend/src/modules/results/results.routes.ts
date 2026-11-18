@@ -51,6 +51,13 @@ export function resultsRoutes(env: Env) {
     } catch (err) { next(err); }
   });
 
+  router.get('/timeline', requireAuth(env.JWT_ACCESS_SECRET), checkRateLimit, validate({ query: historyQuerySchema }), async (req, res, next) => {
+    try {
+      const query = (req as unknown as Validated<HistoryQuery>).validatedQuery!;
+      return ok(res, await svc.resultTimeline(env, query.roll));
+    } catch (err) { next(err); }
+  });
+
   router.get('/admin/parse-job/:jobId', async (req, res, next) => {
     try {
       if (!env.RESULT_SERVICE_URL || !env.RESULT_SERVICE_TOKEN) {

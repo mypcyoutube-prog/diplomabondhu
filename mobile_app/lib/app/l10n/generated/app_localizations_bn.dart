@@ -179,6 +179,9 @@ class AppLocalizationsBn extends AppLocalizations {
   }
 
   @override
+  String get resultCleared => 'পরে পাস করেছে';
+
+  @override
   String get resultThisExam => 'এই পরীক্ষা';
 
   @override

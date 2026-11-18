@@ -179,6 +179,9 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get resultCleared => 'Passed later';
+
+  @override
   String get resultThisExam => 'This exam';
 
   @override

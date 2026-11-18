@@ -38,6 +38,36 @@ export interface ResultRecord {
   disclaimer: string;
 }
 
+export interface TimelineSubject {
+  code?: string;
+  grade?: string;
+  type?: string;
+  name?: string | null;
+  semester?: number | null;
+  cleared?: boolean;
+}
+
+export interface TimelineSemester {
+  semester: number;
+  gpa: number | null;
+  publishedAt: string | null;
+  subjects: TimelineSubject[];
+}
+
+export interface ResultTimeline {
+  roll: string;
+  name: string | null;
+  registrationNo: string | null;
+  institute: string | null;
+  title?: string | null;
+  status: string | null;
+  cgpa: number | null;
+  examSemester: number | null;
+  bannerSubjects: number;
+  semesters: TimelineSemester[];
+  disclaimer: string;
+}
+
 export const RESULT_DISCLAIMER =
   'This is not an official BTEB service. Results are transcribed from published result sheets and may contain errors. Verify with your institute or the official BTEB portal.';
 
@@ -155,6 +185,138 @@ export async function resultHistory(env: Env, rawRoll: string): Promise<ResultRe
     })
   );
   return records as ResultRecord[];
+}
+
+/** Full academic journey for a roll, computed server-side so the client
+ *  never has to re-implement cleared/referred rules.
+ *
+ *  - Semester GPA: the most recent non-null value across cumulative sheets.
+ *  - publishedAt per semester: only from the record whose own examSemester
+ *    matches (each semester exam is published on its own date, ~6 months apart).
+ *  - A referred subject stays listed under its own semester, but renders as
+ *    cleared when its cumulative GPA is known in a later sheet AND the code
+ *    no longer appears in the latest record's pending subjects. */
+export async function resultTimeline(env: Env, rawRoll: string): Promise<ResultTimeline> {
+  const db = resultsDb(env);
+  const roll = String(rawRoll);
+  const docs = await db
+    .collection('records')
+    .find({ roll })
+    .sort({ examSemester: -1, _id: -1 })
+    .limit(50)
+    .toArray();
+  if (docs.length === 0) throw notFound('No published result found for this roll');
+  const examIds = [...new Set(docs.map((d) => String(d.examId)))];
+  const examDocs = await db
+    .collection('exams')
+    .find({ examId: { $in: examIds } })
+    .toArray();
+  const titles = new Map<string, string>();
+  const publishedByExam = new Map<string, string>();
+  for (const e of examDocs) {
+    if (typeof e.title === 'string' && e.title) titles.set(String(e.examId), e.title);
+    const iso = isoDate(e.updatedAt);
+    if (iso) publishedByExam.set(String(e.examId), iso);
+  }
+  await Promise.all(
+    examIds.map((examId) =>
+      db
+        .collection('exams')
+        .updateOne({ examId }, { $inc: { checkCount: 1 }, $setOnInsert: { examId } }, { upsert: true })
+    )
+  );
+
+  const latest = docs[0];
+  const latestSubjectList = Array.isArray(latest.subjects)
+    ? (latest.subjects as Array<{ code?: string }>)
+    : [];
+  const latestCodes = new Set(
+    latestSubjectList
+      .map((s) => String(s.code ?? '').trim().toUpperCase())
+      .filter(Boolean)
+  );
+
+  const publishedBySemester = new Map<number, string>();
+  for (const doc of docs) {
+    const sem = typeof doc.examSemester === 'number' ? doc.examSemester : null;
+    if (sem == null || publishedBySemester.has(sem)) continue;
+    publishedBySemester.set(sem, publishedByExam.get(String(doc.examId)) ?? '');
+  }
+
+  const asc = [...docs].reverse();
+  const latestGpa = new Map<number, number | null>();
+  for (const doc of asc) {
+    const gps = doc.semesterGpas;
+    if (!gps || typeof gps !== 'object' || Array.isArray(gps)) continue;
+    for (const [key, value] of Object.entries(gps as Record<string, unknown>)) {
+      const m = key.match(/gpa(\d+)/i) ?? key.match(/^(\d+)$/);
+      if (!m) continue;
+      if (typeof value === 'number') latestGpa.set(Number(m[1]), value);
+      else if (!latestGpa.has(Number(m[1]))) latestGpa.set(Number(m[1]), null);
+    }
+  }
+
+  const backlog = new Map<number, TimelineSubject[]>();
+  for (const doc of asc) {
+    const examSem = typeof doc.examSemester === 'number' ? doc.examSemester : null;
+    const subjects = Array.isArray(doc.subjects)
+      ? (doc.subjects as Array<{ code?: string; grade?: string; type?: string }>)
+      : [];
+    if (subjects.length === 0) continue;
+    const enriched = await attachSubjectNames(subjects);
+    for (const s of enriched) {
+      const code = String(s.code ?? '').trim().toUpperCase();
+      if (!code) continue;
+      const sem = typeof s.semester === 'number' && s.semester > 0 ? s.semester : examSem;
+      if (sem == null) continue;
+      const list = backlog.get(sem) ?? [];
+      const entry: TimelineSubject = {
+        code: s.code,
+        grade: s.grade,
+        type: s.type,
+        name: s.name ?? null,
+        semester: s.semester ?? null
+      };
+      const existing = list.find((x) => String(x.code ?? '').toUpperCase() === code);
+      if (existing) Object.assign(existing, entry);
+      else list.push(entry);
+      backlog.set(sem, list);
+    }
+  }
+  for (const [sem, list] of backlog) {
+    const gpa = latestGpa.get(sem);
+    const known = gpa != null;
+    for (const s of list) {
+      const code = String(s.code ?? '').toUpperCase();
+      s.cleared = known && !latestCodes.has(code);
+    }
+  }
+
+  const semesterNumbers = [...new Set<number>([...latestGpa.keys(), ...backlog.keys()])].sort(
+    (a, b) => b - a
+  );
+  const semesters: TimelineSemester[] = semesterNumbers.map((sem) => ({
+    semester: sem,
+    gpa: latestGpa.get(sem) ?? null,
+    publishedAt: publishedBySemester.get(sem) ?? null,
+    subjects: backlog.get(sem) ?? []
+  }));
+
+  return {
+    roll,
+    name: typeof latest.name === 'string' ? latest.name : null,
+    registrationNo: typeof latest.registrationNo === 'string' ? latest.registrationNo : null,
+    institute: typeof latest.institute === 'string' ? latest.institute : null,
+    title:
+      titles.get(String(latest.examId)) ??
+      (typeof latest.meta?.title === 'string' && latest.meta.title ? latest.meta.title : null),
+    status: typeof latest.status === 'string' ? latest.status : null,
+    cgpa: typeof latest.cgpa === 'number' ? latest.cgpa : null,
+    examSemester: typeof latest.examSemester === 'number' ? latest.examSemester : null,
+    bannerSubjects: latestCodes.size,
+    semesters,
+    disclaimer: RESULT_DISCLAIMER
+  };
 }
 
 /** Drive API key: env var wins; otherwise the key the admin saved in

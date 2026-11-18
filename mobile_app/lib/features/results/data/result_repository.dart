@@ -27,4 +27,9 @@ class ResultRepository {
         .map((r) => ResultRecord.fromJson(r as Map<String, dynamic>))
         .toList();
   }
+
+  Future<ResultTimeline> timeline({required String roll}) async {
+    final res = await _client.getMap('/results/timeline', query: {'roll': roll});
+    return ResultTimeline.fromJson(res.data);
+  }
 }
