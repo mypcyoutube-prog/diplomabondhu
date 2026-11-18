@@ -409,9 +409,12 @@
   first creation; admins can still reorder/hide sections and toggle
   the `resultChecker` feature flag from Admin → Settings. Backend
   tests updated accordingly (127 passed).
-- Owner-side note: settings documents created before this fix keep
-  the empty array — either enable the section once via Admin →
-  Settings, or drop the `appsettings` document so defaults re-seed.
+- `getAppSettings()` also auto-heals settings documents created
+  before this fix: any missing default section (including
+  `result_checker`) is appended on the next public settings read, so
+  existing installations work without manual database changes.
+  Hiding remains admin-controlled (toggle in Admin → Settings;
+  `resultChecker` feature flag still respected).
 
 ## [0.10.5] — KI-14: parser verified against a real BTEB result sheet (owner-provided)
 
