@@ -1,5 +1,32 @@
 # CHANGELOG.md — DiplomaBondhu
 
+## [0.11.6] — Result Checker premium redesign (advanced UI/UX + animations)
+
+Owner request: go beyond the reference screenshots — clearer text, more
+polished and professional layout, smooth animations, everything neatly
+organized.
+
+### Redesigned (Flutter `ResultCheckerScreen`, zero new packages)
+- **Navy gradient header** (deep navy → navyDark, per the design system) with
+  an icon plate, roll number in bold semibold-white, title + institute clipped
+  to 2 lines — matches the premium look of the approved design direction.
+- **Search upgrade**: tag icon prefix, clear (×) button, Enter key submits,
+  helper hint "6–10 digits", wider 48px full-width button with icon.
+- **CGPA highlight**: softer green gradient card, verified-badge, scale-in
+  entrance animation.
+- **Semester tiles rebuilt**: index avatar (e.g. `7`) per row, semester name
+  with the small "This exam" caption underneath, GPA in tabular figures, letter
+  grade in a soft-rounded badge — cleaner hierarchy than plain text rows.
+- **Staggered entrance animations**: record cards and every semester tile
+  fade-in-up one after another (pure `TweenAnimationBuilder` + `Interval`, no
+  dependency); status/CGPA blocks animate in.
+- **Consistency**: DbColors / DbRadius / DbSpacing tokens everywhere; tabular
+  figures so GPA digits align vertically.
+
+### Verified
+- flutter analyze clean; all 23 widget tests still pass (all asserted texts
+  unchanged — roll, status, GPA values, letter grades, CGPA row, chips).
+
 ## [0.11.5] — Google Drive folder ingest (one link → all result PDFs)
 
 Owner requested: paste ONE shared Drive folder link and have every PDF inside

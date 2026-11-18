@@ -410,6 +410,14 @@ Typecheck: **clean** · Production build: **success** · `npm audit --omit=dev`:
 - Reset-code delivery is out-of-band by admin (phone/in-person) until email
   infrastructure is approved (KI-12). The API and UI flows are complete.
 
+## Report: v0.11.6 — Result Checker premium redesign
+
+| Check | Passed | Failed | Skipped | Notes |
+| --- | --- | --- | --- | --- |
+| flutter analyze | 0 issues | 0 | 0 | — |
+| flutter test (widget) | 23 | 0 | 0 | all prior assertions intact; entrance animations settle under pumpAndSettle |
+| visual QA on a real device/emulator | — | — | **Not run** | KI-10 (no Android SDK in sandbox); owner should hot-restart and review both light + dark mode |
+
 ## Report: v0.11.5 — Google Drive folder ingest
 
 | Check | Passed | Failed | Skipped | Notes |
