@@ -1,5 +1,21 @@
 # CHANGELOG.md — DiplomaBondhu
 
+## [0.11.11] — Fix: repeated referred subject was shown once per record
+
+Owner report: with the 7th + 6th semester PDFs uploaded, the banner says
+"1 subject yet to pass" but two red rows appear below. Cause: boards repeat a
+still-failed subject in every later sheet, and when the subject code is not in
+the catalog the fallback bucketed it under each record's own exam semester —
+so the same code rendered twice (6th + 7th cards).
+
+- `resultTimeline` now assigns every subject code to exactly one semester
+  (catalog semester when known, else the earliest exam that reported it) and
+  dedupes later occurrences into that row. Banner count (`bannerSubjects`) and
+  the red rows shown now always match, and everything is computed from the
+  latest record (the student's current semester).
+- New test: a subject repeated in 6th + 7th sheets renders exactly once under
+  the 6th semester; 1 red row = banner 1. Backend 149/149.
+
 ## [0.11.10] — Per-semester publication dates + cleared referred subjects
 
 Owner request: every semester exam is published on its own date (~6 months

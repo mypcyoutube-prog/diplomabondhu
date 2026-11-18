@@ -257,6 +257,10 @@ export async function resultTimeline(env: Env, rawRoll: string): Promise<ResultT
   }
 
   const backlog = new Map<number, TimelineSubject[]>();
+  // Boards repeat a still-failed subject in every later sheet; the subject
+  // must render exactly once, under its own semester (catalog semester when
+  // known, else the earliest exam that reported it) — never once per record.
+  const codeSemester = new Map<string, number>();
   for (const doc of asc) {
     const examSem = typeof doc.examSemester === 'number' ? doc.examSemester : null;
     const subjects = Array.isArray(doc.subjects)
@@ -267,8 +271,12 @@ export async function resultTimeline(env: Env, rawRoll: string): Promise<ResultT
     for (const s of enriched) {
       const code = String(s.code ?? '').trim().toUpperCase();
       if (!code) continue;
-      const sem = typeof s.semester === 'number' && s.semester > 0 ? s.semester : examSem;
+      let sem =
+        typeof s.semester === 'number' && s.semester > 0 ? s.semester : examSem;
       if (sem == null) continue;
+      const assigned = codeSemester.get(code);
+      if (assigned === undefined) codeSemester.set(code, sem);
+      else sem = assigned;
       const list = backlog.get(sem) ?? [];
       const entry: TimelineSubject = {
         code: s.code,

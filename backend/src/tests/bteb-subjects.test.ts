@@ -288,6 +288,41 @@ describe('result timeline', () => {
     expect(sem5.gpa).toBe(3.76);
   });
 
+  it('shows a subject repeated across later sheets exactly once under its own semester', async () => {
+    const db = mongoose.connection.useDb('results_db');
+    await db.collection('records').insertMany([
+      {
+        examId: 'eng-6th', roll: '600111', name: 'Student Three', gpa: 3.45, status: 'referred',
+        examSemester: 6,
+        semesterGpas: { gpa1: 3.30, gpa2: 3.12, gpa3: 3.33, gpa4: 3.18, gpa5: null, gpa6: 3.45 },
+        subjects: [{ code: '28553', type: 'T', grade: null }]
+      },
+      {
+        examId: 'eng-7th', roll: '600111', name: 'Student Three', gpa: 3.54, status: 'pass',
+        examSemester: 7,
+        semesterGpas: { gpa1: 3.30, gpa2: 3.12, gpa3: 3.33, gpa4: 3.18, gpa5: null, gpa6: 3.45, gpa7: 3.54 },
+        subjects: [{ code: '28553', type: 'T', grade: null }]
+      }
+    ]);
+    await db.collection('exams').insertMany([
+      { examId: 'eng-6th', recordCount: 1, title: 'Diploma in Engineering 6th Semester', updatedAt: new Date('2026-06-15T10:00:00.000Z') },
+      { examId: 'eng-7th', recordCount: 1, title: 'Diploma in Engineering 7th Semester', updatedAt: new Date('2026-11-10T10:00:00.000Z') }
+    ]);
+
+    const token = await studentToken();
+    const res = await request(app).get('/api/v1/results/timeline?roll=600111')
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(200);
+    const data = res.body.data;
+    const rows = data.semesters.flatMap((s: { subjects: Array<{ code?: string }> }) => s.subjects);
+    expect(rows.filter((r: { code?: string }) => r.code === '28553')).toHaveLength(1);
+    expect(data.bannerSubjects).toBe(1);
+    const carrying = data.semesters.filter((s: { subjects: unknown[] }) => s.subjects.length > 0);
+    expect(carrying).toHaveLength(1);
+    expect(carrying[0].semester).toBe(6);
+    expect(carrying[0].publishedAt).toBe('2026-06-15T10:00:00.000Z');
+  });
+
   it('requires auth and rejects invalid rolls on /results/timeline', async () => {
     const noAuth = await request(app).get('/api/v1/results/timeline?roll=712981');
     expect(noAuth.status).toBe(401);

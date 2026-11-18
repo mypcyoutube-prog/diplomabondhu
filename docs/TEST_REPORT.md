@@ -410,6 +410,25 @@ Typecheck: **clean** · Production build: **success** · `npm audit --omit=dev`:
 - Reset-code delivery is out-of-band by admin (phone/in-person) until email
   infrastructure is approved (KI-12). The API and UI flows are complete.
 
+## Report: v0.11.11 — Fix: repeated referred subject rendered once per record
+
+| Field | Value |
+|---|---|
+| Date | 2026-11-18 |
+| Scope | `resultTimeline` dedupe fix — one subject code = exactly one row under its own semester |
+| Commands executed | `cd backend && npx tsc --noEmit && npx vitest run` |
+
+| Suite | Passed | Failed | Skipped |
+|---|---|---|---|
+| Backend vitest | 149 (+1 new) | 0 | 0 |
+
+| Check | Result |
+|---|---|
+| Subject repeated in 6th + 7th sheets (no catalog row) renders exactly once, under the 6th semester | Pass |
+| Red rows across all cards == bannerSubjects (top-record based) | Pass |
+| Per-semester publishedAt unchanged (own exam record) | Pass |
+| Flutter untouched — rendering already row-based | — |
+
 ## Report: v0.11.10 — Per-semester dates + cleared referred subjects
 
 | Field | Value |
