@@ -7,7 +7,7 @@ import { validate } from '../../middlewares/validate';
 import { ok, fail } from '../../core/response';
 import { PERMISSIONS } from '../../core/permissions';
 import * as svc from './results.service';
-import { checkQuerySchema, historyQuerySchema, importBodySchema, jobIdParamSchema, type CheckQuery, type HistoryQuery, type ImportBody, type JobIdParam } from './results.schemas';
+import { checkQuerySchema, historyQuerySchema, importBodySchema, jobIdParamSchema, parseUrlBodySchema, type CheckQuery, type HistoryQuery, type ImportBody, type JobIdParam, type ParseUrlBody } from './results.schemas';
 
 type Validated<T> = { validatedQuery?: T; validatedBody?: T };
 
@@ -137,6 +137,26 @@ export function resultsRoutes(env: Env) {
           body: new Uint8Array(req.body)
         });
         return res.status(status).set('content-type', 'application/json').send(body);
+      } catch (err) { next(err); }
+    }
+  );
+
+  router.post(
+    '/admin/parse-url',
+    express.json({ limit: '16kb' }),
+    validate({ body: parseUrlBodySchema }),
+    async (req, res, next) => {
+      try {
+        if (!env.RESULT_SERVICE_URL || !env.RESULT_SERVICE_TOKEN) {
+          return fail(res, 503, 'SERVICE_UNAVAILABLE', 'Result service is not configured');
+        }
+        const body = req.body as ParseUrlBody;
+        const { status, body: upstream } = await proxyJson(env, '/parse/url/job', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ url: body.url, examId: body.examId ?? '', title: body.title ?? '' })
+        });
+        return res.status(status).set('content-type', 'application/json').send(upstream);
       } catch (err) { next(err); }
     }
   );

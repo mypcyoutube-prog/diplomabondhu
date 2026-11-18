@@ -11,13 +11,17 @@ internal and protected by a shared service token.
 from __future__ import annotations
 
 import hashlib
+import ipaddress
 import json
 import os
 import secrets
+import socket
 import threading
 import time
+import urllib.parse
 from pathlib import Path
 
+import httpx
 from fastapi import Body, Depends, FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pymongo import MongoClient, ASCENDING
@@ -113,6 +117,117 @@ async def parse(
 ):
     data = await file.read()
     return _run_parse(data, file.filename, examId, title)
+
+
+MAX_PDF_BYTES = 50 * 1024 * 1024
+
+
+def _validate_public_url(url: str) -> None:
+    """Only http(s) URLs pointing at PUBLIC hosts are accepted — private,
+    loopback and link-local targets are refused (SSRF guard)."""
+    try:
+        parsed = urllib.parse.urlsplit(url)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid URL")
+    if parsed.scheme not in ("http", "https"):
+        raise HTTPException(status_code=400, detail="Only http:// or https:// URLs are allowed")
+    host = parsed.hostname
+    if not host:
+        raise HTTPException(status_code=400, detail="Invalid URL")
+    try:
+        infos = socket.getaddrinfo(host, None)
+    except OSError:
+        raise HTTPException(status_code=400, detail=f"Cannot resolve host: {host}")
+    for info in infos:
+        ip = ipaddress.ip_address(info[4][0])
+        if not ip.is_global:
+            raise HTTPException(status_code=400, detail="Refusing private/loopback URL host")
+
+
+def _download_pdf(url: str) -> tuple[bytes, str | None]:
+    _validate_public_url(url)
+    filename = os.path.basename(urllib.parse.urlsplit(url).path) or None
+    chunks: list[bytes] = []
+    total = 0
+    try:
+        with httpx.stream("GET", url, timeout=60, follow_redirects=True) as response:
+            if response.status_code != 200:
+                raise HTTPException(status_code=400, detail=f"Download failed: HTTP {response.status_code}")
+            final_host = urllib.parse.urlsplit(str(response.url)).hostname
+            if final_host and final_host != urllib.parse.urlsplit(url).hostname:
+                _validate_public_url(str(response.url))
+            for chunk in response.iter_bytes(64 * 1024):
+                total += len(chunk)
+                if total > MAX_PDF_BYTES:
+                    raise HTTPException(status_code=413, detail="Downloaded file too large (max 50 MB)")
+                chunks.append(chunk)
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=f"Download failed: {type(exc).__name__}")
+    data = b"".join(chunks)
+    if not data.startswith(b"%PDF"):
+        raise HTTPException(status_code=400, detail="URL did not return a PDF file")
+    return data, filename
+
+
+@app.post("/parse/url/job")
+async def parse_url_job(body: dict = Body(default={}), _: None = Depends(require_service_token)):
+    url = str(body.get("url", "")).strip()
+    if not url:
+        raise HTTPException(status_code=400, detail="A PDF URL is required")
+    exam_id = str(body.get("examId", ""))
+    title = str(body.get("title", ""))
+
+    job_id = _hex24()
+    PARSE_JOBS[job_id] = {
+        "stage": "downloading",
+        "pagesDone": 0,
+        "pages": 0,
+        "fileName": urllib.parse.urlsplit(url).path.rsplit("/", 1)[-1] or url,
+        "log": [],
+    }
+
+    def worker() -> None:
+        job = PARSE_JOBS[job_id]
+        try:
+            def log(line: str) -> None:
+                job["log"].append(f"[{time.strftime('%H:%M:%S')}] {line}")
+                if len(job["log"]) > 200:
+                    del job["log"][:-200]
+
+            log(f"downloading {url} …")
+            data, filename = _download_pdf(url)
+            job["fileName"] = filename or job["fileName"]
+            log(f"downloaded {filename or 'file'} ({len(data)} bytes)")
+
+            job["stage"] = "parsing"
+
+            def on_page(pages_done: int, pages: int) -> None:
+                job["pagesDone"] = pages_done
+                job["pages"] = pages
+                if pages_done in (1, pages) or pages_done % 25 == 0:
+                    log(f"page {pages_done}/{pages} scanned")
+
+            def on_warning(message: str) -> None:
+                log(f"⚠ WARNING: {message}")
+
+            result = _run_parse(data, filename, exam_id, title, on_page=on_page, on_warning=on_warning)
+            log(
+                f"done: {result['recordCount']} records, "
+                f"{len(result['warnings'])} warning(s) → batch {result['batchId']}"
+            )
+            job["result"] = result
+            job["stage"] = "done"
+        except HTTPException as exc:
+            job["stage"] = "error"
+            job["detail"] = exc.detail
+        except Exception as exc:
+            job["stage"] = "error"
+            job["detail"] = f"{type(exc).__name__}: {exc}"
+
+    threading.Thread(target=worker, daemon=True).start()
+    return {"jobId": job_id}
 
 
 @app.post("/parse/job")

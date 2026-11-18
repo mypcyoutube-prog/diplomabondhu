@@ -1,5 +1,30 @@
 # CHANGELOG.md — DiplomaBondhu
 
+## [0.11.4] — Upload result PDFs from a link + multiple files at once
+
+Owner request: results must be addable (a) by pasting a direct PDF download
+link and (b) by selecting several PDFs in one go — each becoming its own
+reviewed batch, with the live terminal log visible throughout.
+
+### Added
+- **Python — `POST /parse/url/job`**: downloads a PDF from a URL (http/https
+  only, 50 MB cap, `%PDF` magic check, 60s timeout) in a job thread, then runs
+  the same parse pipeline — the admin panel sees a full terminal log
+  (`downloading … → downloaded N bytes → page X/Y scanned → done`).
+- **Python — SSRF guard**: `_validate_public_url` refuses non-http(s) schemes
+  and any host that resolves to a private/loopback/link-local address,
+  re-checked after redirects.
+- **Admin panel**: the upload card now takes (1) multiple selected PDFs —
+  parsed one by one, each becoming a separate batch — and (2) a direct PDF
+  link. Every processed PDF lands in a review queue; each batch is imported
+  individually with its own Exam ID + title (nothing auto-imports).
+- **Node — `POST /results/admin/parse-url`**: validates the URL body (zod,
+  http/https only) and proxies to the python service under the admin
+  permission guard. 136 vitest passed (3 new).
+- result-service pytest 39 passed (URL guard + URL job pipeline cases).
+- Google Drive folder ingest is deferred until the owner creates the free
+  Drive API key (see conversation) — direct links already cover single files.
+
 ## [0.11.3] — Transparent warnings + terminal-style live parse log in the admin panel
 
 Owner request: during PDF upload the admin panel must show WHY each warning

@@ -53,13 +53,8 @@ interface ParsePollState {
   stage: string;
   pagesDone?: number;
   pages?: number;
-  log?: string[];
-  batchId?: string;
   fileName?: string;
-  pagesScanned?: number;
-  recordCount?: number;
-  warnings?: string[];
-  sample?: Array<{ roll: string; gpa: number | null; name: string | null; status: string | null }>;
+  log?: string[];
 }
 
 function ParseTerminal({ lines }: { lines: string[] }) {
@@ -85,14 +80,70 @@ interface ImportProgressState {
   total?: number;
 }
 
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/** The python service flattens the preview payload at the top level once the
+ *  job is done; older versions nested it under `result`. */
+type ParseJobState = ParsePollState & {
+  batchId?: string;
+  pagesScanned?: number;
+  recordCount?: number;
+  warnings?: string[];
+  sample?: ParsePreview['sample'];
+  detail?: string;
+};
+
+/** Polls a parse job (file or URL) until done, streaming the terminal log. */
+async function pollParseJob(
+  started: { jobId: string },
+  onPoll: (state: ParsePollState | null) => void
+): Promise<ParsePreview> {
+  onPoll({ stage: 'waiting' });
+  let failures = 0;
+  for (let i = 0; i < 900; i += 1) {
+    await sleep(1000);
+    let state: ParseJobState;
+    try {
+      state = await apiRaw<ParseJobState>(`/results/admin/parse-job/${started.jobId}`);
+      failures = 0;
+    } catch {
+      failures += 1;
+      if (failures >= 15) {
+        onPoll(null);
+        throw new Error('Lost contact with the result service while polling');
+      }
+      continue;
+    }
+    if (state.stage === 'done') {
+      onPoll(null);
+      return {
+        batchId: state.batchId ?? '',
+        fileName: state.fileName ?? '',
+        pagesScanned: state.pagesScanned ?? 0,
+        recordCount: state.recordCount ?? 0,
+        warnings: state.warnings ?? [],
+        sample: state.sample ?? []
+      };
+    }
+    if (state.stage === 'error') {
+      onPoll(null);
+      throw new Error(state.detail ?? 'Parsing failed');
+    }
+    onPoll(state);
+  }
+  onPoll(null);
+  throw new Error('Parsing timed out');
+}
+
 export function ResultsPage() {
   const fileRef = useRef<HTMLInputElement>(null);
+  const [urlInput, setUrlInput] = useState('');
   const [uploadError, setUploadError] = useState<string | null>(null);
-  const [preview, setPreview] = useState<ParsePreview | null>(null);
-  const [examId, setExamId] = useState('');
-  const [title, setTitle] = useState('');
-  const [importError, setImportError] = useState<string | null>(null);
-  const [imported, setImported] = useState<string | null>(null);
+  const [queue, setQueue] = useState<ParsePreview[]>([]);
+  const [examIds, setExamIds] = useState<Record<string, string>>({});
+  const [titles, setTitles] = useState<Record<string, string>>({});
+  const [importErrors, setImportErrors] = useState<Record<string, string>>({});
+  const [importedMsgs, setImportedMsgs] = useState<string[]>([]);
   const [parsePoll, setParsePoll] = useState<ParsePollState | null>(null);
   const [importPoll, setImportPoll] = useState<ImportProgressState | null>(null);
 
@@ -104,55 +155,22 @@ export function ResultsPage() {
 
   const invalidate = [['results', 'meta'], ['results', 'batches']];
 
-  const parseMut = useApiMutation(async (file: File) => {
+  const fileMut = useApiMutation(async (file: File) => {
     const form = new FormData();
     form.append('file', file);
-    const started = await apiRaw<{ jobId: string }>('/results/admin/parse-job', {
+    return pollParseJob(await apiRaw<{ jobId: string }>('/results/admin/parse-job', {
       method: 'POST',
       body: form
-    });
-    setParsePoll({ stage: 'waiting' });
-    const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-    let failures = 0;
-    for (let i = 0; i < 900; i += 1) {
-      await sleep(1000);
-      let state: ParsePollState & { result?: ParsePreview; detail?: string };
-      try {
-        state = await apiRaw<ParsePollState & { result?: ParsePreview; detail?: string }>(
-          `/results/admin/parse-job/${started.jobId}`
-        );
-        failures = 0;
-      } catch {
-        failures += 1;
-        if (failures >= 15) {
-          setParsePoll(null);
-          throw new Error('Lost contact with the result service while polling');
-        }
-        continue;
-      }
-      if (state.stage === 'done') {
-        setParsePoll(null);
-        // The python service flattens the preview payload at the top level;
-        // older versions nested it under `result`.
-        const preview = state.result ?? {
-          batchId: state.batchId ?? '',
-          fileName: state.fileName ?? '',
-          pagesScanned: state.pagesScanned ?? 0,
-          recordCount: state.recordCount ?? 0,
-          warnings: state.warnings ?? [],
-          sample: state.sample ?? []
-        };
-        return preview;
-      }
-      if (state.stage === 'error') {
-        setParsePoll(null);
-        throw new Error(state.detail ?? 'Parsing failed');
-      }
-      setParsePoll(state);
-    }
-    setParsePoll(null);
-    throw new Error('Parsing timed out');
+    }), setParsePoll);
   }, invalidate);
+
+  const urlMut = useApiMutation(async (url: string) =>
+    pollParseJob(await apiRaw<{ jobId: string }>('/results/admin/parse-url', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url })
+    }), setParsePoll),
+  invalidate);
 
   const importMut = useApiMutation((vars: { batchId: string; examId: string; title?: string }) =>
     apiRaw<{ examId: string; total: number; inserted: number; updated: number }>('/results/admin/import', {
@@ -161,16 +179,46 @@ export function ResultsPage() {
       body: JSON.stringify(vars)
     }), invalidate);
 
-  function handleUpload() {
+  async function handleFiles() {
     setUploadError(null);
-    setImported(null);
-    const file = fileRef.current?.files?.[0];
-    if (!file) {
-      setUploadError('Choose a PDF file first');
+    const files = Array.from(fileRef.current?.files ?? []);
+    if (files.length === 0) {
+      setUploadError('Choose at least one PDF file first');
       return;
     }
-    parseMut.mutate(file, {
-      onSuccess: (data) => setPreview(data),
+    const collected: ParsePreview[] = [];
+    const errors: string[] = [];
+    for (const file of files) {
+      try {
+        collected.push(await fileMut.mutateAsync(file));
+      } catch (err) {
+        errors.push(`${file.name}: ${(err as Error).message}`);
+        break;
+      }
+    }
+    if (collected.length > 0) {
+      setQueue((q) => [...collected, ...q]);
+      for (const p of collected) {
+        setExamIds((m) => ({ ...m, [p.batchId]: m[p.batchId] ?? '' }));
+      }
+      if (fileRef.current) fileRef.current.value = '';
+    }
+    if (errors.length > 0) setUploadError(errors.join('\n'));
+  }
+
+  function handleParseUrl() {
+    setUploadError(null);
+    const url = urlInput.trim();
+    if (!/^https?:\/\//i.test(url)) {
+      setUploadError('Paste a full http(s) link to the PDF file');
+      return;
+    }
+    urlMut.mutate(url, {
+      onSuccess: (preview) => {
+        setQueue((q) => [preview, ...q]);
+        setExamIds((m) => ({ ...m, [preview.batchId]: m[preview.batchId] ?? '' }));
+        setUrlInput('');
+      },
       onError: (err) => setUploadError(err.message)
     });
   }
@@ -192,25 +240,25 @@ export function ResultsPage() {
     return () => clearInterval(interval);
   }
 
-  function handleImport() {
-    if (!preview) return;
-    setImportError(null);
-    setImported(null);
-    const stopPolling = startImportPolling(preview.batchId);
+  function handleImport(item: ParsePreview) {
+    const examId = (examIds[item.batchId] ?? '').trim();
+    setImportErrors((m) => ({ ...m, [item.batchId]: '' }));
+    if (!examId) {
+      setImportErrors((m) => ({ ...m, [item.batchId]: 'Type an Exam ID first' }));
+      return;
+    }
+    const stopPolling = startImportPolling(item.batchId);
     importMut.mutate(
-      { batchId: preview.batchId, examId: examId.trim(), title: title.trim() || undefined },
+      { batchId: item.batchId, examId, title: (titles[item.batchId] ?? '').trim() || undefined },
       {
         onSuccess: (data) => {
-          setImported(`Imported ${data.inserted} new / ${data.updated} updated records into ${data.examId}`);
-          setPreview(null);
-          setExamId('');
-          setTitle('');
-          if (fileRef.current) fileRef.current.value = '';
+          setImportedMsgs((msgs) => [`Imported ${data.inserted} new / ${data.updated} updated records into ${data.examId}`, ...msgs].slice(0, 5));
+          setQueue((q) => q.filter((p) => p.batchId !== item.batchId));
           stopPolling();
           setImportPoll(null);
         },
         onError: (err) => {
-          setImportError(err.message);
+          setImportErrors((m) => ({ ...m, [item.batchId]: err.message }));
           stopPolling();
           setImportPoll(null);
         }
@@ -218,60 +266,82 @@ export function ResultsPage() {
     );
   }
 
+  function removeFromQueue(batchId: string) {
+    setQueue((q) => q.filter((p) => p.batchId !== batchId));
+  }
+
+  const busy = fileMut.isPending || urlMut.isPending;
+
   return (
     <div className="space-y-6">
       <PageHeader
         title="BTEB Result Checker"
-        subtitle="Upload published BTEB result PDFs — one PDF per program + semester (use a unique exam ID like eng-7th-2022reg-2026, eng-8th-2022reg-2026). Students search by roll number and see every published exam they appear in. Results are shown with a non-official disclaimer."
+        subtitle="Upload published BTEB result PDFs — files or a direct download link, one PDF per program + semester (use a unique exam ID like eng-7th-2022reg-2026, eng-8th-2022reg-2026). Students search by roll number and see every published exam they appear in. Results are shown with a non-official disclaimer."
       />
 
       <Card>
-        <h2 className="mb-3 font-semibold text-slate-800 dark:text-slate-100">1. Upload result PDF</h2>
+        <h2 className="mb-3 font-semibold text-slate-800 dark:text-slate-100">1. Add result PDFs</h2>
         <div className="flex flex-wrap items-end gap-3">
           <input
             ref={fileRef}
             type="file"
             accept="application/pdf"
+            multiple
             className="rounded border border-slate-300 p-2 text-sm dark:bg-navy-600 dark:text-slate-100"
           />
-          <Button onClick={handleUpload} disabled={parseMut.isPending}>
-            {parseMut.isPending ? 'Parsing…' : 'Parse PDF'}
+          <Button onClick={() => void handleFiles()} disabled={busy}>
+            {fileMut.isPending ? 'Parsing…' : 'Parse file(s)'}
+          </Button>
+        </div>
+        <p className="mt-1 text-xs text-slate-500">Multiple files allowed — they are parsed one by one; each becomes a separate batch you review and import individually.</p>
+        <div className="mt-4 flex flex-wrap items-end gap-3 border-t border-slate-200 pt-4 dark:border-navy-500">
+          <div className="min-w-[320px] flex-1">
+            <Input
+              label="…or paste a direct PDF download link (https://…,.pdf)"
+              value={urlInput}
+              onChange={setUrlInput}
+            />
+          </div>
+          <Button onClick={handleParseUrl} disabled={busy}>
+            {urlMut.isPending ? 'Parsing…' : 'Parse from link'}
           </Button>
         </div>
         {parsePoll && (
-          <LiveProgressBar
-            value={parsePoll.pagesDone ?? 0}
-            total={parsePoll.pages ?? 0}
-            label={parsePoll.stage === 'waiting' ? 'Starting PDF parser…' : 'Parsing PDF pages…'}
-          />
+          <>
+            <LiveProgressBar
+              value={parsePoll.pagesDone ?? 0}
+              total={parsePoll.pages ?? 0}
+              label={parsePoll.stage === 'waiting' ? 'Starting…' : parsePoll.stage === 'downloading' ? 'Downloading PDF…' : parsePoll.stage === 'parsing' ? `Parsing ${parsePoll.fileName ?? ''}…` : 'Working…'}
+            />
+            {parsePoll.stage !== 'done' && <ParseTerminal lines={parsePoll.log ?? []} />}
+          </>
         )}
-        {parsePoll && parsePoll.stage !== 'done' && <ParseTerminal lines={parsePoll.log ?? []} />}
-        {uploadError && <p className="mt-2 text-sm text-red-600">{uploadError}</p>}
+        {uploadError && <pre className="mt-2 whitespace-pre-wrap text-sm text-red-600">{uploadError}</pre>}
 
-        {preview && (
-          <div className="mt-4 space-y-3 rounded-lg border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-700 dark:bg-navy-600">
+        {queue.map((item) => (
+          <div key={item.batchId} className="mt-4 space-y-3 rounded-lg border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-700 dark:bg-navy-600">
             <div className="flex flex-wrap gap-2 text-sm">
-              <Badge tone="blue">batch {preview.batchId.slice(0, 8)}…</Badge>
-              <Badge tone="slate">{preview.fileName}</Badge>
-              <Badge tone="green">{preview.recordCount} records</Badge>
-              <Badge tone="slate">{preview.pagesScanned} pages</Badge>
+              <Badge tone="blue">batch {item.batchId.slice(0, 8)}…</Badge>
+              <Badge tone="slate">{item.fileName}</Badge>
+              <Badge tone="green">{item.recordCount} records</Badge>
+              <Badge tone="slate">{item.pagesScanned} pages</Badge>
             </div>
-            {preview.warnings.length > 0 && (
+            {item.warnings.length > 0 && (
               <div className="text-sm text-amber-700 dark:text-amber-300">
-                <p className="font-medium">Warnings ({preview.warnings.length})</p>
+                <p className="font-medium">Warnings ({item.warnings.length})</p>
                 <p className="mt-0.5 text-xs">
                   Each warning is a record the parser REFUSED to store because the PDF text looked
                   malformed — it was thrown away (never shown to students) instead of risking wrong
                   data. Page number + the offending text show exactly why it was discarded.
                 </p>
                 <ul className="mt-1 list-inside list-disc">
-                  {preview.warnings.slice(0, 20).map((w, i) => <li key={i}>{w}</li>)}
-                  {preview.warnings.length > 20 && <li>… and {preview.warnings.length - 20} more</li>}
+                  {item.warnings.slice(0, 20).map((w, i) => <li key={i}>{w}</li>)}
+                  {item.warnings.length > 20 && <li>… and {item.warnings.length - 20} more</li>}
                 </ul>
               </div>
             )}
             <Table head={['Roll', 'Name', 'GPA', 'Status']}>
-              {preview.sample.map((r) => (
+              {item.sample.map((r) => (
                 <tr key={r.roll}>
                   <td className="px-3 py-2 font-mono">{r.roll}</td>
                   <td className="px-3 py-2">{r.name ?? '—'}</td>
@@ -285,34 +355,40 @@ export function ResultsPage() {
             <div className="grid gap-3 md:grid-cols-2">
               <Input
                 label="Exam ID (unique: program-semester-regulation-year, e.g. eng-7th-2022reg-2026)"
-                value={examId}
-                onChange={setExamId}
+                value={examIds[item.batchId] ?? ''}
+                onChange={(v) => setExamIds((m) => ({ ...m, [item.batchId]: v }))}
                 required
               />
               <Input
                 label="Display title (optional)"
-                value={title}
-                onChange={setTitle}
+                value={titles[item.batchId] ?? ''}
+                onChange={(v) => setTitles((m) => ({ ...m, [item.batchId]: v }))}
               />
             </div>
-            {importPoll && (
+            {importPoll && importPoll.stage !== 'finished' && importMut.isPending && (
               <LiveProgressBar
                 value={importPoll.done ?? 0}
-                total={importPoll.total ?? preview.recordCount}
+                total={importPoll.total ?? item.recordCount}
                 label={importPoll.stage === 'waiting' ? 'Starting import…' : 'Importing records into MongoDB…'}
               />
             )}
-            {importError && <p className="text-sm text-red-600">{importError}</p>}
+            {importErrors[item.batchId] && <p className="text-sm text-red-600">{importErrors[item.batchId]}</p>}
             <div className="flex gap-2">
-              <Button onClick={handleImport} disabled={importMut.isPending || !examId.trim()}>
-                {importMut.isPending ? 'Importing…' : `Confirm import (${preview.recordCount} records)`}
+              <Button onClick={() => handleImport(item)} disabled={importMut.isPending || !(examIds[item.batchId] ?? '').trim()}>
+                {importMut.isPending ? 'Importing…' : `Confirm import (${item.recordCount} records)`}
               </Button>
-              <Button variant="secondary" onClick={() => setPreview(null)}>Cancel</Button>
+              <Button variant="secondary" onClick={() => removeFromQueue(item.batchId)}>Remove</Button>
             </div>
           </div>
-        )}
+        ))}
 
-        {imported && <p className="mt-3 text-sm font-medium text-emerald-700 dark:text-emerald-300">{imported}</p>}
+        {importedMsgs.length > 0 && (
+          <div className="mt-3 space-y-1">
+            {importedMsgs.map((m, i) => (
+              <p key={i} className="text-sm font-medium text-emerald-700 dark:text-emerald-300">{m}</p>
+            ))}
+          </div>
+        )}
       </Card>
 
       <Card>

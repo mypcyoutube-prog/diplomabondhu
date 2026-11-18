@@ -53,6 +53,23 @@ beforeAll(async () => {
       });
       return;
     }
+    if (req.method === 'POST' && req.url === '/parse/url/job') {
+      let body = '';
+      req.on('data', (c) => { body += c; });
+      req.on('end', () => {
+        let payload: { url?: string; examId?: string; title?: string } = {};
+        try { payload = JSON.parse(body); } catch { payload = {}; }
+        if (!payload.url || payload.url.startsWith('http') === false) {
+          res.statusCode = 400;
+          return res.end(JSON.stringify({ detail: 'A PDF URL is required' }));
+        }
+        res.end(JSON.stringify({ jobId: 'c'.repeat(24), url: payload.url, examId: payload.examId ?? '' }));
+      });
+      return;
+    }
+    if (req.method === 'GET' && req.url === `/parse/job/${'c'.repeat(24)}`) {
+      return res.end(JSON.stringify({ stage: 'downloading', fileName: 'sheet.pdf', log: ['[19:00:00] downloading …', '[19:00:01] downloaded sheet.pdf (1048576 bytes)'] }));
+    }
     if (req.method === 'GET' && req.url === `/parse/job/${'b'.repeat(24)}`) {
       return res.end(JSON.stringify({ stage: 'parsing', pagesDone: 120, pages: 1103, fileName: 'sample.pdf' }));
     }
@@ -152,6 +169,38 @@ describe('results admin proxy', () => {
     const res = await request(createApp(env)).get(`${ADMIN}/parse-job/not-a-job`)
       .set('Authorization', `Bearer ${token}`);
     expect(res.status).toBe(400);
+  });
+
+  it('starts a parse-from-url job through the proxy', async () => {
+    const env = envWith({ RESULT_SERVICE_URL: pythonUrl, RESULT_SERVICE_TOKEN: 'svc-token' });
+    const token = await adminToken(env);
+    const res = await request(createApp(env)).post(`${ADMIN}/parse-url`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ url: 'https://example.com/results/RESULT_7th.pdf', examId: 'eng-7th-2022reg-2026' });
+    expect(res.status).toBe(200);
+    expect(res.body.jobId).toBe('c'.repeat(24));
+    expect(pythonCalls.some((c) => c.url === '/parse/url/job')).toBe(true);
+  });
+
+  it('validates parse-url body (no url / non-http scheme)', async () => {
+    const env = envWith({ RESULT_SERVICE_URL: pythonUrl, RESULT_SERVICE_TOKEN: 'svc-token' });
+    const token = await adminToken(env);
+    const missing = await request(createApp(env)).post(`${ADMIN}/parse-url`)
+      .set('Authorization', `Bearer ${token}`).send({});
+    expect(missing.status).toBe(400);
+    const ftp = await request(createApp(env)).post(`${ADMIN}/parse-url`)
+      .set('Authorization', `Bearer ${token}`).send({ url: 'ftp://example.com/x.pdf' });
+    expect(ftp.status).toBe(400);
+  });
+
+  it('polls a parse-from-url job with the download log', async () => {
+    const env = envWith({ RESULT_SERVICE_URL: pythonUrl, RESULT_SERVICE_TOKEN: 'svc-token' });
+    const token = await adminToken(env);
+    const res = await request(createApp(env)).get(`${ADMIN}/parse-job/${'c'.repeat(24)}`)
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(200);
+    expect(res.body.stage).toBe('downloading');
+    expect(res.body.log).toHaveLength(2);
   });
 
   it('polls import progress through the proxy', async () => {

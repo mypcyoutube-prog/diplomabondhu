@@ -410,6 +410,15 @@ Typecheck: **clean** · Production build: **success** · `npm audit --omit=dev`:
 - Reset-code delivery is out-of-band by admin (phone/in-person) until email
   infrastructure is approved (KI-12). The API and UI flows are complete.
 
+## Report: v0.11.4 — Link-based + multi-file result upload
+
+| Check | Passed | Failed | Skipped | Notes |
+| --- | --- | --- | --- | --- |
+| result-service pytest (URL guard + URL job pipeline) | 39 | 0 | 1 (pipeline needs Mongo) | 12 new: 8 SSRF refusals (loopback/private/link-local/ftp/file), public host accepted, job E2E w/ faked download, download-error surfacing |
+| Backend `tsc --noEmit` + vitest (parse-url proxy) | 136 | 0 | 0 | 3 new: url job start, body validation (no url / ftp), polling with download log |
+| Admin tsc + vite build (multi-file + link + review queue) | OK | 0 | 0 | each batch imported individually; nothing auto-imports |
+| Google Drive folder ingest | — | — | Not run | deferred until owner creates the free Drive API key |
+
 ## Report: v0.11.3 — Transparent warnings + terminal-style live parse log
 
 | Check | Passed | Failed | Skipped | Notes |

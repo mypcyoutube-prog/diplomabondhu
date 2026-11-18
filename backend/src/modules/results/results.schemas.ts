@@ -19,6 +19,17 @@ export const jobIdParamSchema = z.object({
 
 export type JobIdParam = z.infer<typeof jobIdParamSchema>;
 
+export const parseUrlBodySchema = z.object({
+  url: z.string().url('Invalid URL').max(2000).refine(
+    (value) => value.startsWith('http://') || value.startsWith('https://'),
+    'Only http(s) URLs are allowed'
+  ),
+  examId: z.string().max(120).regex(/^[A-Za-z0-9._-]*$/, 'Invalid exam id').optional(),
+  title: z.string().max(200).optional()
+});
+
+export type ParseUrlBody = z.infer<typeof parseUrlBodySchema>;
+
 export const importBodySchema = z.object({
   batchId: z.string().regex(/^[a-f0-9]{24}$/, 'Invalid batch id'),
   examId: z.string().min(1).max(120).regex(/^[A-Za-z0-9._-]+$/, 'Invalid exam id'),
