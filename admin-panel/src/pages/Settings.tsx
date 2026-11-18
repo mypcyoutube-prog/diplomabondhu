@@ -3,6 +3,70 @@ import { useApiMutation, useApiQuery } from '../api/hooks';
 import { api } from '../api/client';
 import { Button, Card, ErrorState, Input, PageHeader, Spinner } from '../components/ui';
 
+interface DriveKeyState {
+  configured: boolean;
+  keyMasked: string | null;
+}
+
+function DriveKeyCard() {
+  const keyState = useApiQuery<DriveKeyState>(['drive-key'], '/results/admin/drive-key');
+  const [value, setValue] = useState('');
+  const [msg, setMsg] = useState<string | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+
+  const saveMut = useApiMutation((apiKey: string | null) =>
+    api<DriveKeyState>('/results/admin/drive-key', { method: 'PUT', body: { apiKey } }),
+    [['drive-key']]);
+
+  const save = (apiKey: string | null) => {
+    setMsg(null);
+    setErr(null);
+    saveMut.mutate(apiKey, {
+      onSuccess: (d) => {
+        setValue('');
+        setMsg(apiKey ? 'Drive API key saved (stored on the server, never shown here again).' : 'Drive API key removed.');
+        void keyState.refetch();
+        void d;
+      },
+      onError: (e) => setErr(e.message)
+    });
+  };
+
+  return (
+    <Card className="p-5 lg:col-span-2">
+      <h2 className="mb-2 font-semibold text-navy dark:text-white">Google Drive API key (result PDF ingest)</h2>
+      <p className="mb-3 text-sm text-slate-600 dark:text-slate-300">
+        Lets the admin panel pull every result PDF from a shared Drive folder link
+        (folder must be shared as “Anyone with the link”). The key is stored on the
+        server only — after saving it is masked and never shown again.
+      </p>
+      {keyState.isLoading && <Spinner />}
+      {keyState.data && (
+        <p className="mb-3 text-sm">
+          {keyState.data.data.configured ? (
+            <span className="font-medium text-emerald-700 dark:text-emerald-300">Key configured ({keyState.data.data.keyMasked})</span>
+          ) : (
+            <span className="text-slate-500">No key set yet.</span>
+          )}
+        </p>
+      )}
+      <div className="flex flex-wrap items-end gap-3">
+        <div className="min-w-[280px] flex-1">
+          <Input label="Paste API key (AIzaSy…)" value={value} onChange={setValue} />
+        </div>
+        <Button onClick={() => save(value.trim())} disabled={saveMut.isPending || value.trim().length < 20}>
+          Save key
+        </Button>
+        {keyState.data?.data.configured && (
+          <Button variant="secondary" onClick={() => save(null)} disabled={saveMut.isPending}>Remove key</Button>
+        )}
+      </div>
+      {msg && <p className="mt-2 text-sm text-emerald-700 dark:text-emerald-300" role="status">{msg}</p>}
+      {err && <p className="mt-2 text-sm text-red-600" role="alert">{err}</p>}
+    </Card>
+  );
+}
+
 interface AppSettingsData {
   branding: { appName: string; logoUrl?: string };
   homepageSections: Array<{ key: string; visible: boolean; order: number }>;
@@ -137,6 +201,8 @@ export function SettingsPage() {
             ))}
           </div>
         </Card>
+
+        <DriveKeyCard />
 
         <Card className="p-5 lg:col-span-2">
           <h2 className="mb-4 font-semibold text-navy dark:text-white">Legal</h2>

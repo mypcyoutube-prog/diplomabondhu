@@ -14,6 +14,7 @@ import hashlib
 import ipaddress
 import json
 import os
+import re
 import secrets
 import socket
 import threading
@@ -218,6 +219,161 @@ async def parse_url_job(body: dict = Body(default={}), _: None = Depends(require
                 f"{len(result['warnings'])} warning(s) → batch {result['batchId']}"
             )
             job["result"] = result
+            job["stage"] = "done"
+        except HTTPException as exc:
+            job["stage"] = "error"
+            job["detail"] = exc.detail
+        except Exception as exc:
+            job["stage"] = "error"
+            job["detail"] = f"{type(exc).__name__}: {exc}"
+
+    threading.Thread(target=worker, daemon=True).start()
+    return {"jobId": job_id}
+
+
+DRIVE_API_BASE = "https://www.googleapis.com/drive/v3"
+MAX_DRIVE_FILES = 20
+_DRIVE_FOLDER_RE = re.compile(r"drive\.google\.com/drive/folders/([A-Za-z0-9_-]{10,})")
+
+
+def _extract_drive_folder_id(url: str) -> str | None:
+    url = url.strip()
+    match = _DRIVE_FOLDER_RE.search(url)
+    if match:
+        return match.group(1)
+    if re.fullmatch(r"[A-Za-z0-9_-]{10,}", url):
+        return url
+    return None
+
+
+def _list_drive_pdfs(folder_id: str, api_key: str) -> list[dict]:
+    params = {
+        "q": f"'{folder_id}' in parents and mimeType='application/pdf' and trashed=false",
+        "pageSize": 200,
+        "fields": "files(id,name,size)",
+        "key": api_key,
+    }
+    try:
+        response = httpx.get(f"{DRIVE_API_BASE}/files", params=params, timeout=30)
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=f"Cannot reach Google Drive: {type(exc).__name__}")
+    if response.status_code != 200:
+        detail = response.json().get("error", {}).get("message", f"HTTP {response.status_code}")
+        raise HTTPException(status_code=400, detail=f"Google Drive API rejected the request: {detail}")
+    files = [
+        {"id": f["id"], "name": f.get("name", "drive.pdf")}
+        for f in response.json().get("files", [])
+    ][:MAX_DRIVE_FILES]
+    if not files:
+        raise HTTPException(status_code=400, detail="No PDF files found in that Drive folder (is it shared as 'Anyone with the link'?)")
+    return files
+
+
+def _download_drive_file(file_id: str, api_key: str, filename: str) -> bytes:
+    try:
+        with httpx.stream(
+            "GET",
+            f"{DRIVE_API_BASE}/files/{file_id}",
+            params={"alt": "media", "key": api_key},
+            timeout=120,
+            follow_redirects=True,
+        ) as response:
+            if response.status_code != 200:
+                raise HTTPException(status_code=400, detail=f"Download failed: HTTP {response.status_code}")
+            chunks: list[bytes] = []
+            total = 0
+            for chunk in response.iter_bytes(64 * 1024):
+                total += len(chunk)
+                if total > MAX_PDF_BYTES:
+                    raise HTTPException(status_code=413, detail=f"{filename} too large (max 50 MB)")
+                chunks.append(chunk)
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=f"Download failed: {type(exc).__name__}")
+    data = b"".join(chunks)
+    if not data.startswith(b"%PDF"):
+        raise HTTPException(status_code=400, detail=f"{filename} is not a PDF file")
+    return data
+
+
+@app.post("/parse/drive/job")
+async def parse_drive_job(body: dict = Body(default={}), _: None = Depends(require_service_token)):
+    """One Drive folder link -> every PDF inside it is parsed into its own
+    batch. Files are listed with the Drive API key the admin saved (public
+    'Anyone with the link' folders only); each batch is then imported
+    individually after review — never automatically."""
+    api_key = str(body.get("apiKey", "")).strip()
+    if not api_key:
+        raise HTTPException(status_code=400, detail="Google Drive API key is not set")
+    folder_id = _extract_drive_folder_id(str(body.get("folderUrl", "")))
+    if not folder_id:
+        raise HTTPException(status_code=400, detail="Not a Drive folder link (need drive.google.com/drive/folders/…)")
+    exam_id = str(body.get("examId", ""))
+    title = str(body.get("title", ""))
+
+    job_id = _hex24()
+    PARSE_JOBS[job_id] = {
+        "stage": "waiting",
+        "pagesDone": 0,
+        "pages": 0,
+        "fileName": f"drive-folder-{folder_id[:12]}",
+        "log": [],
+    }
+
+    def worker() -> None:
+        job = PARSE_JOBS[job_id]
+        try:
+            def log(line: str) -> None:
+                job["log"].append(f"[{time.strftime('%H:%M:%S')}] {line}")
+                if len(job["log"]) > 200:
+                    del job["log"][:-200]
+
+            job["stage"] = "downloading"
+            log(f"listing PDFs in Drive folder {folder_id} …")
+            files = _list_drive_pdfs(folder_id, api_key)
+            log(f"found {len(files)} PDF(s): " + ", ".join(f['name'] for f in files))
+
+            results: list[dict] = []
+            total_records = 0
+            for idx, entry in enumerate(files, start=1):
+                name = entry["name"]
+                log(f"— file {idx}/{len(files)}: {name} —")
+                try:
+                    data = _download_drive_file(entry["id"], api_key, name)
+                    log(f"downloaded {name} ({len(data)} bytes)")
+                    job["stage"] = "parsing"
+
+                    def on_page(pages_done: int, pages: int) -> None:
+                        job["pagesDone"] = pages_done
+                        job["pages"] = pages
+                        if pages_done in (1, pages) or pages_done % 25 == 0:
+                            log(f"{name}: page {pages_done}/{pages} scanned")
+
+                    def on_warning(message: str) -> None:
+                        log(f"⚠ WARNING: {name}: {message}")
+
+                    parsed = _run_parse(data, name, exam_id, title, on_page=on_page, on_warning=on_warning)
+                    total_records += parsed["recordCount"]
+                    results.append({
+                        "fileName": name,
+                        "batchId": parsed["batchId"],
+                        "recordCount": parsed["recordCount"],
+                        "pagesScanned": parsed["pagesScanned"],
+                        "warnings": parsed["warnings"],
+                        "sample": parsed["sample"],
+                    })
+                    log(f"done: {name} → {parsed['recordCount']} records → batch {parsed['batchId']}")
+                except HTTPException as exc:
+                    results.append({"fileName": name, "error": str(exc.detail)})
+                    log(f"⚠ SKIPPED {name}: {exc.detail}")
+
+            job["fileName"] = f"drive-folder ({len(files)} PDFs)"
+            job["result"] = {
+                "files": results,
+                "totalRecords": total_records,
+                "fileCount": len(files),
+            }
             job["stage"] = "done"
         except HTTPException as exc:
             job["stage"] = "error"

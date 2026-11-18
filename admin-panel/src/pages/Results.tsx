@@ -83,21 +83,46 @@ interface ImportProgressState {
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 /** The python service flattens the preview payload at the top level once the
- *  job is done; older versions nested it under `result`. */
-type ParseJobState = ParsePollState & {
+ *  job is done; older versions nested it under `result`. A Drive-folder job
+ *  instead returns `files` — one result (or error) per PDF. */
+export type ParseJobState = ParsePollState & {
   batchId?: string;
   pagesScanned?: number;
   recordCount?: number;
   warnings?: string[];
   sample?: ParsePreview['sample'];
   detail?: string;
+  files?: DriveFileResult[];
+  fileCount?: number;
+  totalRecords?: number;
 };
 
-/** Polls a parse job (file or URL) until done, streaming the terminal log. */
+export type DriveFileResult = {
+  fileName: string;
+  batchId?: string;
+  recordCount?: number;
+  pagesScanned?: number;
+  warnings?: string[];
+  sample?: ParsePreview['sample'];
+  error?: string;
+};
+
+function previewFromState(state: ParseJobState): ParsePreview {
+  return {
+    batchId: state.batchId ?? '',
+    fileName: state.fileName ?? '',
+    pagesScanned: state.pagesScanned ?? 0,
+    recordCount: state.recordCount ?? 0,
+    warnings: state.warnings ?? [],
+    sample: state.sample ?? []
+  };
+}
+
+/** Polls a parse job (file/URL/Drive) until done, streaming the terminal log. */
 async function pollParseJob(
   started: { jobId: string },
   onPoll: (state: ParsePollState | null) => void
-): Promise<ParsePreview> {
+): Promise<ParseJobState> {
   onPoll({ stage: 'waiting' });
   let failures = 0;
   for (let i = 0; i < 900; i += 1) {
@@ -116,14 +141,7 @@ async function pollParseJob(
     }
     if (state.stage === 'done') {
       onPoll(null);
-      return {
-        batchId: state.batchId ?? '',
-        fileName: state.fileName ?? '',
-        pagesScanned: state.pagesScanned ?? 0,
-        recordCount: state.recordCount ?? 0,
-        warnings: state.warnings ?? [],
-        sample: state.sample ?? []
-      };
+      return state;
     }
     if (state.stage === 'error') {
       onPoll(null);
@@ -138,6 +156,7 @@ async function pollParseJob(
 export function ResultsPage() {
   const fileRef = useRef<HTMLInputElement>(null);
   const [urlInput, setUrlInput] = useState('');
+  const [driveInput, setDriveInput] = useState('');
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [queue, setQueue] = useState<ParsePreview[]>([]);
   const [examIds, setExamIds] = useState<Record<string, string>>({});
@@ -155,20 +174,28 @@ export function ResultsPage() {
 
   const invalidate = [['results', 'meta'], ['results', 'batches']];
 
-  const fileMut = useApiMutation(async (file: File) => {
+  const fileMut = useApiMutation(async (file: File): Promise<ParsePreview> => {
     const form = new FormData();
     form.append('file', file);
-    return pollParseJob(await apiRaw<{ jobId: string }>('/results/admin/parse-job', {
+    return previewFromState(await pollParseJob(await apiRaw<{ jobId: string }>('/results/admin/parse-job', {
       method: 'POST',
       body: form
-    }), setParsePoll);
+    }), setParsePoll));
   }, invalidate);
 
-  const urlMut = useApiMutation(async (url: string) =>
-    pollParseJob(await apiRaw<{ jobId: string }>('/results/admin/parse-url', {
+  const urlMut = useApiMutation(async (url: string): Promise<ParsePreview> =>
+    previewFromState(await pollParseJob(await apiRaw<{ jobId: string }>('/results/admin/parse-url', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ url })
+    }), setParsePoll)),
+  invalidate);
+
+  const driveMut = useApiMutation(async (folderUrl: string): Promise<ParseJobState> =>
+    pollParseJob(await apiRaw<{ jobId: string }>('/results/admin/parse-drive', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ folderUrl })
     }), setParsePoll),
   invalidate);
 
@@ -196,14 +223,45 @@ export function ResultsPage() {
         break;
       }
     }
-    if (collected.length > 0) {
-      setQueue((q) => [...collected, ...q]);
-      for (const p of collected) {
+    enqueuePreviews(collected, errors);
+    if (collected.length > 0 && fileRef.current) fileRef.current.value = '';
+  }
+
+  function enqueuePreviews(previews: ParsePreview[], errors: string[]) {
+    if (previews.length > 0) {
+      setQueue((q) => [...previews, ...q]);
+      for (const p of previews) {
         setExamIds((m) => ({ ...m, [p.batchId]: m[p.batchId] ?? '' }));
       }
-      if (fileRef.current) fileRef.current.value = '';
     }
     if (errors.length > 0) setUploadError(errors.join('\n'));
+  }
+
+  function handleParseDrive() {
+    setUploadError(null);
+    const folderUrl = driveInput.trim();
+    if (!folderUrl) {
+      setUploadError('Paste the Drive folder link first');
+      return;
+    }
+    driveMut.mutate(folderUrl, {
+      onSuccess: (done) => {
+        const previews = (done.files ?? [])
+          .filter((f) => !f.error && f.batchId)
+          .map((f) => ({
+            batchId: f.batchId!,
+            fileName: f.fileName,
+            pagesScanned: f.pagesScanned ?? 0,
+            recordCount: f.recordCount ?? 0,
+            warnings: f.warnings ?? [],
+            sample: f.sample ?? []
+          }));
+        const errors = (done.files ?? []).filter((f) => f.error).map((f) => `${f.fileName}: ${f.error}`);
+        enqueuePreviews(previews, errors);
+        setDriveInput('');
+      },
+      onError: (err) => setUploadError(err.message)
+    });
   }
 
   function handleParseUrl() {
@@ -270,7 +328,7 @@ export function ResultsPage() {
     setQueue((q) => q.filter((p) => p.batchId !== batchId));
   }
 
-  const busy = fileMut.isPending || urlMut.isPending;
+  const busy = fileMut.isPending || urlMut.isPending || driveMut.isPending;
 
   return (
     <div className="space-y-6">
@@ -304,6 +362,18 @@ export function ResultsPage() {
           </div>
           <Button onClick={handleParseUrl} disabled={busy}>
             {urlMut.isPending ? 'Parsing…' : 'Parse from link'}
+          </Button>
+        </div>
+        <div className="mt-4 flex flex-wrap items-end gap-3 border-t border-slate-200 pt-4 dark:border-navy-500">
+          <div className="min-w-[320px] flex-1">
+            <Input
+              label="…or paste a Google Drive FOLDER link with several result PDFs (folder must be 'Anyone with the link'; needs a Drive API key — set it in Settings)"
+              value={driveInput}
+              onChange={setDriveInput}
+            />
+          </div>
+          <Button onClick={handleParseDrive} disabled={busy}>
+            {driveMut.isPending ? 'Parsing…' : 'Parse Drive folder'}
           </Button>
         </div>
         {parsePoll && (

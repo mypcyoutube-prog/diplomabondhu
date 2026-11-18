@@ -1,5 +1,34 @@
 # CHANGELOG.md — DiplomaBondhu
 
+## [0.11.5] — Google Drive folder ingest (one link → all result PDFs)
+
+Owner requested: paste ONE shared Drive folder link and have every PDF inside
+it pulled, parsed and queued — the Drive API key is saved from the admin panel
+(never in code or browser) and the key will be added by the owner later.
+
+### Added
+- **Python — `POST /parse/drive/job`**: accepts a folder link (or raw folder
+  id) + Drive API key → lists PDFs via Drive API v3 (max 20 files) →
+  downloads each (50 MB cap, `%PDF` check) → parses each into its OWN batch,
+  all streamed to the terminal-style live log. One broken file is skipped
+  with a logged reason; the rest continue. 9 new pytest cases (48 passed).
+- **Node**:
+  - `AppSettings.integrations.googleDriveApiKey` — `select: false` in the
+    schema, so the key can never leak through any settings response
+    (public `/settings/app` or admin `PUT /admin/settings`).
+  - `GET/PUT /results/admin/drive-key` (masked display, audited set/clear;
+    env `GOOGLE_DRIVE_API_KEY` overrides the stored key).
+  - `POST /results/admin/parse-drive` — zod-validated folder link, 400 with a
+    clear message when no key is set yet. 139 vitest passed (3 new).
+- **Admin panel**:
+  - Settings → new "Google Drive API key" card: save/remove key, masked
+    status (e.g. `AIzaS…3f7c`), never returned raw after save.
+  - Results → third input: Drive folder link → same review queue; every PDF
+    becomes a separate batch with its own Exam ID/Confirm-import buttons.
+- **Not yet live-verified with a real Drive key** — the Drive API calls are
+  covered by mocked-transport tests; a real-folder smoke test is pending
+  until the owner creates the free key (follow-up test report entry).
+
 ## [0.11.4] — Upload result PDFs from a link + multiple files at once
 
 Owner request: results must be addable (a) by pasting a direct PDF download

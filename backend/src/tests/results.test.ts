@@ -38,6 +38,27 @@ beforeAll(async () => {
     if (req.method === 'POST' && req.url === `/import/${'a'.repeat(24)}`) {
       return res.end(JSON.stringify({ batchId: 'a'.repeat(24), examId: 'eng-3rd-2026-11', total: 4, inserted: 4, updated: 0 }));
     }
+    if (req.method === 'POST' && req.url === '/parse/drive/job') {
+      let body = '';
+      req.on('data', (c) => { body += c; });
+      req.on('end', () => {
+        let payload: { apiKey?: string } = {};
+        try { payload = JSON.parse(body); } catch { payload = {}; }
+        if (!payload.apiKey) {
+          res.statusCode = 400;
+          return res.end(JSON.stringify({ detail: 'Google Drive API key is not set' }));
+        }
+        if (!payload.apiKey.startsWith('AIza')) {
+          res.statusCode = 400;
+          return res.end(JSON.stringify({ detail: 'Google Drive API rejected the request: API key not valid' }));
+        }
+        res.end(JSON.stringify({ jobId: 'd'.repeat(24) }));
+      });
+      return;
+    }
+    if (req.method === 'GET' && req.url === `/parse/job/${'d'.repeat(24)}`) {
+      return res.end(JSON.stringify({ stage: 'parsing', fileName: 'drive-folder (2 PDFs)', log: ['— file 1/2: RESULT_7th.pdf —', 'downloaded RESULT_7th.pdf (4096 bytes)'] }));
+    }
     if (req.method === 'GET' && req.url === '/batches') {
       return res.end(JSON.stringify({ batches: [{ batchId: 'a'.repeat(24), fileName: 'sample.pdf', examId: null, recordCount: 4 }] }));
     }
@@ -191,6 +212,52 @@ describe('results admin proxy', () => {
     const ftp = await request(createApp(env)).post(`${ADMIN}/parse-url`)
       .set('Authorization', `Bearer ${token}`).send({ url: 'ftp://example.com/x.pdf' });
     expect(ftp.status).toBe(400);
+  });
+
+  it('drive-key lifecycle: not configured -> set (masked, never returned raw) -> configured', async () => {
+    const env = envWith({ RESULT_SERVICE_URL: pythonUrl, RESULT_SERVICE_TOKEN: 'svc-token' });
+    const token = await adminToken(env);
+    const initial = await request(createApp(env)).get(`${ADMIN}/drive-key`)
+      .set('Authorization', `Bearer ${token}`);
+    expect(initial.status).toBe(200);
+    expect(initial.body.data.configured).toBe(false);
+
+    const saved = await request(createApp(env)).put(`${ADMIN}/drive-key`)
+      .set('Authorization', `Bearer ${token}`).send({ apiKey: 'AIzaSyExampleKey1234567890abcd' });
+    expect(saved.status).toBe(200);
+    expect(saved.body.data.configured).toBe(true);
+    expect(saved.body.data.keyMasked).toContain('…');
+    expect(JSON.stringify(saved.body)).not.toContain('AIzaSyExampleKey1234567890abcd');
+
+    const after = await request(createApp(env)).get(`${ADMIN}/drive-key`)
+      .set('Authorization', `Bearer ${token}`);
+    expect(after.body.data.configured).toBe(true);
+    expect(JSON.stringify(after.body)).not.toContain('AIzaSyExampleKey1234567890abcd');
+  });
+
+  it('blocks parse-drive when no drive key is set', async () => {
+    const env = envWith({ RESULT_SERVICE_URL: pythonUrl, RESULT_SERVICE_TOKEN: 'svc-token' });
+    const token = await adminToken(env);
+    const res = await request(createApp(env)).post(`${ADMIN}/parse-drive`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ folderUrl: 'https://drive.google.com/drive/folders/1AbC_dEf-1234567890' });
+    expect(res.status).toBe(400);
+    expect(res.body.error.message).toContain('Drive API key');
+  });
+
+  it('starts a drive-folder parse job with the saved key', async () => {
+    const env = envWith({ RESULT_SERVICE_URL: pythonUrl, RESULT_SERVICE_TOKEN: 'svc-token', GOOGLE_DRIVE_API_KEY: 'AIzaSyExampleKey1234567890abcd' });
+    const token = await adminToken(env);
+    const res = await request(createApp(env)).post(`${ADMIN}/parse-drive`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ folderUrl: 'https://drive.google.com/drive/folders/1AbC_dEf-1234567890' });
+    expect(res.status).toBe(200);
+    expect(res.body.jobId).toBe('d'.repeat(24));
+    const poll = await request(createApp(env)).get(`${ADMIN}/parse-job/${'d'.repeat(24)}`)
+      .set('Authorization', `Bearer ${token}`);
+    expect(poll.status).toBe(200);
+    expect(poll.body.stage).toBe('parsing');
+    expect(poll.body.log?.length).toBeGreaterThan(0);
   });
 
   it('polls a parse-from-url job with the download log', async () => {

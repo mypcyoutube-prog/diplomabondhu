@@ -2,6 +2,8 @@ import mongoose from 'mongoose';
 import type { Env } from '../../config/env';
 import { notFound } from '../../core/errors';
 import { writeAudit } from '../../models/audit-log.model';
+import { AppSettings } from '../../models/app-settings.model';
+import { getAppSettings } from '../settings/settings.routes';
 
 export interface ResultExam {
   examId: string;
@@ -126,6 +128,32 @@ export async function resultHistory(env: Env, rawRoll: string): Promise<ResultRe
       examSemester: typeof doc.examSemester === 'number' ? doc.examSemester : null,
       disclaimer: RESULT_DISCLAIMER
     };
+  });
+}
+
+/** Drive API key: env var wins; otherwise the key the admin saved in
+ *  Settings (field has `select: false`, so it is only read here). */
+export async function loadDriveApiKey(env: Env): Promise<string> {
+  if (env.GOOGLE_DRIVE_API_KEY) return env.GOOGLE_DRIVE_API_KEY;
+  const settings = await AppSettings.findOne({}).select('+integrations.googleDriveApiKey');
+  return settings?.integrations?.googleDriveApiKey ?? '';
+}
+
+export function maskKey(key: string): string | null {
+  if (!key) return null;
+  return `${key.slice(0, 5)}…${key.slice(-4)}`;
+}
+
+export async function setDriveKey(actorId: string, apiKey: string | null, ip?: string): Promise<void> {
+  const settings = await getAppSettings();  // seeds the doc (and heals sections) when missing
+  settings.integrations = { ...settings.integrations, googleDriveApiKey: apiKey ?? undefined };
+  await settings.save();
+  await writeAudit({
+    actorId,
+    action: apiKey ? 'results.drive_key.set' : 'results.drive_key.cleared',
+    targetType: 'AppSettings',
+    targetId: String(settings._id),
+    ip
   });
 }
 

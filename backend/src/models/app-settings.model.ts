@@ -4,6 +4,7 @@ export interface IAppSettings extends mongoose.Document {
   branding: { appName: string; logoUrl?: string };
   homepageSections: { key: string; visible: boolean; order: number }[];
   featureFlags: Record<string, unknown>;
+  integrations: { googleDriveApiKey?: string };
   maintenanceMode: boolean;
   supportInfo: { email?: string; phone?: string; url?: string };
   legal: { privacyPolicy: string; terms: string };
@@ -21,6 +22,9 @@ const appSettingsSchema = new Schema<IAppSettings>({
     order: { type: Number, default: 0 }
   }],
   featureFlags: { type: Schema.Types.Mixed, default: {} },
+  integrations: {
+    googleDriveApiKey: { type: String, select: false }
+  },
   maintenanceMode: { type: Boolean, default: false },
   supportInfo: {
     email: String,

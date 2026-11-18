@@ -16,7 +16,8 @@ export const testEnv: Env = {
   LOG_LEVEL: 'error',
   RESULT_SERVICE_URL: '',
   RESULT_SERVICE_TOKEN: '',
-  RESULTS_DB: 'results_db'
+  RESULTS_DB: 'results_db',
+  GOOGLE_DRIVE_API_KEY: ''
 };
 
 export async function startMongo(): Promise<void> {

@@ -30,6 +30,22 @@ export const parseUrlBodySchema = z.object({
 
 export type ParseUrlBody = z.infer<typeof parseUrlBodySchema>;
 
+export const driveKeyBodySchema = z
+  .object({
+    apiKey: z.string().trim().max(200).nullable().optional()
+  })
+  .strip();
+
+export type DriveKeyBody = z.infer<typeof driveKeyBodySchema>;
+
+export const driveFolderBodySchema = z
+  .object({
+    folderUrl: z.string().trim().min(10).max(2000)
+  })
+  .strip();
+
+export type DriveFolderBody = z.infer<typeof driveFolderBodySchema>;
+
 export const importBodySchema = z.object({
   batchId: z.string().regex(/^[a-f0-9]{24}$/, 'Invalid batch id'),
   examId: z.string().min(1).max(120).regex(/^[A-Za-z0-9._-]+$/, 'Invalid exam id'),

@@ -13,7 +13,8 @@ const envSchema = z.object({
   LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).default('info'),
   RESULT_SERVICE_URL: z.string().default(''),
   RESULT_SERVICE_TOKEN: z.string().default(''),
-  RESULTS_DB: z.string().default('results_db')
+  RESULTS_DB: z.string().default('results_db'),
+  GOOGLE_DRIVE_API_KEY: z.string().default('')
 });
 
 export type Env = z.infer<typeof envSchema>;

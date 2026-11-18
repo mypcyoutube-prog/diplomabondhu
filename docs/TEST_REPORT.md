@@ -410,6 +410,16 @@ Typecheck: **clean** · Production build: **success** · `npm audit --omit=dev`:
 - Reset-code delivery is out-of-band by admin (phone/in-person) until email
   infrastructure is approved (KI-12). The API and UI flows are complete.
 
+## Report: v0.11.5 — Google Drive folder ingest
+
+| Check | Passed | Failed | Skipped | Notes |
+| --- | --- | --- | --- | --- |
+| result-service pytest (folder-link extraction, drive job E2E w/ mocked Drive transport, listing-failure path) | 48 | 0 | 1 (pipeline needs Mongo) | 9 new drive tests; real-drive calls mocked — no live key yet |
+| Backend `tsc --noEmit` + vitest (drive-key lifecycle + parse-drive proxy) | 139 | 0 | 0 | key never returned raw (`select: false` + masked responses) |
+| Admin tsc + vite build (Drive key card in Settings, Drive folder input in Results) | OK | 0 | 0 | — |
+| Real Drive folder smoke test with a real API key | — | — | **Pending** | owner creates the free key; then one real folder run must be recorded here |
+| Key-leak audit | yes | 0 | 0 | public settings endpoint + admin settings PUT replies verified to never contain the key |
+
 ## Report: v0.11.4 — Link-based + multi-file result upload
 
 | Check | Passed | Failed | Skipped | Notes |

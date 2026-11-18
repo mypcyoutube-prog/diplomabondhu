@@ -7,7 +7,7 @@ import { validate } from '../../middlewares/validate';
 import { ok, fail } from '../../core/response';
 import { PERMISSIONS } from '../../core/permissions';
 import * as svc from './results.service';
-import { checkQuerySchema, historyQuerySchema, importBodySchema, jobIdParamSchema, parseUrlBodySchema, type CheckQuery, type HistoryQuery, type ImportBody, type JobIdParam, type ParseUrlBody } from './results.schemas';
+import { checkQuerySchema, driveFolderBodySchema, driveKeyBodySchema, historyQuerySchema, importBodySchema, jobIdParamSchema, parseUrlBodySchema, type CheckQuery, type DriveFolderBody, type DriveKeyBody, type HistoryQuery, type ImportBody, type JobIdParam, type ParseUrlBody } from './results.schemas';
 
 type Validated<T> = { validatedQuery?: T; validatedBody?: T };
 
@@ -160,6 +160,41 @@ export function resultsRoutes(env: Env) {
       } catch (err) { next(err); }
     }
   );
+
+  router.get('/admin/drive-key', async (req, res, next) => {
+    try {
+      const key = await svc.loadDriveApiKey(env);
+      return ok(res, { configured: Boolean(key), keyMasked: svc.maskKey(key) });
+    } catch (err) { next(err); }
+  });
+
+  router.put('/admin/drive-key', validate({ body: driveKeyBodySchema }), async (req, res, next) => {
+    try {
+      const body = req.body as DriveKeyBody;
+      await svc.setDriveKey(req.auth!.id, body.apiKey ?? null, req.ip);
+      const key = body.apiKey ?? '';
+      return ok(res, { configured: Boolean(key), keyMasked: svc.maskKey(key) });
+    } catch (err) { next(err); }
+  });
+
+  router.post('/admin/parse-drive', validate({ body: driveFolderBodySchema }), async (req, res, next) => {
+    try {
+      if (!env.RESULT_SERVICE_URL || !env.RESULT_SERVICE_TOKEN) {
+        return fail(res, 503, 'SERVICE_UNAVAILABLE', 'Result service is not configured');
+      }
+      const apiKey = await svc.loadDriveApiKey(env);
+      if (!apiKey) {
+        return fail(res, 400, 'VALIDATION_ERROR', 'Google Drive API key is not set — save it in Settings first');
+      }
+      const body = req.body as DriveFolderBody;
+      const { status, body: upstream } = await proxyJson(env, '/parse/drive/job', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ folderUrl: body.folderUrl, apiKey })
+      });
+      return res.status(status).set('content-type', 'application/json').send(upstream);
+    } catch (err) { next(err); }
+  });
 
   router.post('/admin/import', validate({ body: importBodySchema }), async (req, res, next) => {
     try {
