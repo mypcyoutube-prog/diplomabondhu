@@ -404,3 +404,10 @@
   var was exported by hand). Real environment variables still take
   precedence, so CI/Render behavior is unchanged. Regression: full backend
   suite 127/127 re-run green after the change.
+
+## [0.10.2] — Fix: admin panel login failed with 404 in local dev
+
+- Vite dev server now proxies `/api/*` to `http://localhost:5000`, so the
+  panel works against a locally running backend without configuring
+  `VITE_API_URL` (which previously sent requests to itself → 404).
+  Production deployments are unaffected because `VITE_API_URL` is set there.
