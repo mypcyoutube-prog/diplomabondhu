@@ -33,6 +33,9 @@ GRADE_RE = re.compile(r"^[A-F][+-]?$")
 INSTITUTE_RE = re.compile(r"^([0-9]{5})\s*-\s*(.+)$")
 REC_START_RE = re.compile(r"^([0-9]{6,10})\s*[\(\{](.+)$")
 GPA_ENTRY_RE = re.compile(r"\bgpa([0-9]{1,2})\s*:\s*(ref|fail|[0-4]\.[0-9]{2})")
+# Final-program sheets (e.g. 8th semester, 2016 regulation) print a cumulative
+# CGPA alongside the per-semester map: "... cgpa: 3.45 ( gpa8: 4.00, ...".
+CGPA_RE = re.compile(r"\bcgpa\s*:\s*([0-4]\.[0-9]{2})")
 REF_SUBJECT_RE = re.compile(r"(?:^|[,\s])([0-9]{4,6})\(([A-Za-z]{1,2})\)")
 INTRO_PASSED_RE = re.compile(r"passed in all subjects", re.I)
 INTRO_PROMOTED_RE = re.compile(r"promoted to\s*\n?\s*the next semester|promoted to next semester", re.I)
@@ -56,6 +59,7 @@ SEGMENT_SPLIT_RE = re.compile(r"(?<=[\)\}])\s+(?=[0-9]{6,10}\s*[\(\{])")
 class ParsedRecord:
     roll: str
     gpa: float | None = None
+    cgpa: float | None = None
     registration_no: str | None = None
     name: str | None = None
     status: str | None = None
@@ -319,9 +323,11 @@ def _parse_map_record(text: str, intro: str | None) -> ParsedRecord | None:
     if not gpas and not ref_subjects:
         return None
 
+    cgpa_match = CGPA_RE.search(cleaned)
     return ParsedRecord(
         roll=roll_match.group(1),
         gpa=gpa,
+        cgpa=float(cgpa_match.group(1)) if cgpa_match else None,
         status=status,
         subjects=ref_subjects,
         raw={"line": cleaned[:300]},
@@ -433,6 +439,7 @@ def to_batch(records: list[ParsedRecord], meta: dict[str, Any]) -> dict[str, Any
             {
                 "roll": r.roll,
                 "gpa": r.gpa,
+                "cgpa": r.cgpa,
                 "registrationNo": r.registration_no,
                 "name": r.name,
                 "status": r.status,

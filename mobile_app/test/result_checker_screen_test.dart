@@ -77,6 +77,23 @@ const passRecord = ResultRecord(
   disclaimer: 'This is not an official BTEB service.',
 );
 
+const eighthSemRecord = ResultRecord(
+  examId: 'eng-8th-2016reg-2026',
+  title: 'Diploma in Engineering — 8th Semester (2016 Regulation)',
+  roll: '764001',
+  gpa: 3.50,
+  cgpa: 3.45,
+  status: 'pass',
+  subjects: [],
+  semesterGpas: {
+    'gpa1': 3.30,
+    'gpa4': 3.18,
+    'gpa8': 3.50,
+  },
+  examSemester: 8,
+  disclaimer: 'This is not an official BTEB service.',
+);
+
 const referredRecord = ResultRecord(
   examId: 'eng-7th-2022reg-2026',
   title: 'Diploma in Engineering — 7th Semester (2022 Regulation)',
@@ -125,6 +142,30 @@ void main() {
       find.text('This is not an official BTEB service.'),
       findsOneWidget,
     );
+  });
+
+  testWidgets('letter grade is shown beside each semester GPA', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(800, 3200));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await pumpChecker(tester, onHistory: (_) => const [passRecord]);
+    await tester.enterText(find.byType(TextField), '700014');
+    await tester.tap(find.byType(FilledButton));
+    await tester.pumpAndSettle();
+
+    expect(find.text('A-'), findsWidgets);
+    expect(find.text('A'), findsWidgets);
+  });
+
+  testWidgets('CGPA row appears when the record prints a CGPA', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(800, 3200));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await pumpChecker(tester, onHistory: (_) => const [eighthSemRecord]);
+    await tester.enterText(find.byType(TextField), '764001');
+    await tester.tap(find.byType(FilledButton));
+    await tester.pumpAndSettle();
+
+    expect(find.text('CGPA'), findsOneWidget);
+    expect(find.text('3.45'), findsOneWidget);
   });
 
   testWidgets('referred record shows missing-subject chip and red banner', (tester) async {

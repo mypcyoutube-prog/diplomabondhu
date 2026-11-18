@@ -1,5 +1,30 @@
 # CHANGELOG.md — DiplomaBondhu
 
+## [0.11.2] — CGPA display + letter grades on result cards
+
+Based on the owner-provided BTEB grade-scale reference (screenshots of
+btebresultszone.com, transcribed 2026-11-18; official verification tracked
+as KI-1).
+
+### Added
+- **Python parser**: extracts the cumulative `cgpa:` value when the board
+  sheet prints one (e.g. `700014 (cgpa: 3.45 ( gpa8: 3.50, …))` — seen on
+  2016-regulation 8th-semester sheets); `ParsedRecord.cgpa` + batch export
+  (`cgpa`: null when absent); 4 new pytest cases (22 passed, 1 skipped).
+- **Python import**: exports `cgpa` into the imported result documents.
+- **Node API**: `cgpa` flows through both `GET /results/check` and
+  `GET /results/history` unchanged (verified 133 vitest, tsc clean).
+- **Flutter app**: result cards now show
+  - a CGPA highlight row whenever the record brings a board-printed CGPA
+    (never computed client-side),
+  - a derived letter grade (A+, A, A− …) beside every semester GPA using the
+    documented BTEB scale (display-only: highest grade point ≤ GPA, GPA < 2.00
+    → F; validated against reference screenshots 3.73→A−, 3.45→B+).
+  flutter analyze clean, 23 tests passed (2 new: letter grade, CGPA row).
+- **Docs**: `docs/GPA_CALCULATION_SPECIFICATION.md` §3.1 documents the
+  confirmed BTEB grade scale + provenance and §3.1.1 the letter-grade
+  derivation rule and CGPA pass-through policy.
+
 ## [0.11.1] — Fix: rate limiter starved the result upload progress polling
 
 - On the owner's machine the admin "Parse PDF" polling (every 0.7s)

@@ -42,6 +42,34 @@ def test_pass_record_single_line() -> None:
     assert rec.semester_gpas["gpa6"] == 3.61
 
 
+def test_cgpa_extracted_when_printed() -> None:
+    """8th-semester sheets may print a cumulative cgpa next to the gpa map."""
+    rec = _rec("700014 (cgpa: 3.45 ( gpa8: 3.50, gpa7: 3.73))")
+    assert rec is not None
+    assert rec.cgpa == 3.45
+    assert rec.exam_semester == 8
+    assert rec.semester_gpas == {"gpa8": 3.5, "gpa7": 3.73}
+
+
+def test_cgpa_absent_is_none() -> None:
+    rec = _rec("700014 (gpa7: 3.73, gpa6: 3.61)")
+    assert rec is not None
+    assert rec.cgpa is None
+
+
+def test_cgpa_not_confused_with_gpa_tokens() -> None:
+    rec = _rec("700014 (cgpa: 3.72 (gpa8: 3.72))")
+    assert rec is not None
+    assert rec.cgpa == 3.72 and rec.gpa == 3.72
+
+
+def test_to_batch_exports_cgpa() -> None:
+    rec = _rec("700014 (cgpa: 3.45 ( gpa8: 3.50))")
+    assert rec is not None
+    batch = to_batch([rec], {"examId": "x"})
+    assert batch["records"][0]["cgpa"] == 3.45
+
+
 def test_referred_record_multiline_with_ref_subjects() -> None:
     rec = _rec(
         "745547 { gpa7: ref, gpa6: ref, gpa5: ref, gpa4: "

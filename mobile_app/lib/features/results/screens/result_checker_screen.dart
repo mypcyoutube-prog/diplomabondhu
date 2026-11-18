@@ -151,6 +151,30 @@ String _semesterLabel(BuildContext context, int semester) {
 int _semesterIndex(String key) =>
     int.tryParse(key.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0;
 
+/// Letter grade derived from the BTEB grade scale by picking the highest
+/// grade point not exceeding the GPA (matches the reference board PDFs:
+/// GPA printed only, e.g. 3.73 -> A-, 3.45 -> B+).
+const _gradePoints = [
+  (letter: 'A+', point: 4.00),
+  (letter: 'A', point: 3.75),
+  (letter: 'A-', point: 3.50),
+  (letter: 'B+', point: 3.25),
+  (letter: 'B', point: 3.00),
+  (letter: 'B-', point: 2.75),
+  (letter: 'C+', point: 2.50),
+  (letter: 'C', point: 2.25),
+  (letter: 'D', point: 2.00),
+];
+
+String? _letterFromGpa(double? gpa) {
+  if (gpa == null) return null;
+  if (gpa < 2.00) return 'F';
+  for (final entry in _gradePoints) {
+    if (gpa >= entry.point) return entry.letter;
+  }
+  return null;
+}
+
 class _ResultRecordCard extends StatelessWidget {
   final ResultRecord record;
 
@@ -230,6 +254,33 @@ class _ResultRecordCard extends StatelessWidget {
                 ],
                 if (record.registrationNo != null)
                   DbInfoRow(label: 'Registration', value: record.registrationNo!),
+                if (record.cgpa != null) ...[
+                  const SizedBox(height: 12),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: _gpaGreen.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: _gpaGreen.withValues(alpha: 0.35)),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.stars_rounded, color: _gpaGreen, size: 22),
+                        const SizedBox(width: 8),
+                        Text(l10n.cgpa,
+                            style: const TextStyle(
+                                color: _gpaGreen, fontWeight: FontWeight.w700)),
+                        const Spacer(),
+                        Text(record.cgpa!.toStringAsFixed(2),
+                            style: const TextStyle(
+                                color: _gpaGreen,
+                                fontWeight: FontWeight.w800,
+                                fontSize: 18)),
+                      ],
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 12),
                 Container(
                   width: double.infinity,
@@ -378,6 +429,15 @@ class _SemesterGpaTile extends StatelessWidget {
                 fontWeight: FontWeight.w800,
                 fontSize: 16),
           ),
+          if (!missing)
+            Padding(
+              padding: const EdgeInsets.only(left: 6),
+              child: Text(_letterFromGpa(gpa) ?? '',
+                  style: TextStyle(
+                      color: valueColor.withValues(alpha: 0.85),
+                      fontWeight: FontWeight.w600,
+                      fontSize: 12)),
+            ),
         ],
       ),
     );

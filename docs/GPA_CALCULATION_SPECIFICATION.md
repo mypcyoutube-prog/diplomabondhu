@@ -61,7 +61,9 @@ Both modes produce identical output structure.
 ## 3. Verified Rules (research findings — see research/BTEB_GRADING_RESEARCH.md)
 
 ### 3.1 Grading table — Diploma in Engineering, 2016 & 2022 Probidhan
-*(multi-source agreement; still requires owner confirmation against official document)*
+*(multi-source agreement; owner-provided screenshots of btebresultszone.com
+transcribed 2026-11-18 confirm the same table; still requires verification
+against official BTEB documents — KI-1)*
 
 | Marks (%) | Grade | Point |
 |---|---|---|
@@ -78,6 +80,33 @@ Both modes produce identical output structure.
 
 Pass mark: **40% (grade D, point 2.00)**; F = fail. Minimum CGPA for certificate: 2.00.
 First class: CGPA ≥ 3.00.
+
+GPA formula (per semester): `GPA = Σ(credit × gradePoint) / Σcredit`.
+
+#### 3.1.1 Letter grades on Result Checker cards (display-only, derived)
+
+The board result sheets print **only numeric GPA/CGPA** (— e.g.
+`712981 … 3.72`, `712990 … 3.45`—), while third-party result sites show a
+letter grade next to each semester GPA. DiplomaBondhu derives that letter for
+display only, with this rule (validated against the owner's reference result
+screenshots: 3.73→A−, 3.72→A−, 3.54→A−, 3.45→B+):
+
+> **letter = the grade whose point is the highest point ≤ GPA**;
+> GPA < 2.00 → **F**.
+
+- Implemented in `mobile_app/lib/features/results/screens/result_checker_screen.dart`
+  (`_gradePoints` + `_letterFromGpa`); it never alters or "corrects" the
+  board-printed numbers shown beside it.
+- The derived letter is an approximation of the board's per-subject grading
+  (semester GPA is a weighted average, not a subject mark); it is shown for
+  readability only, identical to the per-semester letter on the reference
+  screenshots.
+- CGPA is likewise **never computed client-side**: it is displayed only when
+  the board sheet itself prints a `cgpa:` value (e.g. 2016-regulation 8th
+  semester records like `cgpa: 3.45 (gpa8: …)`), extracted by the Python
+  parser (`CGPA_RE`) and passed through import → Node API → app unchanged.
+  New layout variants (e.g. the 2016-regulation 8th-semester sheet) must pass
+  gold verification before import — see KNOWN_ISSUES.md KI-14.
 
 ### 3.2 Semester weightage for final CGPA (semester_weighted strategy)
 

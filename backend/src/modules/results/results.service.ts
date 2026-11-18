@@ -18,6 +18,7 @@ export interface ResultRecord {
   name: string | null;
   registrationNo: string | null;
   gpa: number | null;
+  cgpa?: number | null;
   status: string | null;
   subjects: Array<{ code?: string; grade?: string; type?: string }>;
   instituteCode?: string | null;
@@ -64,6 +65,7 @@ export async function checkResult(env: Env, examId: string, roll: string): Promi
     name: typeof doc.name === 'string' ? doc.name : null,
     registrationNo: typeof doc.registrationNo === 'string' ? doc.registrationNo : null,
     gpa: typeof doc.gpa === 'number' ? doc.gpa : null,
+    cgpa: typeof doc.cgpa === 'number' ? doc.cgpa : null,
     status: typeof doc.status === 'string' ? doc.status : null,
     subjects: Array.isArray(doc.subjects) ? doc.subjects : [],
     instituteCode: typeof doc.instituteCode === 'string' ? doc.instituteCode : null,
@@ -112,6 +114,7 @@ export async function resultHistory(env: Env, rawRoll: string): Promise<ResultRe
       name: typeof doc.name === 'string' ? doc.name : null,
       registrationNo: typeof doc.registrationNo === 'string' ? doc.registrationNo : null,
       gpa: typeof doc.gpa === 'number' ? doc.gpa : null,
+      cgpa: typeof doc.cgpa === 'number' ? doc.cgpa : null,
       status: typeof doc.status === 'string' ? doc.status : null,
       subjects: Array.isArray(doc.subjects) ? doc.subjects : [],
       instituteCode: typeof doc.instituteCode === 'string' ? doc.instituteCode : null,

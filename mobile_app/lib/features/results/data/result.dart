@@ -56,6 +56,7 @@ class ResultRecord {
   final String? name;
   final String? registrationNo;
   final double? gpa;
+  final double? cgpa;
   final String? status;
   final List<ResultSubject> subjects;
   final String? institute;
@@ -71,6 +72,7 @@ class ResultRecord {
     this.name,
     this.registrationNo,
     this.gpa,
+    this.cgpa,
     this.status,
     this.subjects = const [],
     this.institute,
@@ -87,6 +89,7 @@ class ResultRecord {
         name: json['name'] as String?,
         registrationNo: json['registrationNo'] as String?,
         gpa: (json['gpa'] as num?)?.toDouble(),
+        cgpa: (json['cgpa'] as num?)?.toDouble(),
         status: json['status'] as String?,
         subjects: (json['subjects'] as List? ?? [])
             .map((e) => ResultSubject.fromJson(e as Map<String, dynamic>))

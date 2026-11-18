@@ -215,6 +215,7 @@ def import_batch(batch_id: str, body: dict = Body(default={}), _: None = Depends
             "examId": exam_id,
             "roll": r["roll"],
             "gpa": r.get("gpa"),
+            "cgpa": r.get("cgpa"),
             "registrationNo": r.get("registrationNo"),
             "name": r.get("name"),
             "status": r.get("status"),

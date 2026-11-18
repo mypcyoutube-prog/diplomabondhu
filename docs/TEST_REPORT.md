@@ -410,6 +410,24 @@ Typecheck: **clean** · Production build: **success** · `npm audit --omit=dev`:
 - Reset-code delivery is out-of-band by admin (phone/in-person) until email
   infrastructure is approved (KI-12). The API and UI flows are complete.
 
+## Report: v0.11.2 — CGPA display + letter grades on result cards
+
+| Check | Passed | Failed | Skipped | Notes |
+| --- | --- | --- | --- | --- |
+| result-service pytest (cgpa extraction + batch export) | 22 | 0 | 1 (pipeline needs Mongo) | 4 new: cgpa printed / absent / not confused with gpa tokens / exported |
+| Backend `tsc --noEmit` + vitest | 133 | 0 | 0 | cgpa passthrough in check + history (no schema change) |
+| Flutter analyze + test (letter grade + CGPA row) | 23 | 0 | 0 | 2 new: `A-`/`A` beside GPA tiles; CGPA row `3.45` for a board-printed cgpa |
+| Grade-scale provenance documented | yes | — | — | owner-provided btebresultszone.com screenshots (2026-11-18); official verification still open (KI-1) |
+| 2016-regulation 8th-sem sheet import | — | — | **Not run** | blocked: awaiting the actual PDF from the owner for gold verification (KI-14) |
+
+Notes:
+- v0.11.0 note "display-only letter grades intentionally NOT shown" is now
+  superseded: the owner supplied the scale reference, so letter grades are
+  displayed with the derivation rule in `GPA_CALCULATION_SPECIFICATION.md`
+  §3.1.1. Still display-only; the numeric GPA stays the board-printed value.
+- CGPA is shown only when the board sheet prints `cgpa:`; the app never
+  recomputes it.
+
 ## Report: v0.11.0 — Result experience upgrade (live progress + roll-only history + full result cards)
 
 | Check | Passed | Failed | Skipped | Notes |
