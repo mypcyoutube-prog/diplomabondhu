@@ -806,6 +806,12 @@ abstract class AppLocalizations {
   /// **'Registration failed. Please check the details.'**
   String get registerFailed;
 
+  /// No description provided for @errorNetwork.
+  ///
+  /// In en, this message translates to:
+  /// **'Cannot reach the server. Make sure the backend is running (npm run dev, port 5000) and try again.'**
+  String get errorNetwork;
+
   /// No description provided for @passwordTooShort.
   ///
   /// In en, this message translates to:

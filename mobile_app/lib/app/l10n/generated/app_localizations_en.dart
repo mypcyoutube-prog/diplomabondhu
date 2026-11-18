@@ -367,6 +367,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get registerFailed => 'Registration failed. Please check the details.';
 
   @override
+  String get errorNetwork =>
+      'Cannot reach the server. Make sure the backend is running (npm run dev, port 5000) and try again.';
+
+  @override
   String get passwordTooShort => 'Password must be at least 8 characters';
 
   @override

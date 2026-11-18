@@ -118,6 +118,7 @@
   "edit": "Edit",
   "loginFailed": "Login failed. Check your email and password.",
   "registerFailed": "Registration failed. Please check the details.",
+  "errorNetwork": "Cannot reach the server. Make sure the backend is running (npm run dev, port 5000) and try again.",
   "passwordTooShort": "Password must be at least 8 characters",
   "invalidEmail": "Enter a valid email",
   "nameTooShort": "Enter your full name",

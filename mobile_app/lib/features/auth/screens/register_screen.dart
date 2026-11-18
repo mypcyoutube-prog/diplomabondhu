@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/l10n/generated/app_localizations.dart';
+import '../../../core/api/api_error_text.dart';
 import '../../../core/api/api_exception.dart';
 import '../providers/auth_controller.dart';
 
@@ -50,7 +51,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           );
       if (mounted) context.go('/home');
     } on ApiException catch (e) {
-      setState(() => _error = e.isValidationError ? e.message : l10n.registerFailed);
+      final detail = apiErrorText(e, l10n);
+      setState(() => _error = e.code == 'NETWORK' || e.code == 'TIMEOUT'
+          ? detail
+          : '${l10n.registerFailed}\n$detail');
     } catch (_) {
       setState(() => _error = l10n.errorGeneric);
     } finally {

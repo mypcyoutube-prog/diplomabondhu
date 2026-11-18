@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/l10n/generated/app_localizations.dart';
 import '../../../app/theme/theme.dart';
+import '../../../core/api/api_error_text.dart';
 import '../../../core/api/api_exception.dart';
 import '../providers/auth_controller.dart';
 
@@ -58,7 +59,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           );
       if (mounted) context.go('/home');
     } on ApiException catch (e) {
-      setState(() => _error = e.isUnauthenticated ? l10n.loginFailed : e.message);
+      final detail = e.isUnauthenticated ? l10n.loginFailed : apiErrorText(e, l10n);
+      setState(() => _error = e.code == 'NETWORK' || e.code == 'TIMEOUT'
+          ? detail
+          : detail);
     } catch (_) {
       setState(() => _error = l10n.errorGeneric);
     } finally {

@@ -420,3 +420,12 @@
   origin list only (+ explicit empty-list allow-all preserved for
   bootstrapping). Verified: localhost origin allowed, foreign origin
   blocked, full backend suite 127/127 green.
+
+## [0.10.4] — Fix: registration/login hid the real error behind a generic message
+
+- The Flutter app collapsed every failure to `registerFailed`/`errorGeneric`,
+  so a still-running CORS problem, an already-registered email (409), a
+  BD-format phone mismatch, or the backend simply not running all looked
+  identical. Auth screens now surface the real server message, zod detail
+  lines, and a dedicated network hint (`errorNetwork`, en+bn). New shared
+  helper `apiErrorText()`. Verified: `flutter analyze` clean, 18/18 tests.
