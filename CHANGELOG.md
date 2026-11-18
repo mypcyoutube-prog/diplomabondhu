@@ -396,3 +396,11 @@
 - D1: BTEB rules researched from web, owner-verified before enabling profiles
 - D2: FCM push in first release (owner provides Firebase project)
 - D3: Email verification & password recovery deferred to post-R1
+
+## [0.10.1] — Fix: .env file was never loaded
+
+- `loadEnv()` now calls `dotenv.config()` on `backend/.env` (the dependency
+  existed but was never wired in — `npm run dev` locally failed unless every
+  var was exported by hand). Real environment variables still take
+  precedence, so CI/Render behavior is unchanged. Regression: full backend
+  suite 127/127 re-run green after the change.

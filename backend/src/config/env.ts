@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import dotenv from 'dotenv';
 
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
@@ -18,7 +19,11 @@ const envSchema = z.object({
 export type Env = z.infer<typeof envSchema>;
 
 export function loadEnv(source: NodeJS.ProcessEnv = process.env): Env {
-  const parsed = envSchema.safeParse(source);
+  // Local/dev convenience: read backend/.env if present. Real environment
+  // variables (Render, CI, shell exports) always win - dotenv never overrides.
+  dotenv.config({ path: `${process.cwd()}/.env` });
+  const merged = source === process.env ? process.env : { ...process.env, ...source };
+  const parsed = envSchema.safeParse(merged);
   if (!parsed.success) {
     const issues = parsed.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`).join('; ');
     throw new Error(`Invalid environment configuration -> ${issues}`);
