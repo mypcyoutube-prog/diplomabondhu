@@ -1,0 +1,33 @@
+# Dependencies
+node_modules/
+
+# Builds
+dist/
+build/
+*.apk
+*.aab
+
+# Dart / Flutter
+.dart_tool/
+.packages
+.flutter-plugins*
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+*.jks
+*.keystore
+google-services.json
+
+# IDE / OS
+.idea/
+.vscode/
+.DS_Store
+*.log

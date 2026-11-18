@@ -1,0 +1,92 @@
+# Render Blueprint for DiplomaBondhu
+# Deploy: Render Dashboard -> New -> Blueprint -> point at this repository.
+# MongoDB is NOT included (Render does not host Mongo) - create a free/paid
+# cluster on MongoDB Atlas and paste its URI where marked "sync: false".
+#
+# Free-tier notes:
+# - Only `api` needs to be kept awake (UptimeRobot -> GET /health every 5 min).
+#   One always-on free web service fits inside the 750 instance-hours/month.
+# - `result-svc` may sleep; it is only used when importing result PDFs.
+# - `admin` is a static site and never sleeps.
+
+services:
+  # ---------- Node API (main backend) ----------
+  - type: web
+    name: diplomabondhu-api
+    runtime: node
+    rootDir: backend
+    plan: free
+    healthCheckPath: /health
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        sync: false          # Atlas URI: mongodb+srv://<user>:<pass>@<cluster>/diplomabondhu
+      - key: JWT_ACCESS_SECRET
+        generateValue: true  # random 32+ char secret, generated once by Render
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: ACCESS_TOKEN_TTL
+        value: 15m
+      - key: REFRESH_TOKEN_TTL_DAYS
+        value: "30"
+      - key: CORS_ORIGINS
+        sync: false          # admin panel URL, e.g. https://diplomabondhu-admin.onrender.com
+      - key: RESULT_SERVICE_URL
+        value: https://diplomabondhu-results.onrender.com
+      - key: RESULT_SERVICE_TOKEN
+        sync: false          # SAME value must be set on result-svc below
+      - key: RESULTS_DB
+        value: results_db
+      - key: LOG_LEVEL
+        value: info
+
+  # ---------- Python result-service (internal PDF parser) ----------
+  - type: web
+    name: diplomabondhu-results
+    runtime: python
+    rootDir: result-service
+    plan: free
+    healthCheckPath: /health
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn result_service.app:app --host 0.0.0.0 --port $PORT
+    autoDeploy: true
+    envVars:
+      - key: RESULT_SERVICE_TOKEN
+        sync: false          # must match the api service token exactly
+      - key: MONGODB_URI
+        sync: false          # same Atlas cluster as the api (uses results_db)
+      - key: RESULTS_DB
+        value: results_db
+      - key: RESULT_BATCH_DIR
+        value: /tmp/result-batches   # ephemeral is fine: batches are reproducible from the source PDFs
+
+  # ---------- React admin panel (static site) ----------
+  - type: web
+    name: diplomabondhu-admin
+    runtime: static
+    rootDir: admin-panel
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist
+    autoDeploy: true
+    routes:
+      # SPA fallback: every unknown path serves index.html (react-router)
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_API_URL
+        sync: false          # https://diplomabondhu-api.onrender.com/api/v1 (baked in at build time)
+    headers:
+      - path: /*
+        name: X-Frame-Options
+        value: DENY
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: Referrer-Policy
+        value: strict-origin-when-cross-origin

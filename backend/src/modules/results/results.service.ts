@@ -1,0 +1,80 @@
+import mongoose from 'mongoose';
+import type { Env } from '../../config/env';
+import { notFound } from '../../core/errors';
+import { writeAudit } from '../../models/audit-log.model';
+
+export interface ResultExam {
+  examId: string;
+  recordCount: number;
+  title?: string;
+  checkCount: number;
+  updatedAt?: string;
+}
+
+export interface ResultRecord {
+  examId: string;
+  roll: string;
+  name: string | null;
+  registrationNo: string | null;
+  gpa: number | null;
+  status: string | null;
+  subjects: Array<{ code?: string; grade?: string }>;
+  disclaimer: string;
+}
+
+export const RESULT_DISCLAIMER =
+  'This is not an official BTEB service. Results are transcribed from published result sheets and may contain errors. Verify with your institute or the official BTEB portal.';
+
+export function resultsDb(env: Env) {
+  return mongoose.connection.useDb(env.RESULTS_DB, { useCache: true });
+}
+
+export async function listResultExams(env: Env): Promise<ResultExam[]> {
+  const docs = await resultsDb(env)
+    .collection('exams')
+    .find({})
+    .sort({ updatedAt: -1 })
+    .limit(200)
+    .toArray();
+  return docs.map((d) => ({
+    examId: String(d.examId ?? ''),
+    recordCount: Number(d.recordCount ?? 0),
+    title: typeof d.title === 'string' && d.title ? d.title : undefined,
+    checkCount: Number(d.checkCount ?? 0),
+    updatedAt: typeof d.updatedAt === 'string' ? d.updatedAt : undefined
+  }));
+}
+
+export async function checkResult(env: Env, examId: string, roll: string): Promise<ResultRecord> {
+  const db = resultsDb(env);
+  const doc = await db.collection('records').findOne({ examId, roll: String(roll) });
+  if (!doc) throw notFound('No result found for this roll in the selected examination');
+  await db
+    .collection('exams')
+    .updateOne({ examId }, { $inc: { checkCount: 1 }, $setOnInsert: { examId } }, { upsert: true });
+  return {
+    examId,
+    roll: String(doc.roll),
+    name: typeof doc.name === 'string' ? doc.name : null,
+    registrationNo: typeof doc.registrationNo === 'string' ? doc.registrationNo : null,
+    gpa: typeof doc.gpa === 'number' ? doc.gpa : null,
+    status: typeof doc.status === 'string' ? doc.status : null,
+    subjects: Array.isArray(doc.subjects) ? doc.subjects : [],
+    disclaimer: RESULT_DISCLAIMER
+  };
+}
+
+export async function auditResultImport(
+  actorId: string,
+  payload: { batchId: string; examId: string; total?: number; inserted?: number; updated?: number },
+  ip?: string
+): Promise<void> {
+  await writeAudit({
+    actorId,
+    action: 'results.import',
+    targetType: 'result_exam',
+    targetId: payload.examId,
+    after: payload,
+    ip
+  });
+}
