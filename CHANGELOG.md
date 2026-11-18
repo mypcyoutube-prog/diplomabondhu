@@ -1,5 +1,26 @@
 # CHANGELOG.md — DiplomaBondhu
 
+## [0.11.9] — Result card styling matched line-by-line to the reference screenshots
+
+Owner follow-up on 0.11.8: the per-semester cards still kept my own styling
+(dark labels, boxed GPA chip, stacked subject rows). This pass reproduces the
+reference screenshots' visual arrangement directly:
+
+- Semester label ("7th Semester") with a book icon in **blue**, status on the
+  same line: green "✓ Passed" or red yet-to-pass count (plain red text).
+- Date line: **blue** date text + calendar icon on the left, gray relative
+  "X days/months/years ago" on the right.
+- GPA block: small gray **"GPA" label above** the big bold green value
+  (not a boxed chip), letter grade in a gray badge on the right.
+- Failed/referred subject: **light-red row** — bold red `28553(T)` code, the
+  subject name on the same line, `Theory`/`Practical` small on the right.
+- Header title split into the program line + a gray details line
+  (e.g. "7th Semester (2022 Regulation)") like the reference top block.
+
+Verified: flutter analyze clean; 30/30 widget tests. Visual comparison against
+the reference screenshots on device: Not run (KI-10).
+
+## [0.11.8]
 ## [0.11.8] — Result view restructured to match the reference board-style layout
 
 Owner request: the result view after a roll search must look same-to-same as

@@ -326,13 +326,7 @@ class _ResultRecordCard extends StatelessWidget {
                         letterSpacing: 0.5)),
                 if (record.title != null && record.title!.isNotEmpty) ...[
                   const SizedBox(height: 4),
-                  Text(record.title!,
-                      textAlign: TextAlign.center,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                          color: Colors.white.withValues(alpha: 0.92),
-                          fontWeight: FontWeight.w600)),
+                  _headerTitleLines(record.title!),
                 ],
                 if (record.institute != null && record.institute!.isNotEmpty) ...[
                   const SizedBox(height: 2),
@@ -366,9 +360,6 @@ class _ResultRecordCard extends StatelessWidget {
                         semesterName: _semesterLabel(context, cards[i].semester),
                         gpa: cards[i].gpa,
                         failedSubjects: cards[i].failed,
-                        isExamSemester: record.examSemester != null &&
-                            record.examSemester == cards[i].semester,
-                        examLabel: l10n.resultThisExam,
                         publishedAt: record.publishedAt,
                       ),
                     ),
@@ -488,6 +479,36 @@ class _StatusBanner extends StatelessWidget {
 
 
 
+
+Widget _headerTitleLines(String title) {
+  final cut = title.indexOf(' — ');
+  final main = cut > 0 ? title.substring(0, cut) : title;
+  final rest = cut > 0 ? title.substring(cut + 3) : '';
+  return Builder(builder: (context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Text(main,
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: theme.textTheme.bodyMedium?.copyWith(
+                color: Colors.white.withValues(alpha: 0.95),
+                fontWeight: FontWeight.w700)),
+        if (rest.isNotEmpty) ...[
+          const SizedBox(height: 1),
+          Text(rest,
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.bodySmall?.copyWith(
+                  color: Colors.white.withValues(alpha: 0.72))),
+        ],
+      ],
+    );
+  });
+}
 Color _statusColorOf(_ResultStatus status, bool showBacklog) {
   return switch (status) {
     _ResultStatus.pass when !showBacklog => _gpaGreen,
@@ -505,8 +526,6 @@ class _SemesterCard extends StatelessWidget {
   final String semesterName;
   final double? gpa;
   final List<ResultSubject> failedSubjects;
-  final bool isExamSemester;
-  final String examLabel;
   final String? publishedAt;
 
   const _SemesterCard({
@@ -514,10 +533,10 @@ class _SemesterCard extends StatelessWidget {
     required this.semesterName,
     required this.gpa,
     required this.failedSubjects,
-    required this.isExamSemester,
-    required this.examLabel,
     required this.publishedAt,
   });
+
+  static const _blue = Color(0xFF1D4ED8);
 
   @override
   Widget build(BuildContext context) {
@@ -527,35 +546,27 @@ class _SemesterCard extends StatelessWidget {
     final valueColor = missing ? _statusRed : _gpaGreen;
     final letter = missing ? null : _letterFromGpa(gpa);
     final hasBacklog = failedSubjects.isNotEmpty;
+    final hasDate = publishedAt != null && publishedAt!.trim().isNotEmpty;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: _gpaGreen.withValues(alpha: 0.06),
+        color: _gpaGreen.withValues(alpha: 0.07),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: _gpaGreen.withValues(alpha: 0.18)),
+        border: Border.all(color: _gpaGreen.withValues(alpha: 0.20)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // line 1: blue semester label + right status
           Row(
             children: [
-              Container(
-                width: 30,
-                height: 30,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: DbColors.navy.withValues(alpha: 0.10),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Icon(Icons.menu_book_rounded,
-                    size: 16, color: DbColors.navy),
-              ),
-              const SizedBox(width: 8),
+              const Icon(Icons.menu_book_rounded, size: 16, color: _blue),
+              const SizedBox(width: 6),
               Expanded(
                 child: Text(semesterName,
-                    style: theme.textTheme.bodyMedium
-                        ?.copyWith(fontWeight: FontWeight.w700)),
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w700, color: _blue)),
               ),
               if (hasBacklog)
                 Text(
@@ -577,51 +588,32 @@ class _SemesterCard extends StatelessWidget {
               ],
             ],
           ),
-          if (isExamSemester) ...[
-            const SizedBox(height: 2),
-            Padding(
-              padding: const EdgeInsets.only(left: 38),
-              child: Text(examLabel,
-                  style: theme.textTheme.labelSmall?.copyWith(
-                      color: theme.colorScheme.primary,
-                      fontWeight: FontWeight.w700)),
+          // line 2: blue date left, gray relative time right
+          if (hasDate) ...[
+            const SizedBox(height: 3),
+            Row(
+              children: [
+                const Icon(Icons.event_rounded, size: 13, color: _blue),
+                const SizedBox(width: 5),
+                Text(_formatDateLine(context, publishedAt!),
+                    style: theme.textTheme.bodySmall
+                        ?.copyWith(color: _blue, fontWeight: FontWeight.w600)),
+                const Spacer(),
+                Text(_timeAgo(l10n, publishedAt!),
+                    style: theme.textTheme.bodySmall
+                        ?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+              ],
             ),
           ],
-          if (publishedAt != null && publishedAt!.trim().isNotEmpty) ...[
-            const SizedBox(height: 4),
-            Padding(
-              padding: const EdgeInsets.only(left: 38),
-              child: Row(
-                children: [
-                  Icon(Icons.event_rounded,
-                      size: 12, color: theme.colorScheme.onSurfaceVariant),
-                  const SizedBox(width: 4),
-                  Text(_formatDateLine(context, publishedAt!),
-                      style: theme.textTheme.bodySmall),
-                  const Spacer(),
-                  Text(_timeAgo(l10n, publishedAt!),
-                      style: theme.textTheme.bodySmall),
-                ],
-              ),
-            ),
-          ],
+          // line 3: GPA block — small label above, big green value + letter
           const SizedBox(height: 8),
+          Text('GPA',
+              style: theme.textTheme.labelSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: theme.colorScheme.onSurfaceVariant)),
+          const SizedBox(height: 2),
           Row(
             children: [
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surfaceContainerHighest
-                      .withValues(alpha: 0.7),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Text('GPA',
-                    style: theme.textTheme.labelSmall?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: theme.colorScheme.onSurfaceVariant)),
-              ),
-              const SizedBox(width: 8),
               if (missing)
                 Text('—',
                     style: TextStyle(
@@ -634,29 +626,31 @@ class _SemesterCard extends StatelessWidget {
                   style: TextStyle(
                       color: valueColor,
                       fontWeight: FontWeight.w800,
-                      fontSize: 18,
+                      fontSize: 20,
                       fontFeatures: const [FontFeature.tabularFigures()]),
                 ),
               const Spacer(),
               if (letter != null)
                 Container(
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
                   decoration: BoxDecoration(
-                    color: valueColor.withValues(alpha: 0.12),
+                    color: theme.colorScheme.surfaceContainerHighest
+                        .withValues(alpha: 0.8),
                     borderRadius: BorderRadius.circular(DbRadius.chip),
                   ),
                   child: Text(
                     letter,
                     style: TextStyle(
-                        color: valueColor.withValues(alpha: 0.9),
+                        color: theme.colorScheme.onSurface,
                         fontWeight: FontWeight.w800,
-                        fontSize: 12,
+                        fontSize: 12.5,
                         letterSpacing: 0.4),
                   ),
                 ),
             ],
           ),
+          // failed subjects: light-red rows inside this semester's box
           for (final s in failedSubjects) ...[
             const SizedBox(height: 6),
             _FailedSubjectRow(subject: s),
@@ -682,43 +676,40 @@ class _FailedSubjectRow extends StatelessWidget {
       'T+P' => l10n.subjectTypeTheoryPractical,
       _ => null,
     };
-    final code =
-        '${subject.code ?? '—'}${subject.titleSuffix}';
+    final code = subject.code ?? '—';
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.55),
+        color: _statusRed.withValues(alpha: 0.07),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: _statusRed.withValues(alpha: 0.25)),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          Row(
-            children: [
-              Text(code,
-                  style: const TextStyle(
-                      color: _statusRed,
-                      fontWeight: FontWeight.w800,
-                      fontSize: 13,
-                      fontFeatures: [FontFeature.tabularFigures()])),
-              const Spacer(),
-              if (label != null)
-                Text(label,
-                    style: theme.textTheme.labelSmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                        fontWeight: FontWeight.w600)),
-            ],
+          Text('$code${subject.titleSuffix}',
+              style: const TextStyle(
+                  color: _statusRed,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 13,
+                  fontFeatures: [FontFeature.tabularFigures()])),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Text(
+              subject.name ?? '',
+              style: TextStyle(
+                  color: _statusRed.withValues(alpha: 0.95),
+                  fontWeight: FontWeight.w600,
+                  fontSize: 12.5,
+                  height: 1.25),
+            ),
           ),
-          if (subject.name != null && subject.name!.trim().isNotEmpty) ...[
-            const SizedBox(height: 2),
-            Text(subject.name!,
-                style: theme.textTheme.bodySmall?.copyWith(
-                    color: _statusRed.withValues(alpha: 0.9),
-                    fontWeight: FontWeight.w600,
-                    height: 1.25)),
+          if (label != null) ...[
+            const SizedBox(width: 8),
+            Text(label,
+                style: theme.textTheme.labelSmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w600)),
           ],
         ],
       ),
