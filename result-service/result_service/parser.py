@@ -23,6 +23,34 @@ GPA_RE = re.compile(r"(?:^|\s)([0-4]\.[0-9]{2})(?:\s|$)")
 REG_RE = re.compile(r"\b([0-9]{10,14})\b")
 GRADE_RE = re.compile(r"^[A-F][+-]?$")
 
+# Institute-wise board result sheets ("gpa-map" format), e.g.:
+#   11044 - Himaloy Polytechnic Institute, Panchagarh
+#   745547 { gpa7: ref, gpa6: ref, gpa4:
+#   3.30, gpa3: 3.18, ref_sub: 25853(T), 28553(T) }
+# Records wrap across lines, and the intro paragraph above each record block
+# (passed / promoted to next semester / declared dropped out) is the only
+# place the board states the outcome class.
+INSTITUTE_RE = re.compile(r"^([0-9]{5})\s*-\s*(.+)$")
+REC_START_RE = re.compile(r"^([0-9]{6,10})\s*[\(\{](.+)$")
+GPA_ENTRY_RE = re.compile(r"\bgpa([0-9]{1,2})\s*:\s*(ref|fail|[0-4]\.[0-9]{2})")
+REF_SUBJECT_RE = re.compile(r"(?:^|[,\s])([0-9]{4,6})\(([A-Za-z]{1,2})\)")
+INTRO_PASSED_RE = re.compile(r"passed in all subjects", re.I)
+INTRO_PROMOTED_RE = re.compile(r"promoted to\s*\n?\s*the next semester|promoted to next semester", re.I)
+INTRO_DROPPED_RE = re.compile(r"dropped out on this semester", re.I)
+
+# pdfplumber chokes on very large files; only use it for table-style PDFs
+# below this page count.
+DEFAULT_TABLE_PAGE_LIMIT = 60
+# A record's roll can sit alone on the very last line of a page with its
+# gpa-map starting on the next page.
+BARE_ROLL_RE = re.compile(r"^[0-9]{6,10}$")
+# Cover-page/notice lines that contain phone numbers, memo ids or emails must
+# never be read as student records.
+JUNK_LINE_RE = re.compile(r"phone|fax|e-?mail|www\.|@|memo no\.", re.I)
+# A new record can begin on the same line where the previous record's closing
+# bracket landed: "...(T) } 700209 { gpa7: ref, ..."
+SEGMENT_SPLIT_RE = re.compile(r"(?<=[\)\}])\s+(?=[0-9]{6,10}\s*[\(\{])")
+
 
 @dataclass
 class ParsedRecord:
@@ -33,6 +61,10 @@ class ParsedRecord:
     status: str | None = None
     subjects: list[dict[str, Any]] = field(default_factory=list)
     raw: dict[str, Any] = field(default_factory=dict)
+    institute_code: str | None = None
+    institute: str | None = None
+    semester_gpas: dict[str, Any] = field(default_factory=dict)
+    exam_semester: int | None = None
 
 
 @dataclass
@@ -166,7 +198,27 @@ def _parse_text_line(line: str) -> ParsedRecord | None:
     )
 
 
-def parse_pdf(path: str, max_pages: int | None = None) -> ParseResult:
+def parse_pdf(
+    path: str,
+    max_pages: int | None = None,
+    table_page_limit: int | None = DEFAULT_TABLE_PAGE_LIMIT,
+) -> ParseResult:
+    """Router: table-style PDFs go to pdfplumber, large gpa-map-style board
+    sheets are parsed from fast raw text (pdfplumber hangs on 1000+-page
+    files; pypdfium2 reads them in seconds)."""
+    page_count = _pdfium_page_count(path)
+    if table_page_limit is not None and page_count <= table_page_limit:
+        return _parse_pdf_pdfplumber(path, max_pages)
+    return _parse_pdf_gpa_map_text(path, max_pages, page_count)
+
+
+def _pdfium_page_count(path: str) -> int:
+    import pypdfium2 as pdfium
+
+    return len(pdfium.PdfDocument(path))
+
+
+def _parse_pdf_pdfplumber(path: str, max_pages: int | None) -> ParseResult:
     records: list[ParsedRecord] = []
     warnings: list[str] = []
     seen_rolls: set[str] = set()
@@ -197,6 +249,161 @@ def parse_pdf(path: str, max_pages: int | None = None) -> ParseResult:
     return ParseResult(records=records, pages_scanned=len(pages), warnings=warnings)
 
 
+def _map_closed(text: str) -> bool:
+    # A record buffer is closed only when its final character is the closing
+    # bracket of its opener. Balanced inner pairs like `25853(T)` mid-record
+    # must not close it early.
+    stripped = text.rstrip()
+    if not stripped or stripped[-1] not in ")}":
+        return False
+    return stripped.count("(") == stripped.count(")") and stripped.count("{") == stripped.count("}")
+
+
+def _parse_map_record(text: str, intro: str | None) -> ParsedRecord | None:
+    cleaned = re.sub(r"\s+", " ", text).strip()
+    roll_match = ROLL_RE.search(cleaned)
+    if roll_match is None:
+        return None
+    for open_ch, close_ch in (("{", "}"), ("(", ")")):
+        if cleaned.count(open_ch) > cleaned.count(close_ch):
+            return None
+
+    ref_subjects = [
+        {"code": m.group(1), "type": m.group(2).upper()}
+        for m in REF_SUBJECT_RE.finditer(cleaned)
+    ]
+    expelled_span = re.search(r"Expelled_sub\s*-\s*(.*)", cleaned)
+    if expelled_span:
+        expelled_codes = re.findall(r"([0-9]{4,6})", expelled_span.group(1)[:120]) or []
+        if not expelled_codes:
+            return None
+        return ParsedRecord(
+            roll=roll_match.group(1),
+            gpa=None,
+            status="expelled",
+            subjects=[{"code": c} for c in expelled_codes],
+            raw={"line": cleaned[:300]},
+        )
+    if "gpa" not in cleaned.lower() and not ref_subjects:
+        return None
+
+    gpas: dict[int, float | None] = {}
+    gpa_tokens: dict[int, str] = {}
+    for match in GPA_ENTRY_RE.finditer(cleaned):
+        semester = int(match.group(1))
+        gpa_tokens[semester] = match.group(2)
+        gpas[semester] = _to_float(match.group(2))
+    exam_semester = max(gpas) if gpas else None
+    gpa = gpas.get(exam_semester) if exam_semester else None
+    exam_token = gpa_tokens.get(exam_semester, "") if exam_semester else ""
+    if intro == "dropped":
+        status = "dropped"
+    elif exam_token == "ref" or not gpas:
+        status = "referred"
+    elif exam_token == "fail":
+        status = "fail"
+    else:
+        status = "pass"
+    if not gpas and not ref_subjects:
+        return None
+
+    return ParsedRecord(
+        roll=roll_match.group(1),
+        gpa=gpa,
+        status=status,
+        subjects=ref_subjects,
+        raw={"line": cleaned[:300]},
+        semester_gpas={f"gpa{k}": v for k, v in sorted(gpas.items())},
+        exam_semester=exam_semester,
+    )
+
+
+def _parse_pdf_gpa_map_text(path: str, max_pages: int | None, page_count: int) -> ParseResult:
+    import pypdfium2 as pdfium
+
+    records: list[ParsedRecord] = []
+    warnings: list[str] = []
+    seen_rolls: set[str] = set()
+
+    def add(record: ParsedRecord | None) -> None:
+        if record is None or record.roll in seen_rolls:
+            return
+        seen_rolls.add(record.roll)
+        records.append(record)
+
+    limit = page_count if max_pages is None else min(max_pages, page_count)
+    pdf = pdfium.PdfDocument(path)
+    pages_scanned = 0
+    institute_code: str | None = None
+    institute: str | None = None
+    pending_intro: str | None = None
+    # Stack of open record buffers: [text, intro, institute_code, institute].
+    # Usually 0 or 1 open. Two bare rolls in a row are a board print artifact:
+    # the older bare roll is discarded instead of being merged into the next
+    # record's data. Board PDFs do not repeat stray rolls, so nothing is lost.
+    open_bufs: list[list[Any]] = []
+
+    def close_top() -> None:
+        text, intro, inst_code, inst = open_bufs.pop()
+        record = _parse_map_record(text, intro)
+        if record is None:
+            warnings.append("discarded malformed record buffer")
+            return
+        record.institute_code = inst_code
+        record.institute = inst
+        add(record)
+
+    for page_no in range(limit):
+        text = pdf[page_no].get_textpage().get_text_bounded()
+        pages_scanned += 1
+        for raw_line in text.splitlines():
+            for segment in SEGMENT_SPLIT_RE.split(raw_line.strip()):
+                line = segment.strip()
+                if not line:
+                    continue
+                inst_match = INSTITUTE_RE.match(line)
+                if inst_match:
+                    institute_code = inst_match.group(1)
+                    institute = inst_match.group(2).strip()
+                    continue
+                if INTRO_PASSED_RE.search(line):
+                    pending_intro = "pass"
+                    continue
+                if INTRO_PROMOTED_RE.search(line):
+                    pending_intro = "referred"
+                    continue
+                if INTRO_DROPPED_RE.search(line):
+                    pending_intro = "dropped"
+                    continue
+                has_opener = bool(re.search(r"[\(\{]", line))
+                is_start = REC_START_RE.match(line) is not None
+                is_bare_roll = BARE_ROLL_RE.match(line) is not None
+                if is_start or is_bare_roll:
+                    if open_bufs and not re.search(r"[\(\{]", open_bufs[-1][0]):
+                        open_bufs.pop()  # bare roll never got its map
+                    if len(open_bufs) >= 2:
+                        warnings.append("discarded unclosed record buffer")
+                        open_bufs.pop(0)
+                    open_bufs.append([line, pending_intro, institute_code, institute])
+                    if _map_closed(open_bufs[-1][0]):
+                        close_top()
+                    continue
+                if open_bufs:
+                    last = open_bufs[-1]
+                    last[0] = f"{last[0]} {line}"
+                    if _map_closed(last[0]):
+                        close_top()
+                    continue
+                if JUNK_LINE_RE.search(line):
+                    continue
+                add(_parse_text_line(line))
+
+    pending = [b for b in open_bufs if "(" in b[0] or "{" in b[0]]
+    if pending:
+        warnings.append(f"{len(pending)} record buffer(s) never closed")
+    return ParseResult(records=records, pages_scanned=pages_scanned, warnings=warnings)
+
+
 def to_batch(records: list[ParsedRecord], meta: dict[str, Any]) -> dict[str, Any]:
     return {
         "meta": meta,
@@ -209,6 +416,10 @@ def to_batch(records: list[ParsedRecord], meta: dict[str, Any]) -> dict[str, Any
                 "name": r.name,
                 "status": r.status,
                 "subjects": r.subjects,
+                "instituteCode": r.institute_code,
+                "institute": r.institute,
+                "semesterGpas": r.semester_gpas,
+                "examSemester": r.exam_semester,
                 "raw": r.raw,
             }
             for r in records

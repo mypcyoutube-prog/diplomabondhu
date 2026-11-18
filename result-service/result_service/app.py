@@ -144,20 +144,22 @@ def import_batch(batch_id: str, body: dict = Body(default={}), _: None = Depends
             "name": r.get("name"),
             "status": r.get("status"),
             "subjects": r.get("subjects", []),
+            "instituteCode": r.get("instituteCode"),
+            "institute": r.get("institute"),
+            "semesterGpas": r.get("semesterGpas"),
+            "examSemester": r.get("examSemester"),
             "batchId": batch_id,
             "meta": {k: v for k, v in {**batch["meta"], **meta}.items() if k not in ("warnings", "records")},
         }
         docs.append(doc)
 
     inserted = 0
-    for doc in docs:
-        res = coll.update_one(
-            {"examId": exam_id, "roll": doc["roll"]},
-            {"$set": doc},
-            upsert=True,
-        )
-        if res.upserted_id is not None:
-            inserted += 1
+    CHUNK = 500
+    from pymongo import ReplaceOne
+    for i in range(0, len(docs), CHUNK):
+        ops = [ReplaceOne({"examId": exam_id, "roll": doc["roll"]}, doc, upsert=True) for doc in docs[i:i + CHUNK]]
+        res = coll.bulk_write(ops, ordered=False)
+        inserted += res.upserted_count
 
     coll.create_index([("examId", ASCENDING), ("roll", ASCENDING)], unique=True)
     coll.create_index([("examId", ASCENDING), ("name", ASCENDING)])

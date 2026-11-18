@@ -397,6 +397,33 @@
 - D2: FCM push in first release (owner provides Firebase project)
 - D3: Email verification & password recovery deferred to post-R1
 
+## [0.10.5] — KI-14: parser verified against a real BTEB result sheet (owner-provided)
+
+- The owner downloaded a real institute-wise board result PDF (1103 pages,
+  `DIPLOMA IN ENGINEERING`, 7th Semester, 2022 Regulation, exam year 2026,
+  392 institutes) from the result portal. It exposed a new board format we
+  had never seen: braced/parenthesised `gpa-map` records that wrap across
+  lines (`745547 { gpa7: ref, gpa6: ref, gpa4: 3.30, ... ref_sub: 25853(T) }`),
+  plus `promoted`/`dropped out`/`Expelled` sections, records whose
+  closing bracket and the next roll share one line, ref-subject-only records,
+  and stray bare rolls (board print artifacts).
+- Parser: added a fast text path (`pypdfium2` reads all 1103 pages in ~2.4s;
+  pdfplumber hangs on files this size) with a stack-of-buffers gpa-map parser,
+  intro-based status detection (pass/referred/dropped/expelled), institute
+  attachment, junk-line filtering (phone/memo/email cover text), and a strict
+  balanced-bracket rule so a record only closes on its own final bracket.
+- Fields per record now include `instituteCode`, `institute`,
+  `semesterGpas` (gpa1..gpaN with `ref` stored as null), `examSemester`.
+  Node `GET /results/check` passes them through; import now uses chunked
+  `bulk_write` (31k records in ~2s; document shape unchanged for consumers).
+- Fixture `docs/research/real-pdfs/bteb-2026-eng-7th-2022-regulation-result.pdf`
+  added with sanity tests (cap at 120 pages for CI speed). Gold verification:
+  every parsed roll is followed by a bracket in the source text (0 unbacked)
+  and every bracket-backed roll is parsed (0 missed) - 31,094 records:
+  15,346 pass / 12,509 referred / 3,233 dropped / 6 expelled, 0 duplicates,
+  0 out-of-range GPAs. Full E2E (parse -> import -> roll lookup -> 404) green.
+  Python: 18 pass + 1 skip (needs Mongo); Node: 127/127.
+
 ## [0.10.1] — Fix: .env file was never loaded
 
 - `loadEnv()` now calls `dotenv.config()` on `backend/.env` (the dependency

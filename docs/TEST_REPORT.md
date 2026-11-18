@@ -410,6 +410,17 @@ Typecheck: **clean** · Production build: **success** · `npm audit --omit=dev`:
 - Reset-code delivery is out-of-band by admin (phone/in-person) until email
   infrastructure is approved (KI-12). The API and UI flows are complete.
 
+## Report: KI-14 — Real result-sheet verification (v0.10.5)
+
+| Check | Passed | Failed | Skipped | Notes |
+| --- | --- | --- | --- | --- |
+| result-service pytest (no Mongo live) | 15 | 0 | 1 (pipeline needs Mongo) | 12 parsing/security incl. 8 new gpa-map tests + 2 notice regressions |
+| result-service pytest + real 1103-page board PDF fixture | 18 | 0 | 1 | gpa-map sanity test on first 120 pages |
+| Gold verification (independent script) | 100% recall + 100% precision | 0 | — | every parsed roll bracket-backed in source; every bracket-backed roll parsed; 31,094 records; 0 dupes; 0 out-of-range GPA |
+| Node backend suite after `results.service.ts` passthrough change | 127 | 0 | 0 | vitest |
+| Live E2E `e2e-results-flow.mjs` | 17 | 0 | 0 | parse→import→check→404→RBAC→audit |
+| Real-PDF full roundtrip via live services | 31,094/31,094 | 0 | 0 | node proxy parse + chunked bulk import (~2s) + roll lookups incl. pass/referred/dropped/expelled/404 |
+
 ## Report: Phase 12 — BTEB Result Checker (Python result-service + Node API + admin + Flutter)
 
 | Field | Value |

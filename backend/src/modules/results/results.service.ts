@@ -18,7 +18,11 @@ export interface ResultRecord {
   registrationNo: string | null;
   gpa: number | null;
   status: string | null;
-  subjects: Array<{ code?: string; grade?: string }>;
+  subjects: Array<{ code?: string; grade?: string; type?: string }>;
+  instituteCode?: string | null;
+  institute?: string | null;
+  semesterGpas?: Record<string, number | null>;
+  examSemester?: number | null;
   disclaimer: string;
 }
 
@@ -60,6 +64,13 @@ export async function checkResult(env: Env, examId: string, roll: string): Promi
     gpa: typeof doc.gpa === 'number' ? doc.gpa : null,
     status: typeof doc.status === 'string' ? doc.status : null,
     subjects: Array.isArray(doc.subjects) ? doc.subjects : [],
+    instituteCode: typeof doc.instituteCode === 'string' ? doc.instituteCode : null,
+    institute: typeof doc.institute === 'string' ? doc.institute : null,
+    semesterGpas:
+      doc.semesterGpas && typeof doc.semesterGpas === 'object' && !Array.isArray(doc.semesterGpas)
+        ? (doc.semesterGpas as Record<string, number | null>)
+        : undefined,
+    examSemester: typeof doc.examSemester === 'number' ? doc.examSemester : null,
     disclaimer: RESULT_DISCLAIMER
   };
 }
