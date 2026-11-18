@@ -2,9 +2,20 @@ import { Router } from 'express';
 import { AppSettings } from '../../models/app-settings.model';
 import { ok } from '../../core/response';
 
+export const DEFAULT_HOMEPAGE_SECTIONS = [
+  { key: 'announcements', visible: true, order: 10 },
+  { key: 'quick_access', visible: true, order: 20 },
+  { key: 'materials', visible: true, order: 30 },
+  { key: 'exams', visible: true, order: 40 },
+  { key: 'gpa_calculator', visible: true, order: 50 },
+  { key: 'planner', visible: true, order: 60 },
+  { key: 'community', visible: true, order: 70 },
+  { key: 'result_checker', visible: true, order: 80 }
+];
+
 export async function getAppSettings() {
   let settings = await AppSettings.findOne();
-  if (!settings) settings = await AppSettings.create({});
+  if (!settings) settings = await AppSettings.create({ homepageSections: DEFAULT_HOMEPAGE_SECTIONS });
   return settings;
 }
 

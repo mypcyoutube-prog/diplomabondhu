@@ -397,6 +397,22 @@
 - D2: FCM push in first release (owner provides Firebase project)
 - D3: Email verification & password recovery deferred to post-R1
 
+## [0.10.6] — Fix: Result Checker card hidden on fresh installs
+
+- `GET /settings/app` created app settings with an empty
+  `homepageSections` array on a fresh database, so the Flutter home
+  screen never rendered the "BTEB Result Checker" card even after a
+  successful import (`resultCheckerVisible` requires the
+  `result_checker` section). Backend now seeds default homepage
+  sections (`announcements`, `quick_access`, `materials`, `exams`,
+  `gpa_calculator`, `planner`, `community`, `result_checker`) on
+  first creation; admins can still reorder/hide sections and toggle
+  the `resultChecker` feature flag from Admin → Settings. Backend
+  tests updated accordingly (127 passed).
+- Owner-side note: settings documents created before this fix keep
+  the empty array — either enable the section once via Admin →
+  Settings, or drop the `appsettings` document so defaults re-seed.
+
 ## [0.10.5] — KI-14: parser verified against a real BTEB result sheet (owner-provided)
 
 - The owner downloaded a real institute-wise board result PDF (1103 pages,

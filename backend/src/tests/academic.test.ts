@@ -133,6 +133,8 @@ describe('settings', () => {
     expect(res.status).toBe(200);
     expect(res.body.data.branding.appName).toBe('DiplomaBondhu');
     expect(res.body.data.maintenanceMode).toBe(false);
+    const sections = res.body.data.homepageSections as { key: string; visible: boolean }[];
+    expect(sections.some((s) => s.key === 'result_checker' && s.visible)).toBe(true);
   });
 
   it('admin can toggle maintenance mode (audit-logged)', async () => {
