@@ -28,9 +28,15 @@ export function createApp(env: Env) {
   app.use(cookieParser());
 
   const origins = env.CORS_ORIGINS.split(',').map((o) => o.trim()).filter(Boolean);
+  // Local dev convenience: Flutter web / Vite dev servers use arbitrary
+  // localhost ports, so any localhost/127.0.0.1 origin is allowed outside
+  // production. Production keeps the strict configured list.
+  const localOrigin = /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/;
   app.use(cors({
     origin: (origin, cb) => {
-      if (!origin || origins.length === 0 || origins.includes(origin)) return cb(null, true);
+      if (!origin || origins.includes(origin)) return cb(null, true);
+      if (env.NODE_ENV !== 'production' && localOrigin.test(origin)) return cb(null, true);
+      if (origins.length === 0) return cb(null, true);
       return cb(new Error('Origin not allowed by CORS'));
     },
     credentials: true

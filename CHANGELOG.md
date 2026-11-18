@@ -411,3 +411,12 @@
   panel works against a locally running backend without configuring
   `VITE_API_URL` (which previously sent requests to itself → 404).
   Production deployments are unaffected because `VITE_API_URL` is set there.
+
+## [0.10.3] — Fix: Flutter web registration blocked by CORS in local dev
+
+- Non-production builds now accept any `localhost`/`127.0.0.1` origin (any
+  port) — `flutter run -d chrome` uses a random port that the configured
+  CORS list could never include. Production behavior unchanged: strict
+  origin list only (+ explicit empty-list allow-all preserved for
+  bootstrapping). Verified: localhost origin allowed, foreign origin
+  blocked, full backend suite 127/127 green.
