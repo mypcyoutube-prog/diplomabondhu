@@ -41,6 +41,24 @@ beforeAll(async () => {
     if (req.method === 'GET' && req.url === '/batches') {
       return res.end(JSON.stringify({ batches: [{ batchId: 'a'.repeat(24), fileName: 'sample.pdf', examId: null, recordCount: 4 }] }));
     }
+    if (req.method === 'POST' && req.url === '/parse/job') {
+      let body = '';
+      req.on('data', (c) => { body += c; });
+      req.on('end', () => {
+        if (!body.includes('%PDF')) {
+          res.statusCode = 400;
+          return res.end(JSON.stringify({ detail: 'Not a PDF file' }));
+        }
+        res.end(JSON.stringify({ jobId: 'b'.repeat(24) }));
+      });
+      return;
+    }
+    if (req.method === 'GET' && req.url === `/parse/job/${'b'.repeat(24)}`) {
+      return res.end(JSON.stringify({ stage: 'parsing', pagesDone: 120, pages: 1103, fileName: 'sample.pdf' }));
+    }
+    if (req.method === 'GET' && req.url === `/import/${'a'.repeat(24)}/progress`) {
+      return res.end(JSON.stringify({ stage: 'importing', total: 4, done: 2 }));
+    }
     res.statusCode = 404;
     res.end(JSON.stringify({ detail: 'Not found' }));
   });
@@ -113,6 +131,39 @@ describe('results admin proxy', () => {
     expect(res.status).toBe(400);
   });
 
+  it('starts a parse job and polls its live progress', async () => {
+    const env = envWith({ RESULT_SERVICE_URL: pythonUrl, RESULT_SERVICE_TOKEN: 'svc-token' });
+    const token = await adminToken(env);
+    const start = await request(createApp(env)).post(`${ADMIN}/parse-job`)
+      .set('Authorization', `Bearer ${token}`).attach('file', PDF, 'sample.pdf');
+    expect(start.status).toBe(200);
+    expect(start.body.jobId).toBe('b'.repeat(24));
+    const poll = await request(createApp(env)).get(`${ADMIN}/parse-job/${'b'.repeat(24)}`)
+      .set('Authorization', `Bearer ${token}`);
+    expect(poll.status).toBe(200);
+    expect(poll.body.stage).toBe('parsing');
+    expect(poll.body.pagesDone).toBe(120);
+    expect(poll.body.pages).toBe(1103);
+  });
+
+  it('rejects malformed parse-job ids', async () => {
+    const env = envWith({ RESULT_SERVICE_URL: pythonUrl, RESULT_SERVICE_TOKEN: 'svc-token' });
+    const token = await adminToken(env);
+    const res = await request(createApp(env)).get(`${ADMIN}/parse-job/not-a-job`)
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(400);
+  });
+
+  it('polls import progress through the proxy', async () => {
+    const env = envWith({ RESULT_SERVICE_URL: pythonUrl, RESULT_SERVICE_TOKEN: 'svc-token' });
+    const token = await adminToken(env);
+    const res = await request(createApp(env)).get(`${ADMIN}/import-progress/${'a'.repeat(24)}`)
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(200);
+    expect(res.body.stage).toBe('importing');
+    expect(res.body.done).toBe(2);
+  });
+
   it('proxies import and writes an audit log entry', async () => {
     const env = envWith({ RESULT_SERVICE_URL: pythonUrl, RESULT_SERVICE_TOKEN: 'svc-token' });
     const token = await adminToken(env);
@@ -182,5 +233,50 @@ describe('student result endpoints', () => {
     const bad = await request(app).get('/api/v1/results/check?examId=eng-3rd-2026-11&roll=abc')
       .set('Authorization', `Bearer ${token}`);
     expect(bad.status).toBe(400);
+  });
+
+  it('history returns all exams for a roll, newest semester first, with titles', async () => {
+    const db = mongoose.connection.useDb('results_db');
+    await db.collection('records').insertMany([
+      {
+        examId: 'eng-5th-2026-11', roll: '410123', name: 'Student One',
+        gpa: 3.60, status: 'pass', subjects: [{ code: '28553', type: 'T' }],
+        institute: 'Himaloy Polytechnic Institute', semesterGpas: { gpa1: 3.36, gpa5: 3.60 }, examSemester: 5,
+        meta: {}
+      },
+      {
+        examId: 'eng-3rd-2026-11', roll: '410123', name: 'Student One',
+        gpa: 3.75, status: 'pass', subjects: [],
+        institute: 'Himaloy Polytechnic Institute', semesterGpas: { gpa1: 3.36, gpa3: 3.75 }, examSemester: 3,
+        meta: {}
+      }
+    ]);
+    await db.collection('exams').insertMany([
+      { examId: 'eng-3rd-2026-11', recordCount: 1, title: 'Diploma in Engineering 3rd Semester', checkCount: 0 },
+      { examId: 'eng-5th-2026-11', recordCount: 1, title: 'Diploma in Engineering 5th Semester', checkCount: 0 }
+    ]);
+    const token = await studentToken(testEnv);
+    const res = await request(app).get('/api/v1/results/history?roll=410123')
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(200);
+    expect(res.body.data.records).toHaveLength(2);
+    expect(res.body.data.records[0].examSemester).toBe(5);
+    expect(res.body.data.records[0].title).toBe('Diploma in Engineering 5th Semester');
+    expect(res.body.data.records[1].examSemester).toBe(3);
+    expect(res.body.data.records[0].subjects[0].type).toBe('T');
+    expect(res.body.data.records[0].disclaimer).toContain('not an official BTEB service');
+  });
+
+  it('history returns 404 when the roll has no published results', async () => {
+    const token = await studentToken(testEnv);
+    const res = await request(app).get('/api/v1/results/history?roll=410123')
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(404);
+  });
+
+  it('history requires authentication and rejects malformed rolls', async () => {
+    expect((await request(app).get('/api/v1/results/history?roll=410123')).status).toBe(401);
+    const token = await studentToken(testEnv);
+    expect((await request(app).get('/api/v1/results/history?roll=abc').set('Authorization', `Bearer ${token}`)).status).toBe(400);
   });
 });

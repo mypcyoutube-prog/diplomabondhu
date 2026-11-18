@@ -153,6 +153,58 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noExamsAvailable => 'No results have been published yet';
 
   @override
+  String get resultPassed => 'Passed';
+
+  @override
+  String get resultReferred => 'Referred';
+
+  @override
+  String get resultDropped => 'Dropped';
+
+  @override
+  String get resultExpelled => 'Expelled';
+
+  @override
+  String get resultFail => 'Failed';
+
+  @override
+  String resultSubjectsYetToPass(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count subjects yet to pass',
+      one: '1 subject yet to pass',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get resultThisExam => 'This exam';
+
+  @override
+  String get resultGpa => 'GPA';
+
+  @override
+  String get resultSubjectsList => 'Subjects';
+
+  @override
+  String get resultTheory => 'Theory';
+
+  @override
+  String get resultPractical => 'Practical';
+
+  @override
+  String resultExamCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count published exams found for this roll',
+      one: '1 published exam found for this roll',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get rollInvalid => 'Enter a valid roll number (6-10 digits)';
 
   @override

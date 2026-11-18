@@ -380,6 +380,78 @@ abstract class AppLocalizations {
   /// **'No results have been published yet'**
   String get noExamsAvailable;
 
+  /// No description provided for @resultPassed.
+  ///
+  /// In en, this message translates to:
+  /// **'Passed'**
+  String get resultPassed;
+
+  /// No description provided for @resultReferred.
+  ///
+  /// In en, this message translates to:
+  /// **'Referred'**
+  String get resultReferred;
+
+  /// No description provided for @resultDropped.
+  ///
+  /// In en, this message translates to:
+  /// **'Dropped'**
+  String get resultDropped;
+
+  /// No description provided for @resultExpelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Expelled'**
+  String get resultExpelled;
+
+  /// No description provided for @resultFail.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed'**
+  String get resultFail;
+
+  /// No description provided for @resultSubjectsYetToPass.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{1 subject yet to pass} other{{count} subjects yet to pass}}'**
+  String resultSubjectsYetToPass(num count);
+
+  /// No description provided for @resultThisExam.
+  ///
+  /// In en, this message translates to:
+  /// **'This exam'**
+  String get resultThisExam;
+
+  /// No description provided for @resultGpa.
+  ///
+  /// In en, this message translates to:
+  /// **'GPA'**
+  String get resultGpa;
+
+  /// No description provided for @resultSubjectsList.
+  ///
+  /// In en, this message translates to:
+  /// **'Subjects'**
+  String get resultSubjectsList;
+
+  /// No description provided for @resultTheory.
+  ///
+  /// In en, this message translates to:
+  /// **'Theory'**
+  String get resultTheory;
+
+  /// No description provided for @resultPractical.
+  ///
+  /// In en, this message translates to:
+  /// **'Practical'**
+  String get resultPractical;
+
+  /// No description provided for @resultExamCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{1 published exam found for this roll} other{{count} published exams found for this roll}}'**
+  String resultExamCount(num count);
+
   /// No description provided for @rollInvalid.
   ///
   /// In en, this message translates to:

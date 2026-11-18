@@ -13,6 +13,7 @@ export interface ResultExam {
 
 export interface ResultRecord {
   examId: string;
+  title?: string | null;
   roll: string;
   name: string | null;
   registrationNo: string | null;
@@ -58,6 +59,7 @@ export async function checkResult(env: Env, examId: string, roll: string): Promi
     .updateOne({ examId }, { $inc: { checkCount: 1 }, $setOnInsert: { examId } }, { upsert: true });
   return {
     examId,
+    title: typeof doc.meta?.title === 'string' && doc.meta.title ? doc.meta.title : undefined,
     roll: String(doc.roll),
     name: typeof doc.name === 'string' ? doc.name : null,
     registrationNo: typeof doc.registrationNo === 'string' ? doc.registrationNo : null,
@@ -73,6 +75,55 @@ export async function checkResult(env: Env, examId: string, roll: string): Promi
     examSemester: typeof doc.examSemester === 'number' ? doc.examSemester : null,
     disclaimer: RESULT_DISCLAIMER
   };
+}
+
+export async function resultHistory(env: Env, rawRoll: string): Promise<ResultRecord[]> {
+  const db = resultsDb(env);
+  const roll = String(rawRoll);
+  const docs = await db
+    .collection('records')
+    .find({ roll })
+    .sort({ examSemester: -1, _id: -1 })
+    .limit(50)
+    .toArray();
+  if (docs.length === 0) throw notFound('No published result found for this roll');
+  const examIds = [...new Set(docs.map((d) => String(d.examId)))];
+  const examDocs = await db
+    .collection('exams')
+    .find({ examId: { $in: examIds } })
+    .toArray();
+  const titles = new Map<string, string>();
+  for (const e of examDocs) {
+    if (typeof e.title === 'string' && e.title) titles.set(String(e.examId), e.title);
+  }
+  await Promise.all(
+    examIds.map((examId) =>
+      db
+        .collection('exams')
+        .updateOne({ examId }, { $inc: { checkCount: 1 }, $setOnInsert: { examId } }, { upsert: true })
+    )
+  );
+  return docs.map((doc) => {
+    const examId = String(doc.examId);
+    return {
+      examId,
+      title: titles.get(examId) ?? (typeof doc.meta?.title === 'string' && doc.meta.title ? doc.meta.title : undefined),
+      roll: String(doc.roll),
+      name: typeof doc.name === 'string' ? doc.name : null,
+      registrationNo: typeof doc.registrationNo === 'string' ? doc.registrationNo : null,
+      gpa: typeof doc.gpa === 'number' ? doc.gpa : null,
+      status: typeof doc.status === 'string' ? doc.status : null,
+      subjects: Array.isArray(doc.subjects) ? doc.subjects : [],
+      instituteCode: typeof doc.instituteCode === 'string' ? doc.instituteCode : null,
+      institute: typeof doc.institute === 'string' ? doc.institute : null,
+      semesterGpas:
+        doc.semesterGpas && typeof doc.semesterGpas === 'object' && !Array.isArray(doc.semesterGpas)
+          ? (doc.semesterGpas as Record<string, number | null>)
+          : undefined,
+      examSemester: typeof doc.examSemester === 'number' ? doc.examSemester : null,
+      disclaimer: RESULT_DISCLAIMER
+    };
+  });
 }
 
 export async function auditResultImport(

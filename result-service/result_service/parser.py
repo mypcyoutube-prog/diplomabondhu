@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, Callable
 
 import pdfplumber
 
@@ -202,14 +202,20 @@ def parse_pdf(
     path: str,
     max_pages: int | None = None,
     table_page_limit: int | None = DEFAULT_TABLE_PAGE_LIMIT,
+    on_page: Callable[[int, int], None] | None = None,
 ) -> ParseResult:
     """Router: table-style PDFs go to pdfplumber, large gpa-map-style board
     sheets are parsed from fast raw text (pdfplumber hangs on 1000+-page
-    files; pypdfium2 reads them in seconds)."""
+    files; pypdfium2 reads them in seconds).
+
+    ``on_page`` receives (pages_done, page_count) after every scanned page
+    so hosts can surface live progress."""
     page_count = _pdfium_page_count(path)
+    if on_page is not None:
+        on_page(0, page_count)
     if table_page_limit is not None and page_count <= table_page_limit:
-        return _parse_pdf_pdfplumber(path, max_pages)
-    return _parse_pdf_gpa_map_text(path, max_pages, page_count)
+        return _parse_pdf_pdfplumber(path, max_pages, on_page)
+    return _parse_pdf_gpa_map_text(path, max_pages, page_count, on_page)
 
 
 def _pdfium_page_count(path: str) -> int:
@@ -218,7 +224,11 @@ def _pdfium_page_count(path: str) -> int:
     return len(pdfium.PdfDocument(path))
 
 
-def _parse_pdf_pdfplumber(path: str, max_pages: int | None) -> ParseResult:
+def _parse_pdf_pdfplumber(
+    path: str,
+    max_pages: int | None,
+    on_page: Callable[[int, int], None] | None = None,
+) -> ParseResult:
     records: list[ParsedRecord] = []
     warnings: list[str] = []
     seen_rolls: set[str] = set()
@@ -232,6 +242,8 @@ def _parse_pdf_pdfplumber(path: str, max_pages: int | None) -> ParseResult:
     with pdfplumber.open(path) as pdf:
         pages = pdf.pages if max_pages is None else pdf.pages[:max_pages]
         for page_no, page in enumerate(pages, start=1):
+            if on_page is not None:
+                on_page(page_no, len(pages))
             tables = page.extract_tables() or []
             table_records = 0
             for table in tables:
@@ -318,7 +330,12 @@ def _parse_map_record(text: str, intro: str | None) -> ParsedRecord | None:
     )
 
 
-def _parse_pdf_gpa_map_text(path: str, max_pages: int | None, page_count: int) -> ParseResult:
+def _parse_pdf_gpa_map_text(
+    path: str,
+    max_pages: int | None,
+    page_count: int,
+    on_page: Callable[[int, int], None] | None = None,
+) -> ParseResult:
     import pypdfium2 as pdfium
 
     records: list[ParsedRecord] = []
@@ -334,6 +351,8 @@ def _parse_pdf_gpa_map_text(path: str, max_pages: int | None, page_count: int) -
     limit = page_count if max_pages is None else min(max_pages, page_count)
     pdf = pdfium.PdfDocument(path)
     pages_scanned = 0
+    if on_page is not None:
+        on_page(0, limit)
     institute_code: str | None = None
     institute: str | None = None
     pending_intro: str | None = None
@@ -356,6 +375,8 @@ def _parse_pdf_gpa_map_text(path: str, max_pages: int | None, page_count: int) -
     for page_no in range(limit):
         text = pdf[page_no].get_textpage().get_text_bounded()
         pages_scanned += 1
+        if on_page is not None:
+            on_page(pages_scanned, limit)
         for raw_line in text.splitlines():
             for segment in SEGMENT_SPLIT_RE.split(raw_line.strip()):
                 line = segment.strip()

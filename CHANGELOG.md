@@ -1,5 +1,72 @@
 # CHANGELOG.md — DiplomaBondhu
 
+## [0.11.0] — Result experience upgrade: full result cards, roll-only search across all exams, live import progress
+
+### Added
+- **Python result-service — live progress**:
+  - `POST /parse/job` starts the PDF parse in a background thread and
+    returns `{jobId}`; `GET /parse/job/{jobId}` reports `{stage,
+    pagesDone, pages}` while running and the same preview payload as
+    `/parse` when done (or an explicit `{stage: error, detail}`).
+    Multi-hundred-page board sheets no longer look frozen.
+  - `GET /import/{batchId}/progress` reports `{stage, total, done}`
+    chunk-by-chunk while a batch imports into MongoDB.
+  - `parser.parse_pdf(on_page=...)` now accepts a per-page progress
+    callback (both the pdfplumber and pypdfium2 code paths).
+- **Node API**:
+  - `GET /api/v1/results/history?roll=` (student, rate-limited,
+    zod-validated) — returns EVERY published result record for a roll
+    across all imported examinations (newest semester first), each with
+    exam `title`, `institute`, `semesterGpas` (gpa1…gpa8 incl. `ref`
+    semesters as null), referred/expelled `subjects` with `(T)`/`(P)`
+    type, and the non-official disclaimer. 404 when the roll has no
+    published result.
+  - Admin proxies: `POST /results/admin/parse-job`,
+    `GET /results/admin/parse-job/:jobId`,
+    `GET /results/admin/import-progress/:batchId`.
+  - `checkResult` now also returns the exam `title`.
+- **Admin panel (Results page)** — live progress bars for both stages:
+  "Parsing PDF pages… X / Y (Z%)" and "Importing records into MongoDB…
+  X / Y (Z%)"; parse errors surface the real parser/service message
+  instead of a generic failure; exam ID hint documents the
+  program-semester-regulation-year convention (one PDF per program +
+  semester).
+- **Flutter Result Checker — full result card** (matches the owner's
+  reference screenshots):
+  - roll-only search (no exam dropdown) via `/results/history`; shows
+    "N published exams found for this roll" when several exams match.
+  - Navy header: roll number, exam title (program + semester),
+    institute name.
+  - Status banner: green "Passed", red "N subject(s) yet to pass"
+    (also shown when the board still lists referred subjects on an
+    otherwise passed record), amber "Dropped", red "Expelled"/"Failed".
+  - Referred subject chips in red with subject code and `(T)`/`(P)`
+    suffix (e.g. `28553(T)`).
+  - Semester GPA timeline (8th → 1st) with green GPA values, red dash
+    for `ref` semesters, and a "This exam" badge on the semester this
+    result belongs to. Bangla semester names (১ম…১০ম) in bn locale.
+- New l10n keys (en+bn): resultPassed, resultReferred, resultDropped,
+  resultExpelled, resultFail, resultSubjectsYetToPass, resultThisExam,
+  resultGpa, resultSubjectsList, resultTheory, resultPractical,
+  resultExamCount.
+
+### Verified (live end-to-end, real 1103-page owner PDF)
+- Parse job with visible live progress (pagesDone/pages) → done in ~3s
+  with 31,094 records; import progress polled → finished 31,094/31,094.
+- Student history: 700014 → pass, gpa7 3.73, full gpa1…gpa7 map, title;
+  712990 → gpa7 3.54 with `28553(T)` referred subject (banner logic);
+  764170 → expelled; unknown roll → 404; malformed roll → 400;
+  unauthenticated → 401.
+
+### Tests
+- Backend vitest: 133 passed (parse-job proxy, malformed job id,
+  import-progress proxy, history: newest-first ordering, titles, 404,
+  400, auth).
+- Python pytest: 18 passed, 1 skipped (mongo-dependent pipeline).
+- Flutter: analyzer clean, 21 tests passed (6 result-checker screen
+  tests incl. backlog banner and multi-exam header).
+- Admin panel: tsc clean, vite build ok.
+
 ## [0.10.0] — Phase 12: BTEB Result Checker (implemented & tested)
 
 ### Added

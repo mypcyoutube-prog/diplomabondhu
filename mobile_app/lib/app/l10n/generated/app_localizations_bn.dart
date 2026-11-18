@@ -153,6 +153,58 @@ class AppLocalizationsBn extends AppLocalizations {
   String get noExamsAvailable => 'এখনো কোনো রেজাল্ট প্রকাশ করা হয়নি';
 
   @override
+  String get resultPassed => 'উত্তীর্ণ';
+
+  @override
+  String get resultReferred => 'রেফারড';
+
+  @override
+  String get resultDropped => 'ড্রপড';
+
+  @override
+  String get resultExpelled => 'বহিষ্কৃত';
+
+  @override
+  String get resultFail => 'অকৃতকার্য';
+
+  @override
+  String resultSubjectsYetToPass(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countটি সাবজেক্ট এখনো পাস করেননি',
+      one: '১টি সাবজেক্ট এখনো পাস করেননি',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get resultThisExam => 'এই পরীক্ষা';
+
+  @override
+  String get resultGpa => 'জিপিএ';
+
+  @override
+  String get resultSubjectsList => 'সাবজেক্ট';
+
+  @override
+  String get resultTheory => 'তত্ত্বীয়';
+
+  @override
+  String get resultPractical => 'ব্যবহারিক';
+
+  @override
+  String resultExamCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'এই রোল নম্বরে $countটি প্রকাশিত পরীক্ষা পাওয়া গেছে',
+      one: 'এই রোল নম্বরে ১টি প্রকাশিত পরীক্ষা পাওয়া গেছে',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get rollInvalid => 'সঠিক রোল নম্বর লিখুন (৬-১০ ডিজিট)';
 
   @override

@@ -13,6 +13,8 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import secrets
+import threading
 import time
 from pathlib import Path
 
@@ -32,6 +34,15 @@ SERVICE_TOKEN = os.environ.get("RESULT_SERVICE_TOKEN", "")
 app = FastAPI(title="DiplomaBondhu result-service", version="0.1.0")
 bearer = HTTPBearer(auto_error=False)
 
+# Live job state so hosts (and the admin panel through the Node proxy) can
+# show progress while long PDF parses and record imports run.
+PARSE_JOBS: dict[str, dict] = {}
+IMPORT_PROGRESS: dict[str, dict] = {}
+
+
+def _hex24() -> str:
+    return secrets.token_hex(12)
+
 
 def require_service_token(creds: HTTPAuthorizationCredentials | None = Depends(bearer)) -> None:
     if not SERVICE_TOKEN:
@@ -50,8 +61,55 @@ def health():
     return {"ok": True, "service": "result-service"}
 
 
+def _run_parse(data: bytes, filename: str | None, exam_id: str, title: str, on_page=None) -> dict:
+    if len(data) > 50 * 1024 * 1024:
+        raise HTTPException(status_code=413, detail="PDF too large (max 50 MB)")
+    if not data.startswith(b"%PDF"):
+        raise HTTPException(status_code=400, detail="Not a PDF file")
+
+    tmp = BATCH_DIR / f"upload-{int(time.time() * 1000)}-{_hex24()}.pdf"
+    tmp.write_bytes(data)
+    try:
+        result = parse_pdf(str(tmp), on_page=on_page)
+    finally:
+        tmp.unlink(missing_ok=True)
+
+    meta = {k: v for k, v in (("examId", exam_id), ("title", title)) if v}
+
+    batch_id = hashlib.sha256(data).hexdigest()[:24]
+    batch_path = BATCH_DIR / f"{batch_id}.json"
+    batch = to_batch(result.records, {"fileName": filename, **meta})
+    batch["meta"]["batchId"] = batch_id
+    batch["meta"]["pagesScanned"] = result.pages_scanned
+    batch["meta"]["warnings"] = result.warnings[:50]
+    batch_path.write_text(json.dumps(batch, ensure_ascii=False))
+
+    return {
+        "batchId": batch_id,
+        "fileName": filename,
+        "pagesScanned": result.pages_scanned,
+        "recordCount": len(result.records),
+        "warnings": result.warnings[:50],
+        "sample": [
+            {k: v for k, v in r.items() if k != "raw"}
+            for r in batch["records"][:5]
+        ],
+    }
+
+
 @app.post("/parse")
 async def parse(
+    file: UploadFile = File(...),
+    examId: str = Form(""),
+    title: str = Form(""),
+    _: None = Depends(require_service_token),
+):
+    data = await file.read()
+    return _run_parse(data, file.filename, examId, title)
+
+
+@app.post("/parse/job")
+async def parse_job(
     file: UploadFile = File(...),
     examId: str = Form(""),
     title: str = Form(""),
@@ -63,34 +121,43 @@ async def parse(
     if not data.startswith(b"%PDF"):
         raise HTTPException(status_code=400, detail="Not a PDF file")
 
-    tmp = BATCH_DIR / f"upload-{int(time.time() * 1000)}.pdf"
-    tmp.write_bytes(data)
-    try:
-        result = parse_pdf(str(tmp))
-    finally:
-        tmp.unlink(missing_ok=True)
+    job_id = _hex24()
+    PARSE_JOBS[job_id] = {"stage": "waiting", "pagesDone": 0, "pages": 0, "fileName": file.filename}
 
-    meta = {k: v for k, v in (("examId", examId), ("title", title)) if v}
+    def worker() -> None:
+        job = PARSE_JOBS[job_id]
+        try:
+            job["stage"] = "parsing"
 
-    batch_id = hashlib.sha256(data).hexdigest()[:24]
-    batch_path = BATCH_DIR / f"{batch_id}.json"
-    batch = to_batch(result.records, {"fileName": file.filename, **meta})
-    batch["meta"]["batchId"] = batch_id
-    batch["meta"]["pagesScanned"] = result.pages_scanned
-    batch["meta"]["warnings"] = result.warnings[:50]
-    batch_path.write_text(json.dumps(batch, ensure_ascii=False))
+            def on_page(pages_done: int, pages: int) -> None:
+                job["pagesDone"] = pages_done
+                job["pages"] = pages
 
-    return {
-        "batchId": batch_id,
-        "fileName": file.filename,
-        "pagesScanned": result.pages_scanned,
-        "recordCount": len(result.records),
-        "warnings": result.warnings[:50],
-        "sample": [
-            {k: v for k, v in r.items() if k != "raw"}
-            for r in batch["records"][:5]
-        ],
-    }
+            job["result"] = _run_parse(data, file.filename, examId, title, on_page=on_page)
+            job["stage"] = "done"
+        except HTTPException as exc:
+            job["stage"] = "error"
+            job["detail"] = exc.detail
+        except Exception as exc:
+            job["stage"] = "error"
+            job["detail"] = f"{type(exc).__name__}: {exc}"
+
+    threading.Thread(target=worker, daemon=True).start()
+    return {"jobId": job_id}
+
+
+@app.get("/parse/job/{job_id}")
+def parse_job_status(job_id: str, _: None = Depends(require_service_token)):
+    if not re_ok(job_id):
+        raise HTTPException(status_code=400, detail="Invalid job id")
+    job = PARSE_JOBS.get(job_id)
+    if job is None:
+        raise HTTPException(status_code=404, detail="Unknown job id (parse again)")
+    if job["stage"] == "done":
+        return {"stage": "done", **job["result"]}
+    if job["stage"] == "error":
+        return {"stage": "error", "detail": job["detail"]}
+    return {"stage": job["stage"], "pagesDone": job["pagesDone"], "pages": job["pages"], "fileName": job["fileName"]}
 
 
 @app.get("/batches")
@@ -163,11 +230,19 @@ def import_batch(batch_id: str, body: dict = Body(default={}), _: None = Depends
 
     inserted = 0
     CHUNK = 500
+    IMPORT_PROGRESS[batch_id] = {"total": len(docs), "done": 0, "examId": exam_id}
     from pymongo import ReplaceOne
-    for i in range(0, len(docs), CHUNK):
-        ops = [ReplaceOne({"examId": exam_id, "roll": doc["roll"]}, doc, upsert=True) for doc in docs[i:i + CHUNK]]
-        res = coll.bulk_write(ops, ordered=False)
-        inserted += res.upserted_count
+    try:
+        for i in range(0, len(docs), CHUNK):
+            ops = [ReplaceOne({"examId": exam_id, "roll": doc["roll"]}, doc, upsert=True) for doc in docs[i:i + CHUNK]]
+            res = coll.bulk_write(ops, ordered=False)
+            inserted += res.upserted_count
+            IMPORT_PROGRESS[batch_id]["done"] = min(i + CHUNK, len(docs))
+    finally:
+        done = IMPORT_PROGRESS.get(batch_id)
+        if done is not None:
+            done["done"] = done["total"]
+            done["finished"] = True
 
     coll.create_index([("examId", ASCENDING), ("roll", ASCENDING)], unique=True)
     coll.create_index([("examId", ASCENDING), ("name", ASCENDING)])
@@ -180,6 +255,16 @@ def import_batch(batch_id: str, body: dict = Body(default={}), _: None = Depends
     )
 
     return {"batchId": batch_id, "examId": exam_id, "total": len(docs), "inserted": inserted, "updated": len(docs) - inserted}
+
+
+@app.get("/import/{batch_id}/progress")
+def import_progress(batch_id: str, _: None = Depends(require_service_token)):
+    if not re_ok(batch_id):
+        raise HTTPException(status_code=400, detail="Invalid batch id")
+    progress = IMPORT_PROGRESS.get(batch_id)
+    if progress is None:
+        return {"stage": "idle"}
+    return {"stage": "finished" if progress.get("finished") else "importing", **progress}
 
 
 def re_ok(batch_id: str) -> bool:

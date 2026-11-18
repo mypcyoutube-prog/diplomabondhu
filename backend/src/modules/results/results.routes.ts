@@ -7,7 +7,7 @@ import { validate } from '../../middlewares/validate';
 import { ok, fail } from '../../core/response';
 import { PERMISSIONS } from '../../core/permissions';
 import * as svc from './results.service';
-import { checkQuerySchema, importBodySchema, type CheckQuery, type ImportBody } from './results.schemas';
+import { checkQuerySchema, historyQuerySchema, importBodySchema, jobIdParamSchema, type CheckQuery, type HistoryQuery, type ImportBody, type JobIdParam } from './results.schemas';
 
 type Validated<T> = { validatedQuery?: T; validatedBody?: T };
 
@@ -44,6 +44,41 @@ export function resultsRoutes(env: Env) {
     } catch (err) { next(err); }
   });
 
+  router.get('/history', requireAuth(env.JWT_ACCESS_SECRET), checkRateLimit, validate({ query: historyQuerySchema }), async (req, res, next) => {
+    try {
+      const query = (req as unknown as Validated<HistoryQuery>).validatedQuery!;
+      return ok(res, { records: await svc.resultHistory(env, query.roll) });
+    } catch (err) { next(err); }
+  });
+
+  router.get('/admin/parse-job/:jobId', async (req, res, next) => {
+    try {
+      if (!env.RESULT_SERVICE_URL || !env.RESULT_SERVICE_TOKEN) {
+        return fail(res, 503, 'SERVICE_UNAVAILABLE', 'Result service is not configured');
+      }
+      const parsed = jobIdParamSchema.safeParse(req.params);
+      if (!parsed.success) {
+        return fail(res, 400, 'VALIDATION_ERROR', 'Invalid job id');
+      }
+      const { status, body } = await proxyJson(env, `/parse/job/${(req.params as JobIdParam).jobId}`, { method: 'GET' });
+      return res.status(status).set('content-type', 'application/json').send(body);
+    } catch (err) { next(err); }
+  });
+
+  router.get('/admin/import-progress/:batchId', async (req, res, next) => {
+    try {
+      if (!env.RESULT_SERVICE_URL || !env.RESULT_SERVICE_TOKEN) {
+        return fail(res, 503, 'SERVICE_UNAVAILABLE', 'Result service is not configured');
+      }
+      const batchId = String(req.params.batchId ?? '');
+      if (!/^[a-f0-9]{24}$/.test(batchId)) {
+        return fail(res, 400, 'VALIDATION_ERROR', 'Invalid batch id');
+      }
+      const { status, body } = await proxyJson(env, `/import/${batchId}/progress`, { method: 'GET' });
+      return res.status(status).set('content-type', 'application/json').send(body);
+    } catch (err) { next(err); }
+  });
+
   router.use('/admin', requireAuth(env.JWT_ACCESS_SECRET), requirePermission(PERMISSIONS.CONTENT_MANAGE));
 
   router.get('/admin/batches', async (_req, res, next) => {
@@ -72,6 +107,31 @@ export function resultsRoutes(env: Env) {
           return fail(res, 400, 'VALIDATION_ERROR', 'PDF file body is empty');
         }
         const { status, body } = await proxyJson(env, '/parse', {
+          method: 'POST',
+          headers: { 'content-type': contentType },
+          body: new Uint8Array(req.body)
+        });
+        return res.status(status).set('content-type', 'application/json').send(body);
+      } catch (err) { next(err); }
+    }
+  );
+
+  router.post(
+    '/admin/parse-job',
+    express.raw({ type: 'multipart/form-data', limit: '55mb' }),
+    async (req, res, next) => {
+      try {
+        if (!env.RESULT_SERVICE_URL || !env.RESULT_SERVICE_TOKEN) {
+          return fail(res, 503, 'SERVICE_UNAVAILABLE', 'Result service is not configured');
+        }
+        const contentType = req.headers['content-type'];
+        if (!contentType || !contentType.startsWith('multipart/form-data')) {
+          return fail(res, 400, 'VALIDATION_ERROR', 'A multipart/form-data PDF upload is required');
+        }
+        if (!Buffer.isBuffer(req.body) || req.body.length === 0) {
+          return fail(res, 400, 'VALIDATION_ERROR', 'PDF file body is empty');
+        }
+        const { status, body } = await proxyJson(env, '/parse/job', {
           method: 'POST',
           headers: { 'content-type': contentType },
           body: new Uint8Array(req.body)

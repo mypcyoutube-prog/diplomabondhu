@@ -20,4 +20,11 @@ class ResultRepository {
     });
     return ResultRecord.fromJson(res.data);
   }
+
+  Future<List<ResultRecord>> history({required String roll}) async {
+    final res = await _client.getMap('/results/history', query: {'roll': roll});
+    return (res.data['records'] as List? ?? [])
+        .map((r) => ResultRecord.fromJson(r as Map<String, dynamic>))
+        .toList();
+  }
 }

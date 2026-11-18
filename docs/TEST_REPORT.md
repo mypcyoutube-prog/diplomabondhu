@@ -410,6 +410,23 @@ Typecheck: **clean** · Production build: **success** · `npm audit --omit=dev`:
 - Reset-code delivery is out-of-band by admin (phone/in-person) until email
   infrastructure is approved (KI-12). The API and UI flows are complete.
 
+## Report: v0.11.0 — Result experience upgrade (live progress + roll-only history + full result cards)
+
+| Check | Passed | Failed | Skipped | Notes |
+| --- | --- | --- | --- | --- |
+| result-service pytest (parse progress callback + job endpoints) | 18 | 0 | 1 (pipeline needs Mongo) | on_page callback in both parser paths; /parse/job + /import/progress verified live below |
+| Backend vitest (history endpoint, parse-job proxy, import-progress proxy) | 133 | 0 | 0 | incl. 6 new results tests |
+| Flutter analyze + test (new result card screen) | 21 | 0 | 0 | 6 screen tests: backlog banner `28553(T)`, semester timeline, multi-exam header, not-found |
+| Admin panel tsc + vite build (live progress bars) | OK | 0 | 0 | parse + import progress UI |
+| Live real-PDF E2E: parse-job progress observed | yes | 0 | 0 | 1103-page owner PDF → pagesDone/pages polled → done ~3s, 31,094 records |
+| Live real-PDF E2E: import progress polled | 31,094/31,094 | 0 | 0 | stage finished at end |
+| Live history checks | 7/7 | 0 | 0 | 700014 pass+gpa1…7+title · 712990 `28553(T)` ref_sub (pass status, backlog banner) · 764170 expelled · 404 · 400 · 401 |
+| Legacy E2E `e2e-results-flow.mjs` (still passing after changes) | 17 | 0 | 0 | — |
+
+Notes:
+- Board prints records like `712990 { … gpa5: ref, … ref_sub: 28553(T) }` where the current-exam GPA is a number — the parser keeps `status: pass` (verified against the board intro text in v0.10.5 gold data) while `subjects` lists the still-referred subject. The Flutter card shows the red "1 subject yet to pass" banner for such records, matching the owner's reference screenshots.
+- Display-only letter grades (A-, B+ next to GPA) visible on third-party sites are intentionally NOT shown: the official GPA→grade mapping must be verified from official BTEB documents first (KI-1/KI-9). Raw GPA values come straight from the board sheet.
+
 ## Report: KI-14 — Real result-sheet verification (v0.10.5)
 
 | Check | Passed | Failed | Skipped | Notes |

@@ -31,6 +31,36 @@ interface BatchInfo {
   createdAt?: string;
 }
 
+function LiveProgressBar({ value, total, label }: { value: number; total: number; label: string }) {
+  const pct = total > 0 ? Math.min(100, Math.round((value / total) * 100)) : 0;
+  return (
+    <div className="mt-3">
+      <div className="mb-1 flex items-center justify-between text-sm text-slate-600 dark:text-slate-300">
+        <span>{label}</span>
+        <span className="font-mono">{value} / {total} ({pct}%)</span>
+      </div>
+      <div className="h-2 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-navy-500">
+        <div
+          className="h-full rounded-full bg-emerald-500 transition-all duration-300"
+          style={{ width: `${Math.max(pct, 3)}%` }}
+        />
+      </div>
+    </div>
+  );
+}
+
+interface ParsePollState {
+  stage: string;
+  pagesDone?: number;
+  pages?: number;
+}
+
+interface ImportProgressState {
+  stage: string;
+  done?: number;
+  total?: number;
+}
+
 export function ResultsPage() {
   const fileRef = useRef<HTMLInputElement>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -39,6 +69,8 @@ export function ResultsPage() {
   const [title, setTitle] = useState('');
   const [importError, setImportError] = useState<string | null>(null);
   const [imported, setImported] = useState<string | null>(null);
+  const [parsePoll, setParsePoll] = useState<ParsePollState | null>(null);
+  const [importPoll, setImportPoll] = useState<ImportProgressState | null>(null);
 
   const exams = useApiQuery<{ exams: ResultExam[] }>(['results', 'meta'], '/results/meta');
   const batches = useQuery({
@@ -51,7 +83,29 @@ export function ResultsPage() {
   const parseMut = useApiMutation(async (file: File) => {
     const form = new FormData();
     form.append('file', file);
-    return apiRaw<ParsePreview>('/results/admin/parse', { method: 'POST', body: form });
+    const started = await apiRaw<{ jobId: string }>('/results/admin/parse-job', {
+      method: 'POST',
+      body: form
+    });
+    setParsePoll({ stage: 'waiting' });
+    const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+    for (let i = 0; i < 600; i += 1) {
+      await sleep(700);
+      const state = await apiRaw<ParsePollState & { result?: ParsePreview; detail?: string }>(
+        `/results/admin/parse-job/${started.jobId}`
+      );
+      if (state.stage === 'done' && state.result) {
+        setParsePoll(null);
+        return state.result;
+      }
+      if (state.stage === 'error') {
+        setParsePoll(null);
+        throw new Error(state.detail ?? 'Parsing failed');
+      }
+      setParsePoll(state);
+    }
+    setParsePoll(null);
+    throw new Error('Parsing timed out');
   }, invalidate);
 
   const importMut = useApiMutation((vars: { batchId: string; examId: string; title?: string }) =>
@@ -75,9 +129,25 @@ export function ResultsPage() {
     });
   }
 
+  function startImportPolling(batchId: string) {
+    setImportPoll({ stage: 'waiting' });
+    const interval = setInterval(async () => {
+      try {
+        const state = await apiRaw<ImportProgressState>(`/results/admin/import-progress/${batchId}`);
+        setImportPoll(state);
+        if (state.stage === 'finished') clearInterval(interval);
+      } catch {
+        clearInterval(interval);
+      }
+    }, 700);
+    return () => clearInterval(interval);
+  }
+
   function handleImport() {
     if (!preview) return;
     setImportError(null);
+    setImported(null);
+    const stopPolling = startImportPolling(preview.batchId);
     importMut.mutate(
       { batchId: preview.batchId, examId: examId.trim(), title: title.trim() || undefined },
       {
@@ -87,8 +157,14 @@ export function ResultsPage() {
           setExamId('');
           setTitle('');
           if (fileRef.current) fileRef.current.value = '';
+          stopPolling();
+          setImportPoll(null);
         },
-        onError: (err) => setImportError(err.message)
+        onError: (err) => {
+          setImportError(err.message);
+          stopPolling();
+          setImportPoll(null);
+        }
       }
     );
   }
@@ -97,7 +173,7 @@ export function ResultsPage() {
     <div className="space-y-6">
       <PageHeader
         title="BTEB Result Checker"
-        subtitle="Upload published BTEB result PDFs, preview the parsed records, then import them so students can check results by roll number. Results are shown with a non-official disclaimer."
+        subtitle="Upload published BTEB result PDFs — one PDF per program + semester (use a unique exam ID like eng-7th-2022reg-2026, eng-8th-2022reg-2026). Students search by roll number and see every published exam they appear in. Results are shown with a non-official disclaimer."
       />
 
       <Card>
@@ -113,6 +189,13 @@ export function ResultsPage() {
             {parseMut.isPending ? 'Parsing…' : 'Parse PDF'}
           </Button>
         </div>
+        {parsePoll && (
+          <LiveProgressBar
+            value={parsePoll.pagesDone ?? 0}
+            total={parsePoll.pages ?? 0}
+            label={parsePoll.stage === 'waiting' ? 'Starting PDF parser…' : 'Parsing PDF pages…'}
+          />
+        )}
         {uploadError && <p className="mt-2 text-sm text-red-600">{uploadError}</p>}
 
         {preview && (
@@ -145,7 +228,7 @@ export function ResultsPage() {
             </Table>
             <div className="grid gap-3 md:grid-cols-2">
               <Input
-                label="Exam ID (unique, e.g. eng-3rd-2026-11)"
+                label="Exam ID (unique: program-semester-regulation-year, e.g. eng-7th-2022reg-2026)"
                 value={examId}
                 onChange={setExamId}
                 required
@@ -156,6 +239,13 @@ export function ResultsPage() {
                 onChange={setTitle}
               />
             </div>
+            {importPoll && (
+              <LiveProgressBar
+                value={importPoll.done ?? 0}
+                total={importPoll.total ?? preview.recordCount}
+                label={importPoll.stage === 'waiting' ? 'Starting import…' : 'Importing records into MongoDB…'}
+              />
+            )}
             {importError && <p className="text-sm text-red-600">{importError}</p>}
             <div className="flex gap-2">
               <Button onClick={handleImport} disabled={importMut.isPending || !examId.trim()}>

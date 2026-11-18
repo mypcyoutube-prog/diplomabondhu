@@ -9,34 +9,36 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 class _FakeResultRepository implements ResultRepository {
-  _FakeResultRepository(this.examList, {this.onCheck});
+  _FakeResultRepository({this.onHistory});
 
-  final List<ResultExam> examList;
-  final ResultRecord? Function(String examId, String roll)? onCheck;
+  final List<ResultRecord> Function(String roll)? onHistory;
 
   @override
-  Future<List<ResultExam>> exams() async => examList;
+  Future<List<ResultExam>> exams() async => const [];
 
   @override
   Future<ResultRecord> check({required String examId, required String roll}) {
-    final handler = onCheck;
-    if (handler == null) throw const ApiException('NOT_FOUND', 'No result found');
-    final record = handler(examId, roll);
-    if (record == null) throw const ApiException('NOT_FOUND', 'No result found');
-    return Future.value(record);
+    throw const ApiException('NOT_FOUND', 'No result found');
+  }
+
+  @override
+  Future<List<ResultRecord>> history({required String roll}) {
+    final handler = onHistory;
+    final records = handler?.call(roll) ?? const <ResultRecord>[];
+    if (records.isEmpty) throw const ApiException('NOT_FOUND', 'No result found');
+    return Future.value(records);
   }
 }
 
 Future<void> pumpChecker(
   WidgetTester tester, {
-  required List<ResultExam> exams,
-  ResultRecord? Function(String, String)? onCheck,
+  List<ResultRecord> Function(String)? onHistory,
 }) async {
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
         resultRepositoryProvider
-            .overrideWithValue(_FakeResultRepository(exams, onCheck: onCheck)),
+            .overrideWithValue(_FakeResultRepository(onHistory: onHistory)),
       ],
       child: MaterialApp(
         supportedLocales: AppLocalizations.supportedLocales,
@@ -52,59 +54,144 @@ Future<void> pumpChecker(
   await tester.pumpAndSettle();
 }
 
+const passRecord = ResultRecord(
+  examId: 'eng-7th-2022reg-2026',
+  title: 'Diploma in Engineering — 7th Semester (2022 Regulation)',
+  roll: '700014',
+  name: 'Student One',
+  registrationNo: '1040014001',
+  gpa: 3.73,
+  status: 'pass',
+  subjects: [],
+  institute: 'Himaloy Polytechnic Institute',
+  semesterGpas: {
+    'gpa1': 3.36,
+    'gpa2': 3.34,
+    'gpa3': 3.54,
+    'gpa4': 3.76,
+    'gpa5': 3.76,
+    'gpa6': 3.61,
+    'gpa7': 3.73,
+  },
+  examSemester: 7,
+  disclaimer: 'This is not an official BTEB service.',
+);
+
+const referredRecord = ResultRecord(
+  examId: 'eng-7th-2022reg-2026',
+  title: 'Diploma in Engineering — 7th Semester (2022 Regulation)',
+  roll: '712990',
+  gpa: 3.54,
+  status: 'referred',
+  subjects: [
+    ResultSubject(code: '28553', type: 'T'),
+  ],
+  semesterGpas: {
+    'gpa1': 3.30,
+    'gpa2': 3.12,
+    'gpa3': 3.33,
+    'gpa4': 3.18,
+    'gpa5': null,
+    'gpa6': 3.45,
+    'gpa7': 3.54,
+  },
+  examSemester: 7,
+  disclaimer: 'This is not an official BTEB service.',
+);
+
 void main() {
-  const exam = ResultExam(
-    examId: 'eng-3rd-2026-11',
-    recordCount: 4,
-    title: 'Diploma in Engineering 3rd Semester',
-    checkCount: 0,
-  );
-
-  testWidgets('empty exams shows empty state', (tester) async {
-    await pumpChecker(tester, exams: []);
-    expect(find.text('No results have been published yet'), findsOneWidget);
-  });
-
   testWidgets('invalid roll shows validation message', (tester) async {
-    await pumpChecker(tester, exams: const [exam]);
+    await pumpChecker(tester);
     await tester.enterText(find.byType(TextField), 'abc');
     await tester.tap(find.byType(FilledButton));
     await tester.pumpAndSettle();
     expect(find.text('Enter a valid roll number (6-10 digits)'), findsOneWidget);
   });
 
-  testWidgets('successful check shows GPA and disclaimer', (tester) async {
-    await pumpChecker(
-      tester,
-      exams: const [exam],
-      onCheck: (examId, roll) => const ResultRecord(
-        examId: 'eng-3rd-2026-11',
-        roll: '410123',
-        name: 'Student One',
-        registrationNo: '1040123456',
-        gpa: 3.75,
-        status: 'pass',
-        disclaimer: 'This is not an official BTEB service.',
-      ),
-    );
-    await tester.enterText(find.byType(TextField), '410123');
+  testWidgets('pass record shows semester timeline, GPA and disclaimer', (tester) async {
+    await pumpChecker(tester, onHistory: (_) => const [passRecord]);
+    await tester.enterText(find.byType(TextField), '700014');
     await tester.tap(find.byType(FilledButton));
     await tester.pumpAndSettle();
 
+    expect(find.text('#700014'), findsOneWidget);
     expect(find.text('Student One'), findsOneWidget);
-    expect(find.text('3.75'), findsOneWidget);
-    expect(find.text('PASS'), findsOneWidget);
-    expect(find.text('This is not an official BTEB service.'), findsOneWidget);
+    expect(find.text('Passed'), findsOneWidget);
+    expect(find.text('7th Semester'), findsOneWidget);
+    expect(find.text('1st Semester'), findsOneWidget);
+    expect(find.text('3.73'), findsOneWidget);
+    expect(find.text('3.36'), findsOneWidget);
+    expect(
+      find.text('This is not an official BTEB service.'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('referred record shows missing-subject chip and red banner', (tester) async {
+    await pumpChecker(tester, onHistory: (_) => const [referredRecord]);
+    await tester.enterText(find.byType(TextField), '712990');
+    await tester.tap(find.byType(FilledButton));
+    await tester.pumpAndSettle();
+
+    expect(find.text('1 subject yet to pass'), findsOneWidget);
+    expect(find.text('28553(T)'), findsOneWidget);
+  });
+
+  testWidgets('pass record with a referred subject yet to pass shows red banner', (tester) async {
+    const passWithBacklog = ResultRecord(
+      examId: 'eng-7th-2022reg-2026',
+      roll: '712990',
+      gpa: 3.54,
+      status: 'pass',
+      subjects: [ResultSubject(code: '28553', type: 'T')],
+      semesterGpas: {'gpa5': null, 'gpa7': 3.54},
+      examSemester: 7,
+      disclaimer: 'This is not an official BTEB service.',
+    );
+    await pumpChecker(tester, onHistory: (_) => const [passWithBacklog]);
+    await tester.enterText(find.byType(TextField), '712990');
+    await tester.tap(find.byType(FilledButton));
+    await tester.pumpAndSettle();
+
+    expect(find.text('1 subject yet to pass'), findsOneWidget);
+    expect(find.text('28553(T)'), findsOneWidget);
+  });
+
+  testWidgets('referred semester without GPA shows a red dash', (tester) async {
+    await pumpChecker(tester, onHistory: (_) => const [referredRecord]);
+    await tester.enterText(find.byType(TextField), '712990');
+    await tester.tap(find.byType(FilledButton));
+    await tester.pumpAndSettle();
+
+    expect(find.text('5th Semester'), findsOneWidget);
   });
 
   testWidgets('unknown roll shows not-found state', (tester) async {
-    await pumpChecker(tester, exams: const [exam]);
+    await pumpChecker(tester, onHistory: (_) => const []);
     await tester.enterText(find.byType(TextField), '999999');
     await tester.tap(find.byType(FilledButton));
     await tester.pumpAndSettle();
     expect(
-      find.text('No result found for this roll in the selected examination'),
+      find.textContaining('No result found for this roll'),
       findsOneWidget,
     );
+  });
+
+  testWidgets('multiple published exams show the count header', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(800, 3200));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await pumpChecker(
+      tester,
+      onHistory: (_) => const [passRecord, referredRecord],
+    );
+    await tester.enterText(find.byType(TextField), '700014');
+    await tester.tap(find.byType(FilledButton));
+    await tester.pumpAndSettle();
+    expect(
+      find.text('2 published exams found for this roll'),
+      findsOneWidget,
+    );
+    expect(find.text('#700014'), findsOneWidget);
+    expect(find.text('#712990'), findsOneWidget);
   });
 }
