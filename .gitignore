@@ -31,3 +31,4 @@ google-services.json
 .vscode/
 .DS_Store
 *.log
+.vibe/

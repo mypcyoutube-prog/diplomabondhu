@@ -133,6 +133,14 @@ def import_batch(batch_id: str, body: dict = Body(default={}), _: None = Depends
     if not exam_id:
         raise HTTPException(status_code=400, detail="examId is required (exam name + date identifies a result set)")
 
+    try:
+        db().client.admin.command("ping")
+    except Exception as exc:
+        raise HTTPException(
+            status_code=502,
+            detail=f"Cannot reach MongoDB ({MONGO_URI}): {type(exc).__name__}: {exc}",
+        ) from exc
+
     coll = db()["records"]
     docs = []
     for r in records:
