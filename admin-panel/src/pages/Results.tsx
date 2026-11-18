@@ -89,11 +89,23 @@ export function ResultsPage() {
     });
     setParsePoll({ stage: 'waiting' });
     const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-    for (let i = 0; i < 600; i += 1) {
-      await sleep(700);
-      const state = await apiRaw<ParsePollState & { result?: ParsePreview; detail?: string }>(
-        `/results/admin/parse-job/${started.jobId}`
-      );
+    let failures = 0;
+    for (let i = 0; i < 900; i += 1) {
+      await sleep(1000);
+      let state: ParsePollState & { result?: ParsePreview; detail?: string };
+      try {
+        state = await apiRaw<ParsePollState & { result?: ParsePreview; detail?: string }>(
+          `/results/admin/parse-job/${started.jobId}`
+        );
+        failures = 0;
+      } catch {
+        failures += 1;
+        if (failures >= 15) {
+          setParsePoll(null);
+          throw new Error('Lost contact with the result service while polling');
+        }
+        continue;
+      }
       if (state.stage === 'done' && state.result) {
         setParsePoll(null);
         return state.result;
@@ -131,15 +143,18 @@ export function ResultsPage() {
 
   function startImportPolling(batchId: string) {
     setImportPoll({ stage: 'waiting' });
+    let failures = 0;
     const interval = setInterval(async () => {
       try {
         const state = await apiRaw<ImportProgressState>(`/results/admin/import-progress/${batchId}`);
+        failures = 0;
         setImportPoll(state);
         if (state.stage === 'finished') clearInterval(interval);
       } catch {
-        clearInterval(interval);
+        failures += 1;
+        if (failures >= 15) clearInterval(interval);
       }
-    }, 700);
+    }, 1000);
     return () => clearInterval(interval);
   }
 

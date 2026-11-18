@@ -1,5 +1,18 @@
 # CHANGELOG.md — DiplomaBondhu
 
+## [0.11.1] — Fix: rate limiter starved the result upload progress polling
+
+- On the owner's machine the admin "Parse PDF" polling (every 0.7s)
+  consumed the global 300-requests/5-min rate limit — the progress bar
+  froze at 0/0 and a red "Too many requests" appeared mid-parse.
+- The global limiter now skips the authenticated admin status polls
+  (`/results/admin/parse-job/:id`, `/results/admin/import-progress/:id`)
+- The admin panel pollers are resilient: transient failures (429,
+  brief network drops) are tolerated (up to 15 consecutive), polling
+  runs at 1s; the live parse/import bar no longer aborts the whole
+  flow on a single error. Backend vitest 133 passed; admin tsc+build
+  OK.
+
 ## [0.11.0] — Result experience upgrade: full result cards, roll-only search across all exams, live import progress
 
 ### Added

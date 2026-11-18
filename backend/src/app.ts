@@ -48,6 +48,11 @@ export function createApp(env: Env) {
       limit: 300,
       standardHeaders: 'draft-7',
       legacyHeaders: false,
+      // Authenticated admin progress polls ride on the same IP while a long
+      // parse/import runs; counting them would starve every other request.
+      skip: (req) =>
+        req.path.startsWith('/api/v1/results/admin/parse-job/') ||
+        req.path.startsWith('/api/v1/results/admin/import-progress/'),
       message: { success: false, error: { code: 'RATE_LIMITED', message: 'Too many requests' } }
     }));
   }
