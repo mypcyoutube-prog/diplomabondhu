@@ -53,12 +53,30 @@ interface ParsePollState {
   stage: string;
   pagesDone?: number;
   pages?: number;
+  log?: string[];
   batchId?: string;
   fileName?: string;
   pagesScanned?: number;
   recordCount?: number;
   warnings?: string[];
   sample?: Array<{ roll: string; gpa: number | null; name: string | null; status: string | null }>;
+}
+
+function ParseTerminal({ lines }: { lines: string[] }) {
+  const visible = lines.slice(-12);
+  return (
+    <div
+      data-testid="parse-terminal"
+      className="mt-3 max-h-56 overflow-y-auto rounded-md bg-slate-900 p-3 font-mono text-xs leading-5 text-emerald-300 dark:bg-navy-700"
+    >
+      <div className="mb-1 text-slate-400">— parse log (live) —</div>
+      {visible.map((line, i) => (
+        <div key={i} className={line.includes('WARNING') ? 'text-amber-400' : undefined}>
+          {line}
+        </div>
+      ))}
+    </div>
+  );
 }
 
 interface ImportProgressState {
@@ -227,6 +245,7 @@ export function ResultsPage() {
             label={parsePoll.stage === 'waiting' ? 'Starting PDF parser…' : 'Parsing PDF pages…'}
           />
         )}
+        {parsePoll && parsePoll.stage !== 'done' && <ParseTerminal lines={parsePoll.log ?? []} />}
         {uploadError && <p className="mt-2 text-sm text-red-600">{uploadError}</p>}
 
         {preview && (
@@ -240,8 +259,14 @@ export function ResultsPage() {
             {preview.warnings.length > 0 && (
               <div className="text-sm text-amber-700 dark:text-amber-300">
                 <p className="font-medium">Warnings ({preview.warnings.length})</p>
+                <p className="mt-0.5 text-xs">
+                  Each warning is a record the parser REFUSED to store because the PDF text looked
+                  malformed — it was thrown away (never shown to students) instead of risking wrong
+                  data. Page number + the offending text show exactly why it was discarded.
+                </p>
                 <ul className="mt-1 list-inside list-disc">
-                  {preview.warnings.slice(0, 5).map((w, i) => <li key={i}>{w}</li>)}
+                  {preview.warnings.slice(0, 20).map((w, i) => <li key={i}>{w}</li>)}
+                  {preview.warnings.length > 20 && <li>… and {preview.warnings.length - 20} more</li>}
                 </ul>
               </div>
             )}

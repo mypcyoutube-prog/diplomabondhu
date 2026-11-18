@@ -61,7 +61,14 @@ def health():
     return {"ok": True, "service": "result-service"}
 
 
-def _run_parse(data: bytes, filename: str | None, exam_id: str, title: str, on_page=None) -> dict:
+def _run_parse(
+    data: bytes,
+    filename: str | None,
+    exam_id: str,
+    title: str,
+    on_page=None,
+    on_warning=None,
+) -> dict:
     if len(data) > 50 * 1024 * 1024:
         raise HTTPException(status_code=413, detail="PDF too large (max 50 MB)")
     if not data.startswith(b"%PDF"):
@@ -70,7 +77,7 @@ def _run_parse(data: bytes, filename: str | None, exam_id: str, title: str, on_p
     tmp = BATCH_DIR / f"upload-{int(time.time() * 1000)}-{_hex24()}.pdf"
     tmp.write_bytes(data)
     try:
-        result = parse_pdf(str(tmp), on_page=on_page)
+        result = parse_pdf(str(tmp), on_page=on_page, on_warning=on_warning)
     finally:
         tmp.unlink(missing_ok=True)
 
@@ -122,18 +129,42 @@ async def parse_job(
         raise HTTPException(status_code=400, detail="Not a PDF file")
 
     job_id = _hex24()
-    PARSE_JOBS[job_id] = {"stage": "waiting", "pagesDone": 0, "pages": 0, "fileName": file.filename}
+    PARSE_JOBS[job_id] = {
+        "stage": "waiting",
+        "pagesDone": 0,
+        "pages": 0,
+        "fileName": file.filename,
+        "log": [],
+    }
 
     def worker() -> None:
         job = PARSE_JOBS[job_id]
         try:
             job["stage"] = "parsing"
 
+            def log(line: str) -> None:
+                """Terminal-style live log (last 200 lines) for the admin panel."""
+                job["log"].append(f"[{time.strftime('%H:%M:%S')}] {line}")
+                if len(job["log"]) > 200:
+                    del job["log"][:-200]
+
+            log(f"parsing {file.filename!r} …")
+
             def on_page(pages_done: int, pages: int) -> None:
                 job["pagesDone"] = pages_done
                 job["pages"] = pages
+                if pages_done in (1, pages) or pages_done % 25 == 0:
+                    log(f"page {pages_done}/{pages} scanned")
 
-            job["result"] = _run_parse(data, file.filename, examId, title, on_page=on_page)
+            def on_warning(message: str) -> None:
+                log(f"⚠ WARNING: {message}")
+
+            result = _run_parse(data, file.filename, examId, title, on_page=on_page, on_warning=on_warning)
+            log(
+                f"done: {result['recordCount']} records, "
+                f"{len(result['warnings'])} warning(s) → batch {result['batchId']}"
+            )
+            job["result"] = result
             job["stage"] = "done"
         except HTTPException as exc:
             job["stage"] = "error"
@@ -154,10 +185,16 @@ def parse_job_status(job_id: str, _: None = Depends(require_service_token)):
     if job is None:
         raise HTTPException(status_code=404, detail="Unknown job id (parse again)")
     if job["stage"] == "done":
-        return {"stage": "done", **job["result"]}
+        return {"stage": "done", "log": job.get("log", [])[-40:], **job["result"]}
     if job["stage"] == "error":
-        return {"stage": "error", "detail": job["detail"]}
-    return {"stage": job["stage"], "pagesDone": job["pagesDone"], "pages": job["pages"], "fileName": job["fileName"]}
+        return {"stage": "error", "log": job.get("log", [])[-40:], "detail": job["detail"]}
+    return {
+        "stage": job["stage"],
+        "pagesDone": job["pagesDone"],
+        "pages": job["pages"],
+        "fileName": job["fileName"],
+        "log": job.get("log", [])[-40:],
+    }
 
 
 @app.get("/batches")

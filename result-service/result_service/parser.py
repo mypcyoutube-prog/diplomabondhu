@@ -55,6 +55,23 @@ JUNK_LINE_RE = re.compile(r"phone|fax|e-?mail|www\.|@|memo no\.", re.I)
 SEGMENT_SPLIT_RE = re.compile(r"(?<=[\)\}])\s+(?=[0-9]{6,10}\s*[\(\{])")
 
 
+# A warning line explains WHERE (page) and WHY (reason + offending text
+# snippet) a record was discarded — the admin must be able to see the cause,
+# not just a bare count.
+SNIPPET_LIMIT = 100
+
+
+def _snippet(text: str, limit: int = SNIPPET_LIMIT) -> str:
+    cleaned = re.sub(r"\s+", " ", text).strip()
+    return cleaned[:limit] + "…" if len(cleaned) > limit else cleaned
+
+
+def _warning_message(reason: str, page: int | None = None, text: str | None = None) -> str:
+    prefix = f"page {page}: " if page else ""
+    body = f'{reason}: "{_snippet(text)}"' if text else reason
+    return prefix + body
+
+
 @dataclass
 class ParsedRecord:
     roll: str
@@ -207,19 +224,21 @@ def parse_pdf(
     max_pages: int | None = None,
     table_page_limit: int | None = DEFAULT_TABLE_PAGE_LIMIT,
     on_page: Callable[[int, int], None] | None = None,
+    on_warning: Callable[[str], None] | None = None,
 ) -> ParseResult:
     """Router: table-style PDFs go to pdfplumber, large gpa-map-style board
     sheets are parsed from fast raw text (pdfplumber hangs on 1000+-page
     files; pypdfium2 reads them in seconds).
 
     ``on_page`` receives (pages_done, page_count) after every scanned page
-    so hosts can surface live progress."""
+    so hosts can surface live progress. ``on_warning`` receives each
+    warning message the moment it is raised, for live display."""
     page_count = _pdfium_page_count(path)
     if on_page is not None:
         on_page(0, page_count)
     if table_page_limit is not None and page_count <= table_page_limit:
-        return _parse_pdf_pdfplumber(path, max_pages, on_page)
-    return _parse_pdf_gpa_map_text(path, max_pages, page_count, on_page)
+        return _parse_pdf_pdfplumber(path, max_pages, on_page, on_warning)
+    return _parse_pdf_gpa_map_text(path, max_pages, page_count, on_page, on_warning)
 
 
 def _pdfium_page_count(path: str) -> int:
@@ -232,9 +251,15 @@ def _parse_pdf_pdfplumber(
     path: str,
     max_pages: int | None,
     on_page: Callable[[int, int], None] | None = None,
+    on_warning: Callable[[str], None] | None = None,
 ) -> ParseResult:
     records: list[ParsedRecord] = []
     warnings: list[str] = []
+
+    def warn(msg: str) -> None:
+        warnings.append(msg)
+        if on_warning is not None:
+            on_warning(msg)
     seen_rolls: set[str] = set()
 
     def add(record: ParsedRecord | None) -> None:
@@ -258,7 +283,7 @@ def _parse_pdf_pdfplumber(
             if table_records == 0:
                 text = page.extract_text() or ""
                 if not text:
-                    warnings.append(f"page {page_no}: no extractable content")
+                    warn(f"page {page_no}: no extractable content")
                 for line in text.splitlines():
                     add(_parse_text_line(line))
 
@@ -341,6 +366,7 @@ def _parse_pdf_gpa_map_text(
     max_pages: int | None,
     page_count: int,
     on_page: Callable[[int, int], None] | None = None,
+    on_warning: Callable[[str], None] | None = None,
 ) -> ParseResult:
     import pypdfium2 as pdfium
 
@@ -368,11 +394,19 @@ def _parse_pdf_gpa_map_text(
     # record's data. Board PDFs do not repeat stray rolls, so nothing is lost.
     open_bufs: list[list[Any]] = []
 
+    def warn(reason: str, text: str | None = None) -> None:
+        msg = _warning_message(reason, state["page"], text)
+        warnings.append(msg)
+        if on_warning is not None:
+            on_warning(msg)
+
+    state = {"page": 0}
+
     def close_top() -> None:
         text, intro, inst_code, inst = open_bufs.pop()
         record = _parse_map_record(text, intro)
         if record is None:
-            warnings.append("discarded malformed record buffer")
+            warn("discarded malformed record buffer (text did not match any known record layout)", text)
             return
         record.institute_code = inst_code
         record.institute = inst
@@ -381,6 +415,7 @@ def _parse_pdf_gpa_map_text(
     for page_no in range(limit):
         text = pdf[page_no].get_textpage().get_text_bounded()
         pages_scanned += 1
+        state["page"] = pages_scanned
         if on_page is not None:
             on_page(pages_scanned, limit)
         for raw_line in text.splitlines():
@@ -409,7 +444,7 @@ def _parse_pdf_gpa_map_text(
                     if open_bufs and not re.search(r"[\(\{]", open_bufs[-1][0]):
                         open_bufs.pop()  # bare roll never got its map
                     if len(open_bufs) >= 2:
-                        warnings.append("discarded unclosed record buffer")
+                        warn("discarded unclosed record buffer (a new roll started before the previous record's map arrived)", open_bufs[0][0])
                         open_bufs.pop(0)
                     open_bufs.append([line, pending_intro, institute_code, institute])
                     if _map_closed(open_bufs[-1][0]):
@@ -427,7 +462,10 @@ def _parse_pdf_gpa_map_text(
 
     pending = [b for b in open_bufs if "(" in b[0] or "{" in b[0]]
     if pending:
-        warnings.append(f"{len(pending)} record buffer(s) never closed")
+        warn(
+            f"{len(pending)} record buffer(s) never closed (PDF text ended mid-record)",
+            " | ".join(b[0] for b in pending),
+        )
     return ParseResult(records=records, pages_scanned=pages_scanned, warnings=warnings)
 
 

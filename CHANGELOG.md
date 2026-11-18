@@ -1,5 +1,30 @@
 # CHANGELOG.md — DiplomaBondhu
 
+## [0.11.3] — Transparent warnings + terminal-style live parse log in the admin panel
+
+Owner request: during PDF upload the admin panel must show WHY each warning
+happened and stream the upload/parse progress live, terminal-style, so a
+wrong batch can never be imported unnoticed.
+
+### Added
+- **Python parser — warning transparency**: every discard now explains itself
+  with `page N: <reason>: "<offending text snippet>"` (snippet ≤100 chars).
+  Raised warnings also stream through a new ``on_warning`` callback (both
+  parser paths). 5 new pytest cases incl. a synthetic gpa-map PDF exercising
+  the malformed-buffer path end-to-end (27 passed, 1 skipped).
+- **Python `/parse/job` — live log**: each job now carries a terminal-style
+  `log` (timestamps, page milestones every 25 pages, ⚠ WARNING lines the
+  moment they occur, final summary with record/warning counts); exposed on
+  `/parse/job/:id` (last 40 lines). Verified live on the real 1103-page PDF:
+  mid-parse polls show pages streaming, and the one warning surfaced with its
+  page (507) + text — a board footer note, not a student record.
+- **Admin panel — terminal-style live log**: a dark monospace log box streams
+  under the parse progress bar while parsing (warnings highlighted amber);
+  after parse, the warnings block now explains what a discard means and lists
+  each warning in full (up to 20). Import stays a separate confirm step —
+  nothing is imported without explicit owner approval.
+- Backend: no API change (parse-job proxy passes the raw payload through).
+
 ## [0.11.2] — CGPA display + letter grades on result cards
 
 Based on the owner-provided BTEB grade-scale reference (screenshots of

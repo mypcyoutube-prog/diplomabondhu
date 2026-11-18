@@ -410,6 +410,16 @@ Typecheck: **clean** · Production build: **success** · `npm audit --omit=dev`:
 - Reset-code delivery is out-of-band by admin (phone/in-person) until email
   infrastructure is approved (KI-12). The API and UI flows are complete.
 
+## Report: v0.11.3 — Transparent warnings + terminal-style live parse log
+
+| Check | Passed | Failed | Skipped | Notes |
+| --- | --- | --- | --- | --- |
+| result-service pytest (warning format + live on_warning) | 27 | 0 | 1 (pipeline needs Mongo) | 5 new incl. synthetic gpa-map PDF exercising the malformed-buffer path |
+| Real 1103-page PDF: live log + warning detail | yes | 0 | 0 | mid-parse polls showed pages streaming; the single warning read `page 507: discarded malformed record buffer … "746213 Note: 1. The result is hereby published…"` (board footer note) |
+| `/parse/job/:id` exposes `log` (last 40 lines) | yes | 0 | 0 | TestClient smoke run on the real PDF |
+| Admin tsc + vite build (ParseTerminal + warnings explainer) | OK | 0 | 0 | — |
+| Backend vitest | — | — | Not run | results routes untouched in 0.11.3 |
+
 ## Report: v0.11.2 — CGPA display + letter grades on result cards
 
 | Check | Passed | Failed | Skipped | Notes |
