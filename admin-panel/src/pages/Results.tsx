@@ -53,6 +53,12 @@ interface ParsePollState {
   stage: string;
   pagesDone?: number;
   pages?: number;
+  batchId?: string;
+  fileName?: string;
+  pagesScanned?: number;
+  recordCount?: number;
+  warnings?: string[];
+  sample?: Array<{ roll: string; gpa: number | null; name: string | null; status: string | null }>;
 }
 
 interface ImportProgressState {
@@ -106,9 +112,19 @@ export function ResultsPage() {
         }
         continue;
       }
-      if (state.stage === 'done' && state.result) {
+      if (state.stage === 'done') {
         setParsePoll(null);
-        return state.result;
+        // The python service flattens the preview payload at the top level;
+        // older versions nested it under `result`.
+        const preview = state.result ?? {
+          batchId: state.batchId ?? '',
+          fileName: state.fileName ?? '',
+          pagesScanned: state.pagesScanned ?? 0,
+          recordCount: state.recordCount ?? 0,
+          warnings: state.warnings ?? [],
+          sample: state.sample ?? []
+        };
+        return preview;
       }
       if (state.stage === 'error') {
         setParsePoll(null);
