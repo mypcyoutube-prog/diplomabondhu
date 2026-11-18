@@ -16,6 +16,11 @@ export const DEFAULT_HOMEPAGE_SECTIONS = [
 export async function getAppSettings() {
   let settings = await AppSettings.findOne();
   if (!settings) settings = await AppSettings.create({ homepageSections: DEFAULT_HOMEPAGE_SECTIONS });
+  const missing = DEFAULT_HOMEPAGE_SECTIONS.filter((d) => !settings!.homepageSections.some((s) => s.key === d.key));
+  if (missing.length > 0) {
+    settings.homepageSections = [...settings.homepageSections, ...missing] as typeof settings.homepageSections;
+    await settings.save();
+  }
   return settings;
 }
 
