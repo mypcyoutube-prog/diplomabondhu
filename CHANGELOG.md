@@ -1,5 +1,60 @@
 # CHANGELOG.md — DiplomaBondhu
 
+## [0.11.7] — BTEB subject catalog browser + referred subject names
+
+Owner request: (1) the failed/referred subject on a result must show the
+subject NAME with its code — e.g. `28553(T) — Computer Architecture &
+Microprocessor`; (2) an in-app subject catalog browser like the
+btebresultszone.com/booklists pages (technology → regulation → semesters →
+subjects, with credit/marks detail).
+
+### Data (checked-in seed, no runtime scraping)
+- `backend/data/bteb-subjects-2022.json` — all 41 technologies of Regulation
+  2022, 2,174 subject rows (code, name, credit, theory/practical max marks,
+  ppw, theory/practical type) with per-semester grouping.
+- `backend/data/bteb-subjects-2016.json` — all 33 technologies of Regulation
+  2016, 1,581 rows (code + name + optional-subject group markers; 2016 booklists
+  publish no credits/marks — absent, not invented).
+- Both harvested 2026-11-18 from the published btebresultszone.com catalog
+  data (owner-designated source). No BTEB rules were invented; only published
+  rows are stored. Spot-verified against the owner's reference screenshots
+  (28553 → "Computer Architecture & Microprocessor", sem 5, 4 credits,
+  150/50 marks).
+
+### Backend
+- New `BtebSubject` model (`bteb_subjects` collection; unique
+  regulation+technology+semester+code) and `/bteb-subjects` module: public
+  `GET /technologies` and `GET /subjects` (filters, search, pagination),
+  authenticated `GET /names` (code→name resolution, 60 codes max), admin
+  `POST /admin/import` (ACADEMIC_MANAGE, 12 MB JSON, chunked upsert,
+  audit-logged `bteb_subjects.imported`).
+- Seed script: `npm run seed:subjects` (reads the data files, upserts without
+  duplicates).
+- `results` service: check + history responses now carry `name` for every
+  subject, joined server-side from `bteb_subjects`; graceful `name: null` when
+  the catalog has no matching code.
+
+### Flutter
+- Referred/failed subject chips now show the subject name under the
+  code+suffix (e.g. `28553(T)` above `Computer Architecture & Microprocessor`);
+  falls back to the code-only chip when the name is unknown.
+- New `subjects` feature: Subject Catalog screen (Regulation 2022/2016 chips,
+  technology search, animated cards with subject counts) and Technology
+  Subjects screen (semester-grouped sections, code badge, name, optional-group
+  label, credits + theory/practical marks pills, in-app search). Catalog entry
+  point: book icon in the Result Checker app bar (`/subjects`, `/subjects/:slug`).
+- New ARB keys (en + bn) for all catalog strings.
+
+### Verified
+- Backend `npx tsc --noEmit` clean; 145/145 vitest (6 new: technologies list,
+  subjects list/search/pagination, names auth + resolution, admin import
+  upsert + RBAC, results enrichment, empty-catalog fallback).
+- Flutter analyze clean; 29/29 widget tests (new: named referred chip;
+  catalog list/filter/error; semester grouping with credits, marks pills,
+  search).
+- result-service pytest untouched (48 tests).
+- Catalog browser visual QA on device: Not run (KI-10).
+
 ## [0.11.6] — Result Checker premium redesign (advanced UI/UX + animations)
 
 Owner request: go beyond the reference screenshots — clearer text, more

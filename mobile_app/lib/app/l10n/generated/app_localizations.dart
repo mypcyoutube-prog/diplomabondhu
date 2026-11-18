@@ -1021,6 +1021,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Share'**
   String get share;
+
+  /// No description provided for @subjectCatalog.
+  ///
+  /// In en, this message translates to:
+  /// **'Subject Catalog'**
+  String get subjectCatalog;
+
+  /// No description provided for @subjectCatalogSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Browse BTEB subjects by technology and regulation'**
+  String get subjectCatalogSubtitle;
+
+  /// No description provided for @searchSubjects.
+  ///
+  /// In en, this message translates to:
+  /// **'Search subject name or code'**
+  String get searchSubjects;
+
+  /// No description provided for @subjectsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{1 subject} other{{count} subjects}}'**
+  String subjectsCount(num count);
+
+  /// No description provided for @credits.
+  ///
+  /// In en, this message translates to:
+  /// **'Credits'**
+  String get credits;
+
+  /// No description provided for @optionalSubjects.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional subjects'**
+  String get optionalSubjects;
+
+  /// No description provided for @noSubjectsFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No subjects found'**
+  String get noSubjectsFound;
+
+  /// No description provided for @regulationLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Regulation'**
+  String get regulationLabel;
+
+  /// No description provided for @marksTheory.
+  ///
+  /// In en, this message translates to:
+  /// **'Theory {marks}'**
+  String marksTheory(Object marks);
+
+  /// No description provided for @marksPractical.
+  ///
+  /// In en, this message translates to:
+  /// **'Practical {marks}'**
+  String marksPractical(Object marks);
 }
 
 class _AppLocalizationsDelegate

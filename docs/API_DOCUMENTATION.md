@@ -169,7 +169,8 @@ populated exclusively by the internal Python result-service (see
 | Method | Path | Auth | Notes |
 |---|---|---|---|
 | GET | `/results/meta` | any logged-in user | published result sets: examId, title, recordCount, checkCount, updatedAt |
-| GET | `/results/check?examId=&roll=` | any logged-in user | 30 checks / 5 min / user; roll must be 6-10 digits; 404 when not found; response always carries the non-official disclaimer |
+| GET | `/results/check?examId=&roll=` | any logged-in user | 30 checks / 5 min / user; roll must be 6-10 digits; 404 when not found; response always carries the non-official disclaimer; each subject gets `name` joined server-side from the BTEB subject catalog (null when unknown) |
+| GET | `/results/history?roll=` | any logged-in user | latest records for the roll (max 50, newest first); `subjects` enriched with `name` the same way |
 | GET | `/results/admin/batches` | CONTENT_MANAGE | proxies python `GET /batches` (parsed, not-yet-imported batches) |
 | POST | `/results/admin/parse` | CONTENT_MANAGE | multipart PDF (≤50 MB) proxied raw to python `POST /parse`; returns batchId, recordCount, pagesScanned, warnings, first 5 sample records |
 | POST | `/results/admin/import` | CONTENT_MANAGE | {batchId, examId, title?}; proxies python `POST /import/:batchId`; audit-logged as `results.import` |
@@ -177,6 +178,20 @@ populated exclusively by the internal Python result-service (see
 Proxy routes return 503 `SERVICE_UNAVAILABLE` when `RESULT_SERVICE_URL` /
 `RESULT_SERVICE_TOKEN` are not configured. The python service rejects every
 request without the shared bearer token.
+
+### 2.13 BTEB Subjects (`/bteb-subjects`) — subject catalog (0.11.7)
+Read-only catalog harvested from the owner-designated source
+(btebresultszone.com booklists, harvested 2026-11-18) and stored in the
+`bteb_subjects` collection (see `DATABASE_DESIGN.md`). Seeded via
+`npm run seed:subjects` from `backend/data/bteb-subjects-*.json`. This is
+reference data only — it never overrides parsed result data.
+
+| Method | Path | Auth | Notes |
+|---|---|---|---|
+| GET | `/bteb-subjects/technologies?regulation=` | public | technologies with regulation, semesterCount, subjectCount |
+| GET | `/bteb-subjects/subjects?regulation=&technologySlug=&semester=&q=&page=&limit=` | public | paginated subject rows (code, name, groupLabel?, type, credits, marks); meta carries page/limit/total/totalPages |
+| GET | `/bteb-subjects/names?codes=28553,25852` | any logged-in user | resolves up to 60 codes to names (first-wins per regulation) |
+| POST | `/bteb-subjects/admin/import` | ACADEMIC_MANAGE | bulk catalog import (≤12 MB JSON), upsert on regulation+technology+semester+code, 500-row chunks, audit-logged as `bteb_subjects.imported` |
 
 ## 3. Authorization Matrix (summary)
 

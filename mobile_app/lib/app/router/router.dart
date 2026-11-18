@@ -29,6 +29,8 @@ import '../../features/planner/screens/planner_screen.dart';
 import '../../features/profile/screens/profile_screen.dart';
 import '../../features/settings/providers/app_preferences.dart';
 import '../../features/settings/screens/settings_screen.dart';
+import '../../features/subjects/screens/subject_catalog_screen.dart';
+import '../../features/subjects/screens/technology_subjects_screen.dart';
 import '../l10n/generated/app_localizations.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'root');
@@ -123,6 +125,19 @@ final rootRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/results/checker',
         builder: (context, state) => const ResultCheckerScreen(),
+      ),
+      GoRoute(
+        path: '/subjects',
+        builder: (context, state) => const SubjectCatalogScreen(),
+      ),
+      GoRoute(
+        path: '/subjects/:slug',
+        builder: (context, state) => TechnologySubjectsScreen(
+          technologySlug: state.pathParameters['slug']!,
+          regulation: int.tryParse(state.uri.queryParameters['reg'] ?? '') ?? 2022,
+          technologyName:
+              state.uri.queryParameters['name'] ?? state.pathParameters['slug']!,
+        ),
       ),
       GoRoute(
         path: '/planner',

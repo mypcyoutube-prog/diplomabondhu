@@ -410,6 +410,35 @@ Typecheck: **clean** · Production build: **success** · `npm audit --omit=dev`:
 - Reset-code delivery is out-of-band by admin (phone/in-person) until email
   infrastructure is approved (KI-12). The API and UI flows are complete.
 
+## Report: v0.11.7 — BTEB subject catalog + referred subject names
+
+| Field | Value |
+|---|---|
+| Date | 2026-11-18 |
+| Scope | Subject-catalog seed data (2022+2016), `/bteb-subjects` module, results name enrichment, Flutter catalog screens, named referred chips |
+| Environment | Node v22 sandbox, Vitest + mongodb-memory-server; Flutter test |
+| Commands executed | `cd backend && npx tsc --noEmit && npm test` · `cd mobile_app && flutter analyze && flutter test` |
+
+| Suite | Passed | Failed | Skipped |
+|---|---|---|---|
+| Backend vitest (13 files) | 145 (6 new) | 0 | 0 |
+| Flutter widget tests | 29 (6 new) | 0 | 0 |
+| result-service pytest | — | — | Not run (result-service untouched in 0.11.7) |
+| Android device run | — | — | Not run (KI-10) |
+
+| Check | Result |
+|---|---|
+| Catalog listing (regulation filter, subject counts) | Pass |
+| Subjects list: technologySlug/semester/search/pagination filters | Pass |
+| `/names`: auth required, resolves codes, 60-code cap, >1000 chars 400 | Pass |
+| Admin import: 401 anonymous, 403 student, 400 invalid body, upsert idempotent | Pass |
+| Results `/check` + `/history` subject `name` enrichment (e.g. 28553) | Pass |
+| Empty catalog → `name: null` graceful fallback | Pass |
+| Flutter: named referred chip (`28553(T)` + name below) | Pass |
+| Flutter: catalog list/filter/error; semester grouping, credits, marks pills | Pass |
+| Seed data spot-check vs owner's reference screenshots (28553, 25852 names, credits, marks) | Pass |
+| Catalog browser visual QA on device | Not run (KI-10) |
+
 ## Report: v0.11.6 — Result Checker premium redesign
 
 | Check | Passed | Failed | Skipped | Notes |

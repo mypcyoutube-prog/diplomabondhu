@@ -1,3 +1,4 @@
+import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -94,7 +95,16 @@ class _ResultCheckerScreenState extends ConsumerState<ResultCheckerScreen> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.resultChecker)),
+      appBar: AppBar(
+        title: Text(l10n.resultChecker),
+        actions: [
+          IconButton(
+            tooltip: l10n.subjectCatalog,
+            icon: const Icon(Icons.menu_book_rounded),
+            onPressed: () => context.push('/subjects'),
+          ),
+        ],
+      ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(
             DbSpacing.md, DbSpacing.md, DbSpacing.md, DbSpacing.xl),
@@ -390,6 +400,7 @@ class _ResultRecordCard extends StatelessWidget {
                       for (final subject in record.subjects)
                         _ReferredSubjectChip(
                           text: '${subject.code ?? '—'}${subject.titleSuffix}',
+                          name: subject.name,
                         ),
                     ],
                   ),
@@ -520,11 +531,13 @@ class _StatusBanner extends StatelessWidget {
 
 class _ReferredSubjectChip extends StatelessWidget {
   final String text;
+  final String? name;
 
-  const _ReferredSubjectChip({required this.text});
+  const _ReferredSubjectChip({required this.text, this.name});
 
   @override
   Widget build(BuildContext context) {
+    final hasName = name != null && name!.trim().isNotEmpty;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
@@ -532,12 +545,32 @@ class _ReferredSubjectChip extends StatelessWidget {
         borderRadius: BorderRadius.circular(DbRadius.chip),
         border: Border.all(color: _statusRed.withValues(alpha: 0.35)),
       ),
-      child: Text(
-        text,
-        style: const TextStyle(
-            color: _statusRed,
-            fontWeight: FontWeight.w600,
-            fontFeatures: [FontFeature.tabularFigures()]),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            text,
+            style: const TextStyle(
+                color: _statusRed,
+                fontWeight: FontWeight.w600,
+                fontFeatures: [FontFeature.tabularFigures()]),
+          ),
+          if (hasName) ...[
+            const SizedBox(height: 2),
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 260),
+              child: Text(
+                name!,
+                style: TextStyle(
+                    color: _statusRed.withValues(alpha: 0.85),
+                    fontWeight: FontWeight.w400,
+                    fontSize: 11.5,
+                    height: 1.25),
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }

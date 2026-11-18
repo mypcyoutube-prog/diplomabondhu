@@ -153,5 +153,15 @@
   "resetCodeInvalid": "Enter the reset code you received",
   "resetPassword": "Set new password",
   "resetSuccess": "Password updated. Please log in with your new password.",
-  "share": "Share"
+  "share": "Share",
+  "subjectCatalog": "Subject Catalog",
+  "subjectCatalogSubtitle": "Browse BTEB subjects by technology and regulation",
+  "searchSubjects": "Search subject name or code",
+  "subjectsCount": "{count, plural, one{1 subject} other{{count} subjects}}",
+  "credits": "Credits",
+  "optionalSubjects": "Optional subjects",
+  "noSubjectsFound": "No subjects found",
+  "regulationLabel": "Regulation",
+  "marksTheory": "Theory {marks}",
+  "marksPractical": "Practical {marks}"
 }

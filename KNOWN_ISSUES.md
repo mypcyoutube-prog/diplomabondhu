@@ -1,6 +1,6 @@
 # KNOWN_ISSUES.md — DiplomaBondhu
 
-**Status: IMPLEMENTATION (P3–P12 done). Backend 127/127 tests + results E2E 17/17 (live python+node+mongo), Python result-service 7/7 pytest, admin panel 8/8 tests + build, Flutter app 18/18 tests + analyzer clean. Flutter app NOT yet run on a real Android device (KI-10).**
+**Status: IMPLEMENTATION (P3–P12 done). Backend 145/145 tests, Python result-service 48/48 pytest, Flutter app 29/29 tests + analyzer clean (latest verified: 0.11.7). Flutter app NOT yet run on a real Android device (KI-10).**
 
 ## Open items blocking implementation start
 | # | Issue | Impact | Owner action needed |
@@ -17,6 +17,7 @@
 | KI-14 | Partially resolved: one owner-provided REAL institute-wise result sheet (1103 pages, Diploma in Engineering 7th Semester 2022 Regulation) parsed with 100% recall/precision — 31,094 records, gold-verified roll-by-roll against the source text (see CHANGELOG 0.10.5). Other board layout variants (other programs, other years' print styles, text-line-only sheets) remain unverified | A differently formatted result sheet (e.g. non-engineering program, different year) may still need a parser adjustment; the admin always reviews record count + first 5 rows + warnings before import | Owner uploads 1-2 more result PDFs from other programs/year variants and spot-checks the preview per batch |
 | KI-15 | NEW (2026-11-18): the 2016-regulation 8th-semester sheet (`RESULT_8th_irr_2016_Regulation.pdf`, 567 pages, 4,549 records) shows a different record shape — `cgpa:` prefix before the gpa map, integer-looking GPA tokens (e.g. `4`), NAME-column text artifacts, 4 malformed-buffer warnings on the owner's preview. The parser's additive `cgpa:` extraction (v0.11.2) works for that pattern, but the full layout is NOT gold-verified and must not be imported | An unverified import could store wrong results for real students; the import stays blocked until gold verification | Owner provides the actual PDF file; parser tuned + gold-verified (100% recall/precision) before import is allowed |
 | KI-10 | Sandbox has no Android SDK/Java, so no APK build and no device/emulator run happened | App is analyzed + unit/widget-tested only; release claim blocked | Owner runs `flutter run` on a device/emulator (see README mobile section) |
+| KI-16 | NEW (0.11.7): BTEB subject catalog harvested from btebresultszone.com booklists (owner-designated source, harvested 2026-11-18); official BTEB verification pending. 2016 entries publish no credits/marks — fields kept absent, not invented. Catalog enrichment (subject names on results) applies only where the 5-digit code matches a catalog row | A subject on a result may show `name: null` if its code is missing from the source booklists; catalog details could change only if BTEB revises booklists | Owner spot-checks a few technologies against official BTEB curriculum documents; corrections can be pushed via `POST /bteb-subjects/admin/import` or the seed JSONs + `npm run seed:subjects` |
 | ~~KI-11~~ | RESOLVED (P11): `url_launcher` added; external-link/download buttons live | — | — |
 
 ## Deliberate limitations (by design, first release)

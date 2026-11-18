@@ -7,6 +7,7 @@ import type { Env } from './config/env';
 import { authRoutes } from './modules/auth/auth.routes';
 import { usersRoutes } from './modules/users/users.routes';
 import { academicRoutes } from './modules/academic/academic.routes';
+import { btebSubjectsRoutes } from './modules/bteb-subjects/bteb-subjects.routes';
 import { settingsRoutes } from './modules/settings/settings.routes';
 import { adminRoutes } from './modules/admin/admin.routes';
 import { gpaRoutes } from './modules/gpa/gpa.routes';
@@ -63,6 +64,7 @@ export function createApp(env: Env) {
   api.use('/auth', authRoutes(env));
   api.use('/users', usersRoutes(env));
   api.use('/academic', academicRoutes(env));
+  api.use('/bteb-subjects', btebSubjectsRoutes(env));
   api.use('/settings', settingsRoutes());
   api.use('/gpa', gpaRoutes(env));
   api.use('/materials', materialsRoutes(env));

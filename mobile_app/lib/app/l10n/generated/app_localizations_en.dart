@@ -495,4 +495,47 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get share => 'Share';
+
+  @override
+  String get subjectCatalog => 'Subject Catalog';
+
+  @override
+  String get subjectCatalogSubtitle =>
+      'Browse BTEB subjects by technology and regulation';
+
+  @override
+  String get searchSubjects => 'Search subject name or code';
+
+  @override
+  String subjectsCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count subjects',
+      one: '1 subject',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get credits => 'Credits';
+
+  @override
+  String get optionalSubjects => 'Optional subjects';
+
+  @override
+  String get noSubjectsFound => 'No subjects found';
+
+  @override
+  String get regulationLabel => 'Regulation';
+
+  @override
+  String marksTheory(Object marks) {
+    return 'Theory $marks';
+  }
+
+  @override
+  String marksPractical(Object marks) {
+    return 'Practical $marks';
+  }
 }

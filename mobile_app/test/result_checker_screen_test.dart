@@ -178,6 +178,29 @@ void main() {
     expect(find.text('28553(T)'), findsOneWidget);
   });
 
+  testWidgets('referred chip shows the subject name when available', (tester) async {
+    const namedRecord = ResultRecord(
+      examId: 'eng-7th-2022reg-2026',
+      roll: '712990',
+      gpa: 3.54,
+      status: 'referred',
+      subjects: [
+        ResultSubject(
+            code: '28553', type: 'T', name: 'Computer Architecture & Microprocessor'),
+      ],
+      semesterGpas: {'gpa5': null, 'gpa7': 3.54},
+      examSemester: 7,
+      disclaimer: 'This is not an official BTEB service.',
+    );
+    await pumpChecker(tester, onHistory: (_) => const [namedRecord]);
+    await tester.enterText(find.byType(TextField), '712990');
+    await tester.tap(find.byType(FilledButton));
+    await tester.pumpAndSettle();
+
+    expect(find.text('28553(T)'), findsOneWidget);
+    expect(find.text('Computer Architecture & Microprocessor'), findsOneWidget);
+  });
+
   testWidgets('pass record with a referred subject yet to pass shows red banner', (tester) async {
     const passWithBacklog = ResultRecord(
       examId: 'eng-7th-2022reg-2026',

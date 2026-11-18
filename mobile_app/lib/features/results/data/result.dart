@@ -28,13 +28,15 @@ class ResultSubject {
   final String? code;
   final String? grade;
   final String? type;
+  final String? name;
 
-  const ResultSubject({this.code, this.grade, this.type});
+  const ResultSubject({this.code, this.grade, this.type, this.name});
 
   factory ResultSubject.fromJson(Map<String, dynamic> json) => ResultSubject(
         code: json['code'] as String?,
         grade: json['grade'] as String?,
         type: json['type'] as String?,
+        name: json['name'] as String?,
       );
 
   String get titleSuffix {

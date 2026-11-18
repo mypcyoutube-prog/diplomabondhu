@@ -495,4 +495,47 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get share => 'শেয়ার';
+
+  @override
+  String get subjectCatalog => 'সাবজেক্ট ক্যাটালগ';
+
+  @override
+  String get subjectCatalogSubtitle =>
+      'টেকনোলজি ও রেগুলেশন অনুযায়ী BTEB সাবজেক্ট দেখুন';
+
+  @override
+  String get searchSubjects => 'সাবজেক্টের নাম বা কোড খুঁজুন';
+
+  @override
+  String subjectsCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countটি সাবজেক্ট',
+      one: '১টি সাবজেক্ট',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get credits => 'ক্রেডিট';
+
+  @override
+  String get optionalSubjects => 'ঐচ্ছিক সাবজেক্ট';
+
+  @override
+  String get noSubjectsFound => 'কোনো সাবজেক্ট পাওয়া যায়নি';
+
+  @override
+  String get regulationLabel => 'রেগুলেশন';
+
+  @override
+  String marksTheory(Object marks) {
+    return 'থিওরি $marks';
+  }
+
+  @override
+  String marksPractical(Object marks) {
+    return 'প্র্যাকটিক্যাল $marks';
+  }
 }

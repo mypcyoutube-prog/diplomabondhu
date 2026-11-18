@@ -3,6 +3,7 @@ import type { Env } from '../../config/env';
 import { notFound } from '../../core/errors';
 import { writeAudit } from '../../models/audit-log.model';
 import { AppSettings } from '../../models/app-settings.model';
+import { resolveSubjectNames } from '../bteb-subjects/bteb-subjects.service';
 import { getAppSettings } from '../settings/settings.routes';
 
 export interface ResultExam {
@@ -22,7 +23,7 @@ export interface ResultRecord {
   gpa: number | null;
   cgpa?: number | null;
   status: string | null;
-  subjects: Array<{ code?: string; grade?: string; type?: string }>;
+  subjects: Array<{ code?: string; grade?: string; type?: string; name?: string | null }>;
   instituteCode?: string | null;
   institute?: string | null;
   semesterGpas?: Record<string, number | null>;
@@ -60,16 +61,16 @@ export async function checkResult(env: Env, examId: string, roll: string): Promi
   await db
     .collection('exams')
     .updateOne({ examId }, { $inc: { checkCount: 1 }, $setOnInsert: { examId } }, { upsert: true });
-  return {
-    examId,
-    title: typeof doc.meta?.title === 'string' && doc.meta.title ? doc.meta.title : undefined,
+      return {
+        examId,
+        title: typeof doc.meta?.title === 'string' && doc.meta.title ? doc.meta.title : undefined,
     roll: String(doc.roll),
     name: typeof doc.name === 'string' ? doc.name : null,
     registrationNo: typeof doc.registrationNo === 'string' ? doc.registrationNo : null,
     gpa: typeof doc.gpa === 'number' ? doc.gpa : null,
     cgpa: typeof doc.cgpa === 'number' ? doc.cgpa : null,
     status: typeof doc.status === 'string' ? doc.status : null,
-    subjects: Array.isArray(doc.subjects) ? doc.subjects : [],
+    subjects: await attachSubjectNames(Array.isArray(doc.subjects) ? doc.subjects : []),
     instituteCode: typeof doc.instituteCode === 'string' ? doc.instituteCode : null,
     institute: typeof doc.institute === 'string' ? doc.institute : null,
     semesterGpas:
@@ -107,8 +108,9 @@ export async function resultHistory(env: Env, rawRoll: string): Promise<ResultRe
         .updateOne({ examId }, { $inc: { checkCount: 1 }, $setOnInsert: { examId } }, { upsert: true })
     )
   );
-  return docs.map((doc) => {
-    const examId = String(doc.examId);
+  const records = await Promise.all(
+    docs.map(async (doc) => {
+      const examId = String(doc.examId);
     return {
       examId,
       title: titles.get(examId) ?? (typeof doc.meta?.title === 'string' && doc.meta.title ? doc.meta.title : undefined),
@@ -118,7 +120,7 @@ export async function resultHistory(env: Env, rawRoll: string): Promise<ResultRe
       gpa: typeof doc.gpa === 'number' ? doc.gpa : null,
       cgpa: typeof doc.cgpa === 'number' ? doc.cgpa : null,
       status: typeof doc.status === 'string' ? doc.status : null,
-      subjects: Array.isArray(doc.subjects) ? doc.subjects : [],
+      subjects: await attachSubjectNames(Array.isArray(doc.subjects) ? doc.subjects : []),
       instituteCode: typeof doc.instituteCode === 'string' ? doc.instituteCode : null,
       institute: typeof doc.institute === 'string' ? doc.institute : null,
       semesterGpas:
@@ -127,8 +129,10 @@ export async function resultHistory(env: Env, rawRoll: string): Promise<ResultRe
           : undefined,
       examSemester: typeof doc.examSemester === 'number' ? doc.examSemester : null,
       disclaimer: RESULT_DISCLAIMER
-    };
-  });
+      };
+    })
+  );
+  return records as ResultRecord[];
 }
 
 /** Drive API key: env var wins; otherwise the key the admin saved in
@@ -154,6 +158,20 @@ export async function setDriveKey(actorId: string, apiKey: string | null, ip?: s
     targetType: 'AppSettings',
     targetId: String(settings._id),
     ip
+  });
+}
+
+/** Referred subjects carry code + T/P; join the catalog for names.
+ *  Safe even when the catalog is empty — names are just skipped. */
+export async function attachSubjectNames(
+  subjects: Array<{ code?: string; grade?: string; type?: string }>
+): Promise<Array<{ code?: string; grade?: string; type?: string; name?: string | null }>> {
+  if (subjects.length === 0) return subjects;
+  const names = await resolveSubjectNames(subjects.map((s) => s.code));
+  if (names.size === 0) return subjects.map((s) => ({ ...s, name: null }));
+  return subjects.map((s) => {
+    const key = String(s.code ?? '').trim().toUpperCase();
+    return { ...s, name: names.get(key) ?? null };
   });
 }
 
