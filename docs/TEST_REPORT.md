@@ -420,11 +420,12 @@ Typecheck: **clean** · Production build: **success** · `npm audit --omit=dev`:
 
 | Suite | Passed | Failed | Skipped |
 |---|---|---|---|
-| Backend vitest | 149 (+1 new) | 0 | 0 |
+| Backend vitest | 150 (+2 new) | 0 | 0 |
 
 | Check | Result |
 |---|---|
 | Subject repeated in 6th + 7th sheets (no catalog row) renders exactly once, under the 6th semester | Pass |
+| Referred group split per subject: 2 of 3 passed later → green (cleared), 1 still failed → red; banner = total pending | Pass |
 | Red rows across all cards == bannerSubjects (top-record based) | Pass |
 | Per-semester publishedAt unchanged (own exam record) | Pass |
 | Flutter untouched — rendering already row-based | — |

@@ -323,6 +323,52 @@ describe('result timeline', () => {
     expect(carrying[0].publishedAt).toBe('2026-06-15T10:00:00.000Z');
   });
 
+  it('splits a referred group per subject: passed ones green, still-failed red', async () => {
+    await BtebSubjectCollection.insertMany([
+      bs(2022, 'Computer Technology', 'computer-technology', 6, '28611'),
+      bs(2022, 'Computer Technology', 'computer-technology', 6, '28612'),
+      bs(2022, 'Computer Technology', 'computer-technology', 6, '28613')
+    ]);
+    const db = mongoose.connection.useDb('results_db');
+    await db.collection('records').insertMany([
+      {
+        examId: 'eng-6th-mix', roll: '600112', name: 'Student Four', gpa: null, status: 'referred',
+        examSemester: 6,
+        semesterGpas: { gpa1: 3.30, gpa2: 3.12, gpa3: 3.33, gpa4: 3.18, gpa5: null, gpa6: null },
+        subjects: [
+          { code: '28611', type: 'T', grade: null },
+          { code: '28612', type: 'T', grade: null },
+          { code: '28613', type: 'T', grade: null }
+        ]
+      },
+      {
+        examId: 'eng-7th-mix', roll: '600112', name: 'Student Four', gpa: 3.54, status: 'pass',
+        examSemester: 7,
+        semesterGpas: { gpa1: 3.30, gpa2: 3.12, gpa3: 3.33, gpa4: 3.18, gpa5: 3.40, gpa6: 3.40, gpa7: 3.54 },
+        subjects: [{ code: '28613', type: 'T', grade: null }]
+      }
+    ]);
+    await db.collection('exams').insertMany([
+      { examId: 'eng-6th-mix', recordCount: 4, title: 'Diploma in Engineering 6th Semester', updatedAt: new Date('2026-06-15T10:00:00.000Z') },
+      { examId: 'eng-7th-mix', recordCount: 4, title: 'Diploma in Engineering 7th Semester', updatedAt: new Date('2026-11-10T10:00:00.000Z') }
+    ]);
+
+    const token = await studentToken();
+    const res = await request(app).get('/api/v1/results/timeline?roll=600112')
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(200);
+    const data = res.body.data;
+    expect(data.bannerSubjects).toBe(1);
+    const sem6 = data.semesters.find((s: { semester: number }) => s.semester === 6);
+    expect(sem6.subjects).toHaveLength(3);
+    const byCode = Object.fromEntries(
+      sem6.subjects.map((s: { code?: string; cleared?: boolean }) => [s.code, s.cleared])
+    );
+    expect(byCode['28611']).toBe(true);
+    expect(byCode['28612']).toBe(true);
+    expect(byCode['28613']).toBeFalsy();
+  });
+
   it('requires auth and rejects invalid rolls on /results/timeline', async () => {
     const noAuth = await request(app).get('/api/v1/results/timeline?roll=712981');
     expect(noAuth.status).toBe(401);

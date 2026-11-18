@@ -1,6 +1,6 @@
 # KNOWN_ISSUES.md — DiplomaBondhu
 
-**Status: IMPLEMENTATION (P3–P12 done). Backend 149/149 tests, Python result-service 48/48 pytest, Flutter app 29/29 tests + analyzer clean (latest verified: 0.11.11). Flutter app NOT yet run on a real Android device (KI-10).**
+**Status: IMPLEMENTATION (P3–P12 done). Backend 150/150 tests, Python result-service 48/48 pytest, Flutter app 29/29 tests + analyzer clean (latest verified: 0.11.11). Flutter app NOT yet run on a real Android device (KI-10).**
 
 ## Open items blocking implementation start
 | # | Issue | Impact | Owner action needed |
