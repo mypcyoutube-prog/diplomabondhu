@@ -29,14 +29,16 @@ class ResultSubject {
   final String? grade;
   final String? type;
   final String? name;
+  final int? semester;
 
-  const ResultSubject({this.code, this.grade, this.type, this.name});
+  const ResultSubject({this.code, this.grade, this.type, this.name, this.semester});
 
   factory ResultSubject.fromJson(Map<String, dynamic> json) => ResultSubject(
         code: json['code'] as String?,
         grade: json['grade'] as String?,
         type: json['type'] as String?,
         name: json['name'] as String?,
+        semester: (json['semester'] as num?)?.toInt(),
       );
 
   String get titleSuffix {
@@ -65,6 +67,7 @@ class ResultRecord {
   final String? instituteCode;
   final Map<String, double?> semesterGpas;
   final int? examSemester;
+  final String? publishedAt;
   final String disclaimer;
 
   const ResultRecord({
@@ -81,6 +84,7 @@ class ResultRecord {
     this.instituteCode,
     this.semesterGpas = const {},
     this.examSemester,
+    this.publishedAt,
     required this.disclaimer,
   });
 
@@ -101,6 +105,7 @@ class ResultRecord {
         semesterGpas: (json['semesterGpas'] as Map<String, dynamic>? ?? {})
             .map((k, v) => MapEntry(k, (v as num?)?.toDouble())),
         examSemester: (json['examSemester'] as num?)?.toInt(),
+        publishedAt: json['publishedAt'] as String?,
         disclaimer: json['disclaimer'] as String? ?? '',
       );
 

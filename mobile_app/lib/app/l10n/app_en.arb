@@ -163,5 +163,12 @@
   "noSubjectsFound": "No subjects found",
   "regulationLabel": "Regulation",
   "marksTheory": "Theory {marks}",
-  "marksPractical": "Practical {marks}"
+  "marksPractical": "Practical {marks}",
+  "subjectTypeTheory": "Theory",
+  "subjectTypePractical": "Practical",
+  "subjectTypeTheoryPractical": "Theory + Practical",
+  "resultTimeAgoHours": "{count, plural, one{1 hour ago} other{{count} hours ago}}",
+  "resultTimeAgoDays": "{count, plural, one{1 day ago} other{{count} days ago}}",
+  "resultTimeAgoMonths": "{count, plural, one{1 month ago} other{{count} months ago}}",
+  "resultTimeAgoYears": "{count, plural, one{1 year ago} other{{count} years ago}}"
 }

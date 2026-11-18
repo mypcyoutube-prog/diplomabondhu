@@ -410,6 +410,31 @@ Typecheck: **clean** · Production build: **success** · `npm audit --omit=dev`:
 - Reset-code delivery is out-of-band by admin (phone/in-person) until email
   infrastructure is approved (KI-12). The API and UI flows are complete.
 
+## Report: v0.11.8 — Result view restructured to the reference layout
+
+| Field | Value |
+|---|---|
+| Date | 2026-11-18 |
+| Scope | Result card restructure (centered header, banner, per-semester cards with dates + failed-subject rows), publishedAt + subject-semester enrichment |
+| Commands executed | `cd backend && npx tsc --noEmit && npm test` · `cd mobile_app && flutter analyze && flutter test` |
+
+| Suite | Passed | Failed | Skipped |
+|---|---|---|---|
+| Backend vitest | 145 | 0 | 0 |
+| Flutter widget tests | 30 (+1 new) | 0 | 0 |
+| Android device run | — | — | Not run (KI-10) |
+
+| Check | Result |
+|---|---|
+| Centered header (roll / title / institute) matches reference order | Pass |
+| Banner under header: red yet-to-pass, hidden on clean pass | Pass |
+| Per-semester card: ✓ Passed / yet-to-pass, date + relative time, GPA chip + letter, red dash | Pass |
+| Failed subject row inside its own semester card (code+T, name, Theory) | Pass |
+| publishedAt returned from exams collection (check + history) | Pass |
+| Subject semester resolved from catalog; fallback to exam semester when unknown | Pass |
+| Existing texts preserved (rolls, GPAs, letters, chip code, disclaimer) | Pass |
+| Layout visual QA on device vs reference screenshots | Not run (KI-10) |
+
 ## Report: v0.11.7 — BTEB subject catalog + referred subject names
 
 | Field | Value |

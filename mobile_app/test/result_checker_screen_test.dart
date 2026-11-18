@@ -133,7 +133,7 @@ void main() {
 
     expect(find.text('#700014'), findsOneWidget);
     expect(find.text('Student One'), findsOneWidget);
-    expect(find.text('Passed'), findsOneWidget);
+    expect(find.text('Passed'), findsNWidgets(7));
     expect(find.text('7th Semester'), findsOneWidget);
     expect(find.text('1st Semester'), findsOneWidget);
     expect(find.text('3.73'), findsOneWidget);
@@ -174,7 +174,7 @@ void main() {
     await tester.tap(find.byType(FilledButton));
     await tester.pumpAndSettle();
 
-    expect(find.text('1 subject yet to pass'), findsOneWidget);
+    expect(find.text('1 subject yet to pass'), findsNWidgets(2));
     expect(find.text('28553(T)'), findsOneWidget);
   });
 
@@ -217,8 +217,39 @@ void main() {
     await tester.tap(find.byType(FilledButton));
     await tester.pumpAndSettle();
 
-    expect(find.text('1 subject yet to pass'), findsOneWidget);
+    expect(find.text('1 subject yet to pass'), findsNWidgets(2));
     expect(find.text('28553(T)'), findsOneWidget);
+  });
+
+  testWidgets('failed subject is listed under its own semester card with date',
+      (tester) async {
+    const catalogedRecord = ResultRecord(
+      examId: 'eng-7th-2022reg-2026',
+      roll: '712990',
+      gpa: 3.54,
+      status: 'referred',
+      subjects: [
+        ResultSubject(
+            code: '28553',
+            type: 'T',
+            name: 'Computer Architecture & Microprocessor',
+            semester: 5),
+      ],
+      semesterGpas: {'gpa5': null, 'gpa7': 3.54},
+      examSemester: 7,
+      publishedAt: '2026-11-10T00:00:00.000Z',
+      disclaimer: 'This is not an official BTEB service.',
+    );
+    await pumpChecker(tester, onHistory: (_) => const [catalogedRecord]);
+    await tester.enterText(find.byType(TextField), '712990');
+    await tester.tap(find.byType(FilledButton));
+    await tester.pumpAndSettle();
+
+    expect(find.text('28553(T)'), findsOneWidget);
+    expect(find.text('Computer Architecture & Microprocessor'), findsOneWidget);
+    expect(find.text('Theory'), findsOneWidget);
+    expect(find.text('5th Semester'), findsOneWidget);
+    expect(find.text('10 November, 2026'), findsWidgets);
   });
 
   testWidgets('referred semester without GPA shows a red dash', (tester) async {

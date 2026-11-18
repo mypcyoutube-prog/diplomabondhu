@@ -39,7 +39,7 @@ export function btebSubjectsRoutes(env: Env) {
       const query = (req as unknown as Validated<NamesQuery, never>).validatedQuery!;
       const codes = query.codes.split(',').map((c) => c.trim()).filter(Boolean).slice(0, 60);
       const names = await svc.resolveSubjectNames(codes);
-      return ok(res, { names: [...names.entries()].map(([code, name]) => ({ code, name })) });
+      return ok(res, { names: [...names.entries()].map(([code, v]) => ({ code, name: v.name })) });
     } catch (err) { next(err); }
   });
 

@@ -538,4 +538,57 @@ class AppLocalizationsBn extends AppLocalizations {
   String marksPractical(Object marks) {
     return 'প্র্যাকটিক্যাল $marks';
   }
+
+  @override
+  String get subjectTypeTheory => 'থিওরি';
+
+  @override
+  String get subjectTypePractical => 'প্র্যাকটিক্যাল';
+
+  @override
+  String get subjectTypeTheoryPractical => 'থিওরি + প্র্যাকটিক্যাল';
+
+  @override
+  String resultTimeAgoHours(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ঘণ্টা আগে',
+      one: '১ ঘণ্টা আগে',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String resultTimeAgoDays(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count দিন আগে',
+      one: '১ দিন আগে',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String resultTimeAgoMonths(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count মাস আগে',
+      one: '১ মাস আগে',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String resultTimeAgoYears(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count বছর আগে',
+      one: '১ বছর আগে',
+    );
+    return '$_temp0';
+  }
 }

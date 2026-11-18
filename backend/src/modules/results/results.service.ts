@@ -23,7 +23,14 @@ export interface ResultRecord {
   gpa: number | null;
   cgpa?: number | null;
   status: string | null;
-  subjects: Array<{ code?: string; grade?: string; type?: string; name?: string | null }>;
+  subjects: Array<{
+    code?: string;
+    grade?: string;
+    type?: string;
+    name?: string | null;
+    semester?: number | null;
+  }>;
+  publishedAt?: string | null;
   instituteCode?: string | null;
   institute?: string | null;
   semesterGpas?: Record<string, number | null>;
@@ -54,6 +61,12 @@ export async function listResultExams(env: Env): Promise<ResultExam[]> {
   }));
 }
 
+function isoDate(value: unknown): string | null {
+  if (value instanceof Date) return value.toISOString();
+  if (typeof value === 'string' && value) return value;
+  return null;
+}
+
 export async function checkResult(env: Env, examId: string, roll: string): Promise<ResultRecord> {
   const db = resultsDb(env);
   const doc = await db.collection('records').findOne({ examId, roll: String(roll) });
@@ -61,10 +74,15 @@ export async function checkResult(env: Env, examId: string, roll: string): Promi
   await db
     .collection('exams')
     .updateOne({ examId }, { $inc: { checkCount: 1 }, $setOnInsert: { examId } }, { upsert: true });
+  const examDoc = await db.collection('exams').findOne(
+    { examId },
+    { projection: { updatedAt: 1 } }
+  );
       return {
         examId,
         title: typeof doc.meta?.title === 'string' && doc.meta.title ? doc.meta.title : undefined,
     roll: String(doc.roll),
+    publishedAt: isoDate(examDoc?.updatedAt),
     name: typeof doc.name === 'string' ? doc.name : null,
     registrationNo: typeof doc.registrationNo === 'string' ? doc.registrationNo : null,
     gpa: typeof doc.gpa === 'number' ? doc.gpa : null,
@@ -98,8 +116,11 @@ export async function resultHistory(env: Env, rawRoll: string): Promise<ResultRe
     .find({ examId: { $in: examIds } })
     .toArray();
   const titles = new Map<string, string>();
+  const publishedAt = new Map<string, string>();
   for (const e of examDocs) {
     if (typeof e.title === 'string' && e.title) titles.set(String(e.examId), e.title);
+    const iso = isoDate(e.updatedAt);
+    if (iso) publishedAt.set(String(e.examId), iso);
   }
   await Promise.all(
     examIds.map((examId) =>
@@ -128,6 +149,7 @@ export async function resultHistory(env: Env, rawRoll: string): Promise<ResultRe
           ? (doc.semesterGpas as Record<string, number | null>)
           : undefined,
       examSemester: typeof doc.examSemester === 'number' ? doc.examSemester : null,
+      publishedAt: publishedAt.get(examId) ?? null,
       disclaimer: RESULT_DISCLAIMER
       };
     })
@@ -165,13 +187,15 @@ export async function setDriveKey(actorId: string, apiKey: string | null, ip?: s
  *  Safe even when the catalog is empty — names are just skipped. */
 export async function attachSubjectNames(
   subjects: Array<{ code?: string; grade?: string; type?: string }>
-): Promise<Array<{ code?: string; grade?: string; type?: string; name?: string | null }>> {
+): Promise<
+  Array<{ code?: string; grade?: string; type?: string; name?: string | null; semester?: number | null }>
+> {
   if (subjects.length === 0) return subjects;
-  const names = await resolveSubjectNames(subjects.map((s) => s.code));
-  if (names.size === 0) return subjects.map((s) => ({ ...s, name: null }));
+  const resolved = await resolveSubjectNames(subjects.map((s) => s.code));
+  if (resolved.size === 0) return subjects.map((s) => ({ ...s, name: null, semester: null }));
   return subjects.map((s) => {
     const key = String(s.code ?? '').trim().toUpperCase();
-    return { ...s, name: names.get(key) ?? null };
+    return { ...s, name: resolved.get(key)?.name ?? null, semester: resolved.get(key)?.semester ?? null };
   });
 }
 

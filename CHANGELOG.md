@@ -1,5 +1,48 @@
 # CHANGELOG.md — DiplomaBondhu
 
+## [0.11.8] — Result view restructured to match the reference board-style layout
+
+Owner request: the result view after a roll search must look same-to-same as
+the btebresultszone.com result pages shown in his reference screenshots — the
+previous build used a custom premium layout instead of the reference structure.
+
+### Result card now mirrors the reference (Flutter)
+- **Centered header**: big roll (`#712990`), program title, institute — exactly
+  the stacking of the reference page top.
+- **Status banner directly under the header** (red "1 subject yet to pass" /
+  status text; hidden on clean passes, like the reference).
+- **One card per semester** (box with a soft green tint, like the reference):
+  semester icon + name, right side `✓ Passed` (green) or the yet-to-pass count
+  (red) for the semester that has failed subjects, publication date line with
+  a relative "X days / months / years ago" caption, and the GPA row — gray
+  `GPA` label chip, big bold green value, letter-grade badge; red `—` when no
+  GPA is recorded.
+- **Failed/referred subjects are listed inside their own semester's card**:
+  code+suffix in bold red (`28553(T)`), subject name underneath, and the type
+  word (`Theory` / `Practical`) on the right — same as the reference row.
+- Semester grouping uses the subject's own semester from the BTEB subject
+  catalog, so a 7th-semester exam PDF that reports a 5th-semester backlog
+  (e.g. 28553) shows that subject under the 5th Semester card, exactly like
+  the reference. Codes absent from the catalog fall back to the exam semester.
+- CGPA highlight kept for 8th-semester records; name/registration now shown
+  as subtle info rows above the disclaimer.
+
+### Backend
+- Result `check` and `history` responses now include `publishedAt` (the
+  published exam's updatedAt) so the app can render real publication dates —
+  one honest date per exam; per-semester publish dates are not present in the
+  source PDFs, so they are not invented.
+- Subject-name enrichment now also resolves each subject's `semester` from the
+  catalog (first-wins by regulation) and returns `{code, grade, type, name,
+  semester}`.
+
+### Verified
+- Backend `tsc --noEmit` clean; 145/145 vitest.
+- Flutter analyze clean; 30/30 widget tests (new: failed subject under its own
+  semester card with formatted date; existing chip/name/banner assertions
+  updated for the per-semester repetition, matching the reference). Visual QA
+  on device: Not run (KI-10).
+
 ## [0.11.7] — BTEB subject catalog browser + referred subject names
 
 Owner request: (1) the failed/referred subject on a result must show the

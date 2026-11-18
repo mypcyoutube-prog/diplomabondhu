@@ -163,5 +163,12 @@
   "noSubjectsFound": "কোনো সাবজেক্ট পাওয়া যায়নি",
   "regulationLabel": "রেগুলেশন",
   "marksTheory": "থিওরি {marks}",
-  "marksPractical": "প্র্যাকটিক্যাল {marks}"
+  "marksPractical": "প্র্যাকটিক্যাল {marks}",
+  "subjectTypeTheory": "থিওরি",
+  "subjectTypePractical": "প্র্যাকটিক্যাল",
+  "subjectTypeTheoryPractical": "থিওরি + প্র্যাকটিক্যাল",
+  "resultTimeAgoHours": "{count, plural, one{১ ঘণ্টা আগে} other{{count} ঘণ্টা আগে}}",
+  "resultTimeAgoDays": "{count, plural, one{১ দিন আগে} other{{count} দিন আগে}}",
+  "resultTimeAgoMonths": "{count, plural, one{১ মাস আগে} other{{count} মাস আগে}}",
+  "resultTimeAgoYears": "{count, plural, one{১ বছর আগে} other{{count} বছর আগে}}"
 }

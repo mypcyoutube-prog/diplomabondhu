@@ -80,8 +80,14 @@ export async function listSubjects(
   };
 }
 
-/** code -> name lookup used to enrich referred subjects on result records. */
-export async function resolveSubjectNames(codes: Array<string | undefined | null>): Promise<Map<string, string>> {
+/** code -> {name, semester} lookup used to enrich referred subjects on result
+ *  records (semester lets clients show the subject under its own semester card). */
+export interface ResolvedSubject {
+  name: string;
+  semester: number | null;
+}
+
+export async function resolveSubjectNames(codes: Array<string | undefined | null>): Promise<Map<string, ResolvedSubject>> {
   const wanted = [...new Set(
     codes
       .map((c) => String(c ?? '').trim().toUpperCase())
@@ -90,12 +96,12 @@ export async function resolveSubjectNames(codes: Array<string | undefined | null
   if (wanted.length === 0) return new Map();
   const docs = await BtebSubject.find({ code: { $in: wanted } })
     .sort({ regulation: -1 })
-    .select('code name')
+    .select('code name semester')
     .lean();
-  const map = new Map<string, string>();
+  const map = new Map<string, ResolvedSubject>();
   for (const d of docs) {
     const code = String(d.code).toUpperCase();
-    if (!map.has(code)) map.set(code, d.name);
+    if (!map.has(code)) map.set(code, { name: d.name, semester: typeof d.semester === 'number' ? d.semester : null });
   }
   return map;
 }

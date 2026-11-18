@@ -1081,6 +1081,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Practical {marks}'**
   String marksPractical(Object marks);
+
+  /// No description provided for @subjectTypeTheory.
+  ///
+  /// In en, this message translates to:
+  /// **'Theory'**
+  String get subjectTypeTheory;
+
+  /// No description provided for @subjectTypePractical.
+  ///
+  /// In en, this message translates to:
+  /// **'Practical'**
+  String get subjectTypePractical;
+
+  /// No description provided for @subjectTypeTheoryPractical.
+  ///
+  /// In en, this message translates to:
+  /// **'Theory + Practical'**
+  String get subjectTypeTheoryPractical;
+
+  /// No description provided for @resultTimeAgoHours.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{1 hour ago} other{{count} hours ago}}'**
+  String resultTimeAgoHours(num count);
+
+  /// No description provided for @resultTimeAgoDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{1 day ago} other{{count} days ago}}'**
+  String resultTimeAgoDays(num count);
+
+  /// No description provided for @resultTimeAgoMonths.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{1 month ago} other{{count} months ago}}'**
+  String resultTimeAgoMonths(num count);
+
+  /// No description provided for @resultTimeAgoYears.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{1 year ago} other{{count} years ago}}'**
+  String resultTimeAgoYears(num count);
 }
 
 class _AppLocalizationsDelegate

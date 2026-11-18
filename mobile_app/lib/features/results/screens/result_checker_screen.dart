@@ -1,4 +1,5 @@
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -276,14 +277,13 @@ class _ResultRecordCard extends StatelessWidget {
     final theme = Theme.of(context);
     final status = _statusOf(record.status);
 
-    final hasBacklog = record.subjects.isNotEmpty;
-    final showBacklog = hasBacklog &&
+    final showBacklog = record.subjects.isNotEmpty &&
         (status == _ResultStatus.referred || status == _ResultStatus.pass);
     final statusText = switch (status) {
       _ResultStatus.pass when showBacklog =>
         l10n.resultSubjectsYetToPass(record.subjects.length),
       _ResultStatus.pass => l10n.resultPassed,
-      _ResultStatus.referred when hasBacklog =>
+      _ResultStatus.referred when record.subjects.isNotEmpty =>
         l10n.resultSubjectsYetToPass(record.subjects.length),
       _ResultStatus.referred => l10n.resultReferred,
       _ResultStatus.dropped => l10n.resultDropped,
@@ -291,18 +291,10 @@ class _ResultRecordCard extends StatelessWidget {
       _ResultStatus.fail => l10n.resultFail,
       _ResultStatus.unknown => record.status ?? '',
     };
-    final statusColor = switch (status) {
-      _ResultStatus.pass when !showBacklog => _gpaGreen,
-      _ResultStatus.referred ||
-      _ResultStatus.expelled ||
-      _ResultStatus.fail ||
-      _ResultStatus.pass =>
-        _statusRed,
-      _ResultStatus.dropped => _statusAmber,
-      _ResultStatus.unknown => Colors.grey,
-    };
+    final showBanner = !(status == _ResultStatus.pass && record.subjects.isEmpty);
 
-    final tiles = record.sortedSemesterGpas;
+    final failed = _subjectsBySemester(record);
+    final cards = _semesterCards(record, failed);
 
     return Card(
       margin: const EdgeInsets.only(bottom: DbSpacing.md),
@@ -313,7 +305,6 @@ class _ResultRecordCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ── Navy gradient header ────────────────────────────────────────
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(DbSpacing.md),
@@ -324,47 +315,34 @@ class _ResultRecordCard extends StatelessWidget {
                 colors: [DbColors.navy, DbColors.navyDark],
               ),
             ),
-            child: Row(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(Icons.badge_rounded,
-                      color: Colors.white, size: 24),
-                ),
-                const SizedBox(width: DbSpacing.sm),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('#${record.roll}',
-                          style: theme.textTheme.titleLarge?.copyWith(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: 0.5)),
-                      if (record.title != null && record.title!.isNotEmpty) ...[
-                        const SizedBox(height: 2),
-                        Text(record.title!,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: theme.textTheme.bodySmall
-                                ?.copyWith(color: Colors.white.withValues(alpha: 0.9))),
-                      ],
-                      if (record.institute != null && record.institute!.isNotEmpty) ...[
-                        const SizedBox(height: 2),
-                        Text(record.institute!,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: theme.textTheme.bodySmall?.copyWith(
-                                color: Colors.white
-                                    .withValues(alpha: 0.75))),
-                      ],
-                    ],
-                  ),
-                ),
+                Text('#${record.roll}',
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.headlineSmall?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.5)),
+                if (record.title != null && record.title!.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Text(record.title!,
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                          color: Colors.white.withValues(alpha: 0.92),
+                          fontWeight: FontWeight.w600)),
+                ],
+                if (record.institute != null && record.institute!.isNotEmpty) ...[
+                  const SizedBox(height: 2),
+                  Text(record.institute!,
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                          color: Colors.white.withValues(alpha: 0.75))),
+                ],
               ],
             ),
           ),
@@ -373,61 +351,40 @@ class _ResultRecordCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if (record.name != null && record.name!.isNotEmpty) ...[
-                  Text(record.name!,
-                      style: theme.textTheme.titleMedium
-                          ?.copyWith(fontWeight: FontWeight.w700)),
-                  const SizedBox(height: 4),
-                ],
-                if (record.registrationNo != null)
-                  DbInfoRow(label: 'Registration', value: record.registrationNo!),
-                if (record.cgpa != null) ...[
+                if (showBanner) ...[
+                  _StatusBanner(text: statusText, color: _statusColorOf(status, showBacklog)),
                   const SizedBox(height: DbSpacing.sm + 4),
-                  _CgpaHighlight(cgpa: record.cgpa!, label: l10n.cgpa),
                 ],
-                const SizedBox(height: DbSpacing.sm + 4),
-                _StatusBanner(text: statusText, color: statusColor),
-                if (record.subjects.isNotEmpty) ...[
-                  const SizedBox(height: DbSpacing.sm + 4),
-                  Text(l10n.resultSubjectsList,
-                      style: theme.textTheme.titleSmall
-                          ?.copyWith(fontWeight: FontWeight.w700)),
-                  const SizedBox(height: DbSpacing.sm),
-                  Wrap(
-                    spacing: DbSpacing.sm,
-                    runSpacing: DbSpacing.sm,
-                    children: [
-                      for (final subject in record.subjects)
-                        _ReferredSubjectChip(
-                          text: '${subject.code ?? '—'}${subject.titleSuffix}',
-                          name: subject.name,
-                        ),
-                    ],
-                  ),
-                ],
-                if (tiles.isNotEmpty) ...[
-                  const SizedBox(height: DbSpacing.md),
-                  Text(l10n.resultGpa,
-                      style: theme.textTheme.titleSmall
-                          ?.copyWith(fontWeight: FontWeight.w700)),
-                  const SizedBox(height: DbSpacing.sm),
-                  for (var i = 0; i < tiles.length; i++)
-                    _FadeInUp(
-                      key: ValueKey('${record.examId}-${tiles[i].key}'),
-                      index: (i + 1).clamp(0, 8),
-                      child: Padding(
-                        padding: const EdgeInsets.only(bottom: DbSpacing.sm),
-                        child: _SemesterGpaTile(
-                          semester: _semesterIndex(tiles[i].key),
-                          semesterName: _semesterLabel(
-                              context, _semesterIndex(tiles[i].key)),
-                          gpa: tiles[i].value,
-                          isExamSemester: record.examSemester != null &&
-                              record.examSemester == _semesterIndex(tiles[i].key),
-                          examLabel: l10n.resultThisExam,
-                        ),
+                for (var i = 0; i < cards.length; i++)
+                  _FadeInUp(
+                    key: ValueKey('${record.examId}-sem-${cards[i].semester}-$i'),
+                    index: (i + 1).clamp(0, 8),
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom: DbSpacing.sm),
+                      child: _SemesterCard(
+                        semester: cards[i].semester,
+                        semesterName: _semesterLabel(context, cards[i].semester),
+                        gpa: cards[i].gpa,
+                        failedSubjects: cards[i].failed,
+                        isExamSemester: record.examSemester != null &&
+                            record.examSemester == cards[i].semester,
+                        examLabel: l10n.resultThisExam,
+                        publishedAt: record.publishedAt,
                       ),
                     ),
+                  ),
+                if (record.cgpa != null) ...[
+                  const SizedBox(height: DbSpacing.sm),
+                  _CgpaHighlight(cgpa: record.cgpa!, label: l10n.cgpa),
+                ],
+                if (record.name != null || record.registrationNo != null) ...[
+                  const SizedBox(height: DbSpacing.sm),
+                  if (record.name != null)
+                    DbInfoRow(label: 'Name', value: record.name!),
+                  if (record.registrationNo != null) ...[
+                    if (record.name != null) const SizedBox(height: 4),
+                    DbInfoRow(label: 'Registration', value: record.registrationNo!),
+                  ],
                 ],
                 const SizedBox(height: DbSpacing.sm),
                 Text(record.disclaimer,
@@ -529,161 +486,300 @@ class _StatusBanner extends StatelessWidget {
   }
 }
 
-class _ReferredSubjectChip extends StatelessWidget {
-  final String text;
-  final String? name;
 
-  const _ReferredSubjectChip({required this.text, this.name});
 
-  @override
-  Widget build(BuildContext context) {
-    final hasName = name != null && name!.trim().isNotEmpty;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: _statusRed.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(DbRadius.chip),
-        border: Border.all(color: _statusRed.withValues(alpha: 0.35)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            text,
-            style: const TextStyle(
-                color: _statusRed,
-                fontWeight: FontWeight.w600,
-                fontFeatures: [FontFeature.tabularFigures()]),
-          ),
-          if (hasName) ...[
-            const SizedBox(height: 2),
-            ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 260),
-              child: Text(
-                name!,
-                style: TextStyle(
-                    color: _statusRed.withValues(alpha: 0.85),
-                    fontWeight: FontWeight.w400,
-                    fontSize: 11.5,
-                    height: 1.25),
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
+Color _statusColorOf(_ResultStatus status, bool showBacklog) {
+  return switch (status) {
+    _ResultStatus.pass when !showBacklog => _gpaGreen,
+    _ResultStatus.referred ||
+    _ResultStatus.expelled ||
+    _ResultStatus.fail ||
+    _ResultStatus.pass => _statusRed,
+    _ResultStatus.dropped => _statusAmber,
+    _ResultStatus.unknown => Colors.grey,
+  };
 }
 
-class _SemesterGpaTile extends StatelessWidget {
+class _SemesterCard extends StatelessWidget {
   final int semester;
   final String semesterName;
   final double? gpa;
+  final List<ResultSubject> failedSubjects;
   final bool isExamSemester;
   final String examLabel;
+  final String? publishedAt;
 
-  const _SemesterGpaTile({
+  const _SemesterCard({
     required this.semester,
     required this.semesterName,
     required this.gpa,
+    required this.failedSubjects,
     required this.isExamSemester,
     required this.examLabel,
+    required this.publishedAt,
   });
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final missing = gpa == null;
     final valueColor = missing ? _statusRed : _gpaGreen;
     final letter = missing ? null : _letterFromGpa(gpa);
+    final hasBacklog = failedSubjects.isNotEmpty;
 
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 250),
+    return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: isExamSemester
-            ? theme.colorScheme.primary.withValues(alpha: 0.06)
-            : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+        color: _gpaGreen.withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-            color: isExamSemester
-                ? theme.colorScheme.primary.withValues(alpha: 0.35)
-                : Colors.transparent),
+        border: Border.all(color: _gpaGreen.withValues(alpha: 0.18)),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Semester index avatar
-          Container(
-            width: 34,
-            height: 34,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: isExamSemester
-                  ? theme.colorScheme.primary.withValues(alpha: 0.14)
-                  : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.8),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Text(
-              semester > 0 ? '$semester' : '?',
-              style: theme.textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w800,
-                color: isExamSemester
-                    ? theme.colorScheme.primary
-                    : theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(semesterName,
-                    style: theme.textTheme.bodyMedium
-                        ?.copyWith(fontWeight: FontWeight.w600)),
-                if (isExamSemester) ...[
-                  const SizedBox(height: 2),
-                  Text(examLabel,
-                      style: theme.textTheme.labelSmall?.copyWith(
-                          color: theme.colorScheme.primary,
-                          fontWeight: FontWeight.w700)),
-                ],
-              ],
-            ),
-          ),
-          if (missing)
-            Text('—', style: TextStyle(color: valueColor, fontWeight: FontWeight.w800, fontSize: 16))
-          else ...[
-            Text(
-              gpa!.toStringAsFixed(2),
-              style: TextStyle(
-                  color: valueColor,
-                  fontWeight: FontWeight.w800,
-                  fontSize: 16,
-                  fontFeatures: const [FontFeature.tabularFigures()]),
-            ),
-            if (letter != null)
+          Row(
+            children: [
               Container(
-                margin: const EdgeInsets.only(left: 8),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                width: 30,
+                height: 30,
+                alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color: valueColor.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(DbRadius.chip),
+                  color: DbColors.navy.withValues(alpha: 0.10),
+                  borderRadius: BorderRadius.circular(8),
                 ),
-                child: Text(
-                  letter,
-                  style: TextStyle(
-                      color: valueColor.withValues(alpha: 0.9),
-                      fontWeight: FontWeight.w800,
-                      fontSize: 12,
-                      letterSpacing: 0.4),
-                ),
+                child: const Icon(Icons.menu_book_rounded,
+                    size: 16, color: DbColors.navy),
               ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(semesterName,
+                    style: theme.textTheme.bodyMedium
+                        ?.copyWith(fontWeight: FontWeight.w700)),
+              ),
+              if (hasBacklog)
+                Text(
+                  l10n.resultSubjectsYetToPass(failedSubjects.length),
+                  style: const TextStyle(
+                      color: _statusRed,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 12),
+                )
+              else if (!missing) ...[
+                const Icon(Icons.check_circle_rounded,
+                    size: 16, color: _gpaGreen),
+                const SizedBox(width: 4),
+                Text(l10n.resultPassed,
+                    style: const TextStyle(
+                        color: _gpaGreen,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 12)),
+              ],
+            ],
+          ),
+          if (isExamSemester) ...[
+            const SizedBox(height: 2),
+            Padding(
+              padding: const EdgeInsets.only(left: 38),
+              child: Text(examLabel,
+                  style: theme.textTheme.labelSmall?.copyWith(
+                      color: theme.colorScheme.primary,
+                      fontWeight: FontWeight.w700)),
+            ),
+          ],
+          if (publishedAt != null && publishedAt!.trim().isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Padding(
+              padding: const EdgeInsets.only(left: 38),
+              child: Row(
+                children: [
+                  Icon(Icons.event_rounded,
+                      size: 12, color: theme.colorScheme.onSurfaceVariant),
+                  const SizedBox(width: 4),
+                  Text(_formatDateLine(context, publishedAt!),
+                      style: theme.textTheme.bodySmall),
+                  const Spacer(),
+                  Text(_timeAgo(l10n, publishedAt!),
+                      style: theme.textTheme.bodySmall),
+                ],
+              ),
+            ),
+          ],
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surfaceContainerHighest
+                      .withValues(alpha: 0.7),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text('GPA',
+                    style: theme.textTheme.labelSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: theme.colorScheme.onSurfaceVariant)),
+              ),
+              const SizedBox(width: 8),
+              if (missing)
+                Text('—',
+                    style: TextStyle(
+                        color: valueColor,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 16))
+              else
+                Text(
+                  gpa!.toStringAsFixed(2),
+                  style: TextStyle(
+                      color: valueColor,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 18,
+                      fontFeatures: const [FontFeature.tabularFigures()]),
+                ),
+              const Spacer(),
+              if (letter != null)
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: valueColor.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(DbRadius.chip),
+                  ),
+                  child: Text(
+                    letter,
+                    style: TextStyle(
+                        color: valueColor.withValues(alpha: 0.9),
+                        fontWeight: FontWeight.w800,
+                        fontSize: 12,
+                        letterSpacing: 0.4),
+                  ),
+                ),
+            ],
+          ),
+          for (final s in failedSubjects) ...[
+            const SizedBox(height: 6),
+            _FailedSubjectRow(subject: s),
           ],
         ],
       ),
     );
   }
 }
+
+class _FailedSubjectRow extends StatelessWidget {
+  final ResultSubject subject;
+
+  const _FailedSubjectRow({required this.subject});
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final label = switch (subject.type) {
+      'T' => l10n.subjectTypeTheory,
+      'P' => l10n.subjectTypePractical,
+      'T+P' => l10n.subjectTypeTheoryPractical,
+      _ => null,
+    };
+    final code =
+        '${subject.code ?? '—'}${subject.titleSuffix}';
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.55),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: _statusRed.withValues(alpha: 0.25)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(code,
+                  style: const TextStyle(
+                      color: _statusRed,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 13,
+                      fontFeatures: [FontFeature.tabularFigures()])),
+              const Spacer(),
+              if (label != null)
+                Text(label,
+                    style: theme.textTheme.labelSmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w600)),
+            ],
+          ),
+          if (subject.name != null && subject.name!.trim().isNotEmpty) ...[
+            const SizedBox(height: 2),
+            Text(subject.name!,
+                style: theme.textTheme.bodySmall?.copyWith(
+                    color: _statusRed.withValues(alpha: 0.9),
+                    fontWeight: FontWeight.w600,
+                    height: 1.25)),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _SubjectsForSemester {
+  final int semester;
+  final double? gpa;
+  final List<ResultSubject> failed;
+
+  const _SubjectsForSemester(this.semester, this.gpa, this.failed);
+}
+
+Map<int, List<ResultSubject>> _subjectsBySemester(ResultRecord record) {
+  final map = <int, List<ResultSubject>>{};
+  for (final s in record.subjects) {
+    final sem = (s.semester != null && s.semester! >= 1)
+        ? s.semester!
+        : (record.examSemester ?? 0);
+    if (sem <= 0) continue;
+    map.putIfAbsent(sem, () => []).add(s);
+  }
+  return map;
+}
+
+List<_SubjectsForSemester> _semesterCards(
+  ResultRecord record,
+  Map<int, List<ResultSubject>> failed,
+) {
+  final semesters = <int>{
+    for (final e in record.semesterGpas.keys) _semesterIndex(e),
+    ...failed.keys,
+  }.where((s) => s > 0).toList()
+    ..sort((a, b) => b.compareTo(a));
+  return [
+    for (final sem in semesters)
+      _SubjectsForSemester(
+        sem,
+        record.semesterGpas['gpa$sem'] ?? record.semesterGpas['GPA$sem'],
+        failed[sem] ?? const [],
+      ),
+  ];
+}
+
+String _formatDateLine(BuildContext context, String iso) {
+  final isBn = Localizations.localeOf(context).languageCode == 'bn';
+  final dt = DateTime.tryParse(iso);
+  if (dt == null) return iso;
+  return DateFormat('d MMMM, y', isBn ? 'bn' : 'en').format(dt);
+}
+
+String _timeAgo(AppLocalizations l10n, String iso) {
+  final dt = DateTime.tryParse(iso);
+  if (dt == null) return '';
+  final diff = DateTime.now().difference(dt);
+  if (diff.inMinutes < 60) return l10n.resultTimeAgoHours(diff.inHours.clamp(1, 24));
+  final days = diff.inDays;
+  if (days < 45) return l10n.resultTimeAgoDays(days);
+  if (days < 365) return l10n.resultTimeAgoMonths((days / 30.44).round().clamp(1, 12));
+  return l10n.resultTimeAgoYears((days / 365.25).round().clamp(1, 10));
+}
+
