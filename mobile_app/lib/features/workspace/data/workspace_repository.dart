@@ -18,7 +18,7 @@ class WorkspaceRepository {
   }
 
   Future<WorkspaceNote> createNote({required String title, required String body, String? collectionId}) async {
-    final res = await _client.postMap('/workspace/notes', data: {
+    final res = await _client.postMap('/workspace/notes', body: {
       'title': title,
       'body': body,
       if (collectionId != null) 'collectionId': collectionId,
@@ -27,7 +27,7 @@ class WorkspaceRepository {
   }
 
   Future<void> updateNote(String id, {bool? pinned, bool? archived}) async {
-    await _client.putMap('/workspace/notes/$id', data: {
+    await _client.putMap('/workspace/notes/$id', body: {
       if (pinned != null) 'pinned': pinned,
       if (archived != null) 'archived': archived,
     });
@@ -45,7 +45,7 @@ class WorkspaceRepository {
   }
 
   Future<WorkspaceCollection> createCollection(String name) async {
-    final res = await _client.postMap('/workspace/collections', data: {'name': name});
+    final res = await _client.postMap('/workspace/collections', body: {'name': name});
     return WorkspaceCollection.fromJson(res['item'] as Map<String, dynamic>);
   }
 
@@ -54,7 +54,7 @@ class WorkspaceRepository {
   }
 
   Future<void> addToCollection(String id, {required String refType, required String refId}) async {
-    await _client.postMap('/workspace/collections/$id/items', data: {'refType': refType, 'refId': refId});
+    await _client.postMap('/workspace/collections/$id/items', body: {'refType': refType, 'refId': refId});
   }
 
   Future<List<WorkspaceRecentItem>> recent() async {

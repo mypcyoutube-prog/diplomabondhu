@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/providers.dart';
+import '../data/search_models.dart';
 import '../data/search_repository.dart';
 
 final searchRepositoryProvider = Provider<SearchRepository>((ref) {

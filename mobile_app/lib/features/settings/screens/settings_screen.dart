@@ -336,9 +336,9 @@ class _QuietHoursSectionState extends ConsumerState<_QuietHoursSection> {
           contentPadding: EdgeInsets.zero,
           dense: true,
           title: Text(l10n.quietHoursLabel),
-          subtitle: Text(_hhmm(start) == _hhmm(end)
+          subtitle: _hhmm(start) == _hhmm(end)
               ? null
-              : '${_hhmm(start)} \u2192 ${_hhmm(end)}'),
+              : Text('${_hhmm(start)} \u2192 ${_hhmm(end)}'),
           value: enabled,
           onChanged: _saving
               ? null

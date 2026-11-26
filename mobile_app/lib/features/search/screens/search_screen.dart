@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../../../app/l10n/generated/app_localizations.dart';
 import '../../../app/theme/theme.dart';
 import '../../../shared/widgets/states.dart';
+import '../data/search_models.dart';
 import '../providers/search_providers.dart';
 
 class SearchScreen extends ConsumerStatefulWidget {
