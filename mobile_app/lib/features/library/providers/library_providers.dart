@@ -30,6 +30,29 @@ class LibraryController extends AsyncNotifier<MaterialPage> {
   Future<void> refresh() async {
     ref.invalidateSelf();
   }
+
+  Future<void> loadMore() async {
+    final current = state.value;
+    if (current == null || state.isLoading) return;
+    if (current.items.length >= current.total) return;
+    final filter = ref.read(libraryFilterProvider);
+    state = const AsyncLoading<MaterialPage>()
+        .copyWithPrevious(AsyncData(current), isRefresh: false);
+    try {
+      final next = await ref.read(materialRepositoryProvider).list(
+            type: filter.type,
+            q: filter.q,
+            page: current.page + 1,
+          );
+      state = AsyncData(MaterialPage(
+        items: [...current.items, ...next.items],
+        page: next.page,
+        total: next.total,
+      ));
+    } catch (e, st) {
+      state = AsyncError(e, st).copyWithPrevious(AsyncData(current));
+    }
+  }
 }
 
 class LibraryFilterController extends Notifier<LibraryFilter> {
@@ -64,4 +87,10 @@ final bookmarksProvider = FutureProvider<List<Material>>((ref) {
 final materialDetailProvider =
     FutureProvider.family<Material, String>((ref, id) {
   return ref.watch(materialRepositoryProvider).byId(id);
+});
+
+final isBookmarkedProvider =
+    FutureProvider.family<bool, String>((ref, id) async {
+  final bookmarks = await ref.watch(bookmarksProvider.future);
+  return bookmarks.any((m) => m.id == id);
 });

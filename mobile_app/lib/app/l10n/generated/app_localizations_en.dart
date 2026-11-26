@@ -1280,6 +1280,32 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get roleStudent => 'Student';
+  @override
+  String get loadMore => 'Load more';
+  @override
+  String get viewsLabel => 'Views';
+  @override
+  String get typeLabel => 'Type';
+  @override
+  String get examYearLabel => 'Exam year';
+  @override
+  String get pagesLabel => 'Pages';
+  @override
+  String get sizeLabel => 'Size';
+  @override
+  String get bookmarkAdded => 'Added to bookmarks';
+  @override
+  String get bookmarkRemoved => 'Removed from bookmarks';
+  @override
+  String get reportTypeLabel => 'Report type';
+  @override
+  String get reportWrongInfo => 'Wrong information';
+  @override
+  String get reportBrokenLink => 'Broken link';
+  @override
+  String get reportInappropriate => 'Inappropriate content';
+  @override
+  String get reportOther => 'Other';
 
   @override
   String get searchRecent => 'Recent searches';

@@ -1279,6 +1279,83 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Student'**
   String get roleStudent;
+  /// No description provided for @loadMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Load more'**
+  String get loadMore;
+
+  /// No description provided for @viewsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Views'**
+  String get viewsLabel;
+
+  /// No description provided for @typeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Type'**
+  String get typeLabel;
+
+  /// No description provided for @examYearLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Exam year'**
+  String get examYearLabel;
+
+  /// No description provided for @pagesLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Pages'**
+  String get pagesLabel;
+
+  /// No description provided for @sizeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Size'**
+  String get sizeLabel;
+
+  /// No description provided for @bookmarkAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Added to bookmarks'**
+  String get bookmarkAdded;
+
+  /// No description provided for @bookmarkRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Removed from bookmarks'**
+  String get bookmarkRemoved;
+
+  /// No description provided for @reportTypeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Report type'**
+  String get reportTypeLabel;
+
+  /// No description provided for @reportWrongInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Wrong information'**
+  String get reportWrongInfo;
+
+  /// No description provided for @reportBrokenLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Broken link'**
+  String get reportBrokenLink;
+
+  /// No description provided for @reportInappropriate.
+  ///
+  /// In en, this message translates to:
+  /// **'Inappropriate content'**
+  String get reportInappropriate;
+
+  /// No description provided for @reportOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get reportOther;
 }
 
 

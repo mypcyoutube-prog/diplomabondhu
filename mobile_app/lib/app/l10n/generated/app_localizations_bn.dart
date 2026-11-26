@@ -1279,6 +1279,32 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get roleStudent => 'শিক্ষার্থী';
+  @override
+  String get loadMore => 'আরও দেখুন';
+  @override
+  String get viewsLabel => 'ভিউ';
+  @override
+  String get typeLabel => 'ধরন';
+  @override
+  String get examYearLabel => 'পরীক্ষার বছর';
+  @override
+  String get pagesLabel => 'পৃষ্ঠা';
+  @override
+  String get sizeLabel => 'সাইজ';
+  @override
+  String get bookmarkAdded => 'বুকমার্কে যোগ হয়েছে';
+  @override
+  String get bookmarkRemoved => 'বুকমার্ক থেকে সরানো হয়েছে';
+  @override
+  String get reportTypeLabel => 'রিপোর্টের ধরন';
+  @override
+  String get reportWrongInfo => 'ভুল তথ্য';
+  @override
+  String get reportBrokenLink => 'লিংক নষ্ট';
+  @override
+  String get reportInappropriate => 'অনুপযুক্ত কনটেন্ট';
+  @override
+  String get reportOther => 'অন্যান্য';
 
   @override
   String get searchRecent => 'সাম্প্রতিক সর্চ';

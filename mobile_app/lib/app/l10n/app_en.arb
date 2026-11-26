@@ -230,5 +230,18 @@
   "profileUpdated": "Profile updated",
   "phoneLabel": "Phone",
   "statusActive": "Active",
-  "roleStudent": "Student"
+  "roleStudent": "Student",
+  "loadMore": "Load more",
+  "viewsLabel": "Views",
+  "typeLabel": "Type",
+  "examYearLabel": "Exam year",
+  "pagesLabel": "Pages",
+  "sizeLabel": "Size",
+  "bookmarkAdded": "Added to bookmarks",
+  "bookmarkRemoved": "Removed from bookmarks",
+  "reportTypeLabel": "Report type",
+  "reportWrongInfo": "Wrong information",
+  "reportBrokenLink": "Broken link",
+  "reportInappropriate": "Inappropriate content",
+  "reportOther": "Other"
 }

@@ -230,5 +230,18 @@
   "profileUpdated": "প্রোফাইল আপডেট হয়েছে",
   "phoneLabel": "ফোন",
   "statusActive": "সক্রিয়",
-  "roleStudent": "শিক্ষার্থী"
+  "roleStudent": "শিক্ষার্থী",
+  "loadMore": "আরও দেখুন",
+  "viewsLabel": "ভিউ",
+  "typeLabel": "ধরন",
+  "examYearLabel": "পরীক্ষার বছর",
+  "pagesLabel": "পৃষ্ঠা",
+  "sizeLabel": "সাইজ",
+  "bookmarkAdded": "বুকমার্কে যোগ হয়েছে",
+  "bookmarkRemoved": "বুকমার্ক থেকে সরানো হয়েছে",
+  "reportTypeLabel": "রিপোর্টের ধরন",
+  "reportWrongInfo": "ভুল তথ্য",
+  "reportBrokenLink": "লিংক নষ্ট",
+  "reportInappropriate": "অনুপযুক্ত কনটেন্ট",
+  "reportOther": "অন্যান্য"
 }
