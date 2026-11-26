@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../app/l10n/generated/app_localizations.dart';
 import '../../../app/theme/theme.dart';
@@ -29,6 +30,105 @@ class HomeScreen extends ConsumerWidget {
           .map((key) => DashboardSectionPref(key: key, visible: true, order: 0))
           .toList(),
     );
+  }
+
+  Widget _bannersStrip(WidgetRef ref) {
+    final banners = ref.watch(homeBannersProvider);
+    return banners.maybeWhen(
+      data: (items) {
+        if (items.isEmpty) return const SizedBox.shrink();
+        return SizedBox(
+          height: 120,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: items.length,
+            separatorBuilder: (_, _) => const SizedBox(width: 8),
+            itemBuilder: (context, i) {
+              final banner = items[i];
+              return GestureDetector(
+                onTap: () => _openBanner(context, banner.linkUrl),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(DbRadius.card),
+                  child: SizedBox(
+                    width: 280,
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        Image.network(
+                          banner.imageUrl,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, _, _) => Container(
+                            color: DbColors.fillLight,
+                            child: const Icon(Icons.image_rounded,
+                                color: DbColors.textSecondaryLight, size: 32),
+                          ),
+                        ),
+                        if (banner.title.isNotEmpty ||
+                            banner.ctaLabel.isNotEmpty)
+                          Container(
+                            decoration: const BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.bottomCenter,
+                                end: Alignment.topCenter,
+                                colors: [DbColors.overlay, Colors.transparent],
+                              ),
+                            ),
+                            padding: const EdgeInsets.all(12),
+                            alignment: Alignment.bottomLeft,
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                if (banner.title.isNotEmpty)
+                                  Text(
+                                    banner.title,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                if (banner.ctaLabel.isNotEmpty)
+                                  Padding(
+                                    padding:
+                                        const EdgeInsets.only(top: 4),
+                                    child: Text(
+                                      banner.ctaLabel,
+                                      style: const TextStyle(
+                                        color: Colors.white70,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        );
+      },
+      orElse: () => const SizedBox.shrink(),
+    );
+  }
+
+  void _openBanner(BuildContext context, String linkUrl) {
+    if (linkUrl.isEmpty) return;
+    if (linkUrl.startsWith('/')) {
+      context.push(linkUrl);
+      return;
+    }
+    final uri = Uri.tryParse(linkUrl);
+    if (uri != null && (uri.scheme == 'http' || uri.scheme == 'https')) {
+      launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
   }
 
   @override
@@ -169,6 +269,11 @@ class HomeScreen extends ConsumerWidget {
           ..add(widget)
           ..add(const SizedBox(height: 16));
       }
+      if (section.key == 'announcements') {
+        sectionChildren
+          ..add(_bannersStrip(ref))
+          ..add(const SizedBox(height: 16));
+      }
     }
 
     return Scaffold(
@@ -195,6 +300,7 @@ class HomeScreen extends ConsumerWidget {
           ref.invalidate(appSettingsProvider);
           ref.invalidate(recentMaterialsProvider);
           ref.invalidate(dashboardPrefsProvider);
+          ref.invalidate(homeBannersProvider);
         },
         child: ListView(
           padding: const EdgeInsets.all(16),

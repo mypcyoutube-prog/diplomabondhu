@@ -30,7 +30,8 @@ const NAV: Array<{ section: string; items: NavItem[] }> = [
     items: [
       { to: '/materials', label: 'Study Materials', permission: 'CONTENT_MANAGE' },
       { to: '/exams', label: 'Exams & Questions', permission: 'EXAM_MANAGE' },
-      { to: '/results', label: 'BTEB Results', permission: 'CONTENT_MANAGE' }
+      { to: '/results', label: 'BTEB Results', permission: 'CONTENT_MANAGE' },
+      { to: '/banners', label: 'Home Banners', permission: 'CONTENT_MANAGE' }
     ]
   },
   {

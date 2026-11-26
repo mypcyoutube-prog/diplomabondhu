@@ -20,6 +20,7 @@ const SettingsPage = lazy(() => import('./pages/Settings').then((m) => ({ defaul
 const AuditLogsPage = lazy(() => import('./pages/AuditLogs').then((m) => ({ default: m.AuditLogsPage })));
 const AiSearchSettingsPage = lazy(() => import('./pages/AiSearchSettings').then((m) => ({ default: m.AiSearchSettingsPage })));
 const ScheduledNotificationsPage = lazy(() => import('./pages/ScheduledNotifications').then((m) => ({ default: m.ScheduledNotificationsPage })));
+const BannersPage = lazy(() => import('./pages/Banners').then((m) => ({ default: m.BannersPage })));
 
 function Protected({ permission, children }: { permission?: string; children: ReactNode }) {
   const { user, permissions, ready } = useAuth();
@@ -47,6 +48,7 @@ export default function App() {
         <Route path="/materials" element={<Protected permission="CONTENT_MANAGE"><MaterialsPage /></Protected>} />
         <Route path="/exams" element={<Protected permission="EXAM_MANAGE"><ExamsPage /></Protected>} />
         <Route path="/results" element={<Protected permission="CONTENT_MANAGE"><ResultsPage /></Protected>} />
+        <Route path="/banners" element={<Protected permission="CONTENT_MANAGE"><BannersPage /></Protected>} />
         <Route path="/gpa" element={<Protected permission="GPA_MANAGE"><GpaProfilesPage /></Protected>} />
         <Route path="/community" element={<Protected permission="MODERATE"><CommunityPage /></Protected>} />
         <Route path="/announcements" element={<Protected permission="NOTIFY_MANAGE"><AnnouncementsPage /></Protected>} />

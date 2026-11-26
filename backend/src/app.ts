@@ -19,6 +19,7 @@ import { examRoutes } from './modules/exams/exam.routes';
 import { plannerRoutes } from './modules/planner/planner.routes';
 import { communityRoutes } from './modules/community/community.routes';
 import { notificationsRoutes } from './modules/notifications/notifications.routes';
+import { bannersRoutes } from './modules/banners/banners.routes';
 import { resultsRoutes } from './modules/results/results.routes';
 import { errorHandler, notFoundHandler } from './middlewares/error-handler';
 import { searchRoutes } from './modules/search/search.routes';
@@ -98,6 +99,7 @@ export function createApp(env: Env) {
   api.use('/planner', plannerRoutes(env));
   api.use('/community', communityRoutes(env));
   api.use('/notifications', notificationsRoutes(env));
+  api.use('/banners', bannersRoutes(env));
   api.use('/results', resultsRoutes(env));
   api.use('/search', searchRoutes(env));
   api.use('/me/dashboard-preferences', dashboardPrefsRoutes(env));

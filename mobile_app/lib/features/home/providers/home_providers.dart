@@ -53,3 +53,38 @@ final appSettingsProvider = FutureProvider<AppSettingsData>((ref) async {
   final res = await client.getMap('/settings/app');
   return AppSettingsData.fromJson(res.data);
 });
+
+class HomeBanner {
+  final String id;
+  final String title;
+  final String imageUrl;
+  final String linkUrl;
+  final String ctaLabel;
+
+  const HomeBanner({
+    required this.id,
+    required this.title,
+    required this.imageUrl,
+    required this.linkUrl,
+    required this.ctaLabel,
+  });
+
+  factory HomeBanner.fromJson(Map<String, dynamic> json) {
+    return HomeBanner(
+      id: json['_id'] as String? ?? '',
+      title: json['title'] as String? ?? '',
+      imageUrl: json['imageUrl'] as String? ?? '',
+      linkUrl: json['linkUrl'] as String? ?? '',
+      ctaLabel: json['ctaLabel'] as String? ?? '',
+    );
+  }
+}
+
+final homeBannersProvider = FutureProvider<List<HomeBanner>>((ref) async {
+  final client = ref.watch(apiClientProvider);
+  final res = await client.getMap('/banners');
+  final items = res.data['items'] as List? ?? [];
+  return items
+      .map((e) => HomeBanner.fromJson(e as Map<String, dynamic>))
+      .toList();
+});
