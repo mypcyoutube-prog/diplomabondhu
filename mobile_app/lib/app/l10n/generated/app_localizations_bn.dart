@@ -112,7 +112,22 @@ class AppLocalizationsBn extends AppLocalizations {
   String get goodEvening => 'শুভ সন্ধ্যা';
 
   @override
-  String get searchHint => 'ম্যাটেরিয়াল, পরীক্ষা খুঁজুন...';
+  String get searchHint => 'ম্যাটেরিয়াल, পরীক্ষা খুঁজুন...';
+
+  @override
+  String get searchTitle => 'সব কিছু খুঁজুন';
+
+  @override
+  String get searchAll => 'সব';
+
+  @override
+  String get searchMaterials => 'ম্যাটেরিয়াল';
+
+  @override
+  String get searchPosts => 'পোস্ট';
+
+  @override
+  String get searchStartTyping => 'খুঁজতে অন্তত ২ অক্ষর লিখুন';
 
   @override
   String get quickAccess => 'দ্রুত অ্যাক্সেস';

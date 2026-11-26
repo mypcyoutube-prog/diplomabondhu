@@ -1,5 +1,33 @@
 # CHANGELOG.md — DiplomaBondhu
 
+## [0.11.13] — Global Search (API + app), network retry, health v2, admin code-split, docs
+
+Remaining approved items from the Phase-1 audit / improvement plan (see docs/DIPLOMABONDHU_*_BN.md):
+
+- **D-3 Global Search:** new `GET /api/v1/search?q=&type=&page=` — regex search across
+  published StudyMaterials (title/titleBn/description), published Exams and visible Community
+  Posts; grouped mode returns counts + first 10 per type, `type` mode paginates (20/page).
+  Drafts, hidden and soft-deleted docs are excluded by filter. New Flutter feature
+  `features/search` (repository/provider/screen): debounced search field, type filter chips,
+  grouped results with per-type headers, deep-links into library/exam/community detail,
+  loading/error/empty states from the shared design system. Home search field now routes to
+  the global search (`/search?q=…`). 5 new backend tests (search.test.ts).
+- **D-4 Network resilience:** ApiClient retries idempotent GETs on transport-level failures
+  (timeouts / connection error) up to 2 times with linear backoff; 2 new tests
+  (api_client_test.dart).
+- **N-5 Health:** `GET /health` now reports `{status, db (ping), version, uptimeSec}`.
+- **N-3 Admin bundle:** route-level `React.lazy` code splitting — index chunk 300.28 KB →
+  214.29 KB (gzip 87.79 → 68.80 KB), per-page chunks emitted; 8/8 tests still green.
+- **N-1 Terminology:** GPA/CGPA label rules locked in docs/UI_UX_GUIDE.md §7 (GPA vs CGPA kept
+  distinct; `/gpa/results` API name never surfaced as "Result").
+- **N-6 Backup:** Backup & Restore runbook with quarterly restore drill added to
+  docs/DEPLOYMENT_GUIDE.md §6.
+- **Audit correction:** BUG-B2/M-2 ("dashboard sections missing") was a false positive — the
+  full `homepageSections` chain (model → API → admin UI → app) already existed; docs corrected,
+  no duplicate system was built.
+- Flutter tests could not run in this environment (no Dart/Flutter SDK — KI-10 unchanged);
+  new Dart code follows existing patterns and includes tests to run where the SDK exists.
+
 ## [0.11.12] — Security fix: unauthenticated results/admin proxies + deterministic academic duplicate guards
 
 Phase-1 audit (see docs/DIPLOMABONDHU_FULL_AUDIT_REPORT_BN.md) found two issues, fixed with owner approval:

@@ -1,21 +1,23 @@
 import type { ReactNode } from 'react';
+import { Suspense, lazy } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { useAuth } from './auth';
 import { hasPermission } from './permissions';
 import { Layout } from './components/Layout';
 import { Spinner } from './components/ui';
 import { LoginPage } from './pages/Login';
-import { DashboardPage } from './pages/Dashboard';
-import { StudentsPage } from './pages/Students';
-import { AcademicPage } from './pages/Academic';
-import { MaterialsPage } from './pages/Materials';
-import { ExamsPage } from './pages/Exams';
-import { ResultsPage } from './pages/Results';
-import { GpaProfilesPage } from './pages/GpaProfiles';
-import { CommunityPage } from './pages/Community';
-import { AnnouncementsPage } from './pages/Announcements';
-import { SettingsPage } from './pages/Settings';
-import { AuditLogsPage } from './pages/AuditLogs';
+
+const DashboardPage = lazy(() => import('./pages/Dashboard').then((m) => ({ default: m.DashboardPage })));
+const StudentsPage = lazy(() => import('./pages/Students').then((m) => ({ default: m.StudentsPage })));
+const AcademicPage = lazy(() => import('./pages/Academic').then((m) => ({ default: m.AcademicPage })));
+const MaterialsPage = lazy(() => import('./pages/Materials').then((m) => ({ default: m.MaterialsPage })));
+const ExamsPage = lazy(() => import('./pages/Exams').then((m) => ({ default: m.ExamsPage })));
+const ResultsPage = lazy(() => import('./pages/Results').then((m) => ({ default: m.ResultsPage })));
+const GpaProfilesPage = lazy(() => import('./pages/GpaProfiles').then((m) => ({ default: m.GpaProfilesPage })));
+const CommunityPage = lazy(() => import('./pages/Community').then((m) => ({ default: m.CommunityPage })));
+const AnnouncementsPage = lazy(() => import('./pages/Announcements').then((m) => ({ default: m.AnnouncementsPage })));
+const SettingsPage = lazy(() => import('./pages/Settings').then((m) => ({ default: m.SettingsPage })));
+const AuditLogsPage = lazy(() => import('./pages/AuditLogs').then((m) => ({ default: m.AuditLogsPage })));
 
 function Protected({ permission, children }: { permission?: string; children: ReactNode }) {
   const { user, permissions, ready } = useAuth();
@@ -27,8 +29,13 @@ function Protected({ permission, children }: { permission?: string; children: Re
   return <>{children}</>;
 }
 
+function PageFallback() {
+  return <div className="p-6"><Spinner label="Loading…" /></div>;
+}
+
 export default function App() {
   return (
+    <Suspense fallback={<PageFallback />}>
     <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route element={<Protected><Layout /></Protected>}>
@@ -46,5 +53,6 @@ export default function App() {
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
+    </Suspense>
   );
 }

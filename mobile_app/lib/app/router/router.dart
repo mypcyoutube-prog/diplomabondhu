@@ -25,6 +25,7 @@ import '../../features/library/screens/library_screen.dart';
 import '../../features/results/screens/result_checker_screen.dart';
 import '../../features/library/screens/material_detail_screen.dart';
 import '../../features/notifications/screens/notifications_screen.dart';
+import '../../features/search/screens/search_screen.dart';
 import '../../features/planner/screens/planner_screen.dart';
 import '../../features/profile/screens/profile_screen.dart';
 import '../../features/settings/providers/app_preferences.dart';
@@ -156,6 +157,13 @@ final rootRouterProvider = Provider<GoRouter>((ref) {
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) =>
             PostDetailScreen(postId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/search',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => SearchScreen(
+          initialQuery: state.uri.queryParameters['q'] ?? '',
+        ),
       ),
       GoRoute(
         path: '/notifications',

@@ -20,6 +20,8 @@ class Envelope<T> {
 typedef RefreshExecutor = Future<({String accessToken, String refreshToken})?> Function();
 
 class ApiClient {
+  static const int _maxNetworkRetries = 2;
+
   final Dio dio;
   final TokenStorage tokenStorage;
   RefreshExecutor? refreshExecutor;
@@ -40,6 +42,7 @@ class ApiClient {
       ..receiveTimeout = const Duration(seconds: 20)
       ..headers = {'Accept': 'application/json'};
     this.dio.interceptors.add(InterceptorsWrapper(onRequest: _onRequest, onError: _onError));
+    this.dio.interceptors.add(InterceptorsWrapper(onError: _onNetworkError));
   }
 
   Future<void> _onRequest(RequestOptions options, RequestInterceptorHandler handler) async {
@@ -78,6 +81,32 @@ class ApiClient {
       handler.next(err);
     } catch (_) {
       handler.next(err);
+    }
+  }
+
+  /// Retries idempotent GET requests on transport-level failures
+  /// (timeout / connection error) with a small linear backoff.
+  Future<void> _onNetworkError(DioException err, ErrorInterceptorHandler handler) async {
+    final opts = err.requestOptions;
+    final attempts = opts.extra['__network_retry_count__'] as int? ?? 0;
+    final retryable = err.response == null &&
+        opts.method.toUpperCase() == 'GET' &&
+        attempts < _maxNetworkRetries &&
+        (err.type == DioExceptionType.connectionTimeout ||
+            err.type == DioExceptionType.receiveTimeout ||
+            err.type == DioExceptionType.sendTimeout ||
+            err.type == DioExceptionType.connectionError);
+    if (!retryable) {
+      handler.next(err);
+      return;
+    }
+    opts.extra['__network_retry_count__'] = attempts + 1;
+    await Future<void>.delayed(Duration(milliseconds: 300 * (attempts + 1)));
+    try {
+      final retried = await dio.fetch<dynamic>(opts);
+      handler.resolve(retried);
+    } on DioException catch (e) {
+      handler.next(e);
     }
   }
 

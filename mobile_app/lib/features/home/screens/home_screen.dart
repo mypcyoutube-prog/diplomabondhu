@@ -84,8 +84,9 @@ class HomeScreen extends ConsumerWidget {
                 prefixIcon: const Icon(Icons.search_rounded),
               ),
               onSubmitted: (q) {
-                ref.read(libraryFilterProvider.notifier).setQuery(q.trim());
-                context.push('/library');
+                final query = q.trim();
+                if (query.length < 2) return;
+                context.push('/search?q=${Uri.encodeComponent(query)}');
               },
             ),
             const SizedBox(height: 16),

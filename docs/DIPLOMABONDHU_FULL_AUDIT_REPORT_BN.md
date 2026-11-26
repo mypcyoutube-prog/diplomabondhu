@@ -82,7 +82,7 @@ diplomabondhu/
 - একটি `theme.dart` আছে (central design tokens), `shared/widgets/states.dart` + `async_value_view.dart` — অর্থাৎ loading/error/empty state-এর ভিত্তি আছে।
 - l10n আছে (`lib/app/l10n/` + generated), Light/Dark সাপোর্ট আছে — কিন্তু ডিভাইসে চালিয়ে দেখার সুযোগ এখনো হয়নি (KI-10, KI-8)।
 - অ্যাডমিন প্যানেলে Sidebar+Topbar layout (`components/Layout.tsx`), প্রতিটি রুটে permission guard (`App.tsx`)।
-- GAP-UX: Home Dashboard-এর অ্যাডমিন-নিয়ন্ত্রিত section reorder/enable-disable স্কিমা এখনো জেনেরিক `featureFlags: Mixed` — নির্দিষ্ট section config নেই (§৯, MIS-2)।
+- ~~GAP-UX: Home Dashboard-এর অ্যাডমিন-নিয়ন্ত্রিত section reorder/enable-disable~~ **CORRECTED (0.11.13):** এটি ভুল দাবি ছিল — আসলে সম্পূর্ণ chain আগে থেকেই আছে: `app-settings.model.ts homepageSections` (key/visible/order) → `GET /settings/app` → admin `PUT /admin/settings` (`settingsUpdateSchema.homepageSections`) → admin UI (`Settings.tsx` "Homepage sections") → Flutter home (`home_providers.dart` homepageSections consume)। প্রাথমিক grep কেস-সংবেদনশীল ছিল বলে miss হয়েছিল।
 - GAP-UX: Global Search নেই — library/community/exams আলাদা আলাদা list সার্চ করে; কেন্দ্রীয় সার্চ API/স্ক্রিন নেই।
 
 ## ৮. যাচাইকৃত টেস্ট ফলাফল (এই অডিট রান)
@@ -109,7 +109,7 @@ Backend FAIL বিস্তারিত: `src/tests/academic.test.ts:104` — "
 |---|---|---|---|---|---|
 | SEC-1 | `GET /api/v1/results/admin/parse-job/:jobId` ও `/admin/import-progress/:batchId` — authentication ছাড়াই accessible | এই ২টি রুট `router.use('/admin', requireAuth, requirePermission)` লাইনের (results.routes.ts:89) **আগে** রেজিস্টার করা, তাই গার্ড প্রয়োগ হয় না | `results.routes.ts:61-87` বনাম `:89` | সার্ভিস configure থাকলে যে কেউ guessed id দিয়ে parse/import job-এর status তথ্য পড়তে পারবে; admin surface-এ unauth রুট | রুট-guard লাইনটি এই ২ রুটের উপরে সরানো (এক-লাইন reposition + টেস্ট) |
 | BUG-B1 | Duplicate subject create মাঝে মাঝে 201 | mongoose unique index background-এ তৈরি হয়; test-env এ দ্রুত পরপর insert এ index না-থাকা অবস্থায় ঢুকে যায় | §৮ এ বর্ণিত flaky fail | নতুন/রিস্টোরড ডাটাবেসে আসল duplicate সাবজেক্ট ঢুকতে পারে; টেস্ট suite-এর বিশ্বাসযোগ্যতা কমে | startup-এ `await Model.syncIndexes()` (বা route-এ pre-check `findOne({regulationId, code})`) + প্রয়োজনে partial index |
-| BUG-B2 | GAP-UX Home Dashboard admin-নিয়ন্ত্রণ: prompt-এর চাহিদা (enable/disable/reorder/section title) এখনো schema-তে নেই | `app-settings.model.ts` এ শুধু জেনেরিক `featureFlags: Mixed` | `app-settings.model.ts:6,24` | Product goal অসম্পূর্ণ | MIS-2 proposal (approval-সাপেক্ষ) |
+| BUG-B2 | ~~Dashboard section admin-নিয়ন্ত্রণ নেই~~ **প্রত্যাহৃত (false positive)** — `homepageSections` chain সম্পূর্ণ বিদ্যমান | model/routes/admin UI/app-এ উপস্থিত (§৭ সংশোধন দেখুন) | — | নতুন কিছু লাগবে না | — |
 
 ### Minor
 | ID | সমস্যা | প্রমাণ |
@@ -133,7 +133,7 @@ Backend FAIL বিস্তারিত: `src/tests/academic.test.ts:104` — "
 | Monitoring/metrics (uptime, alerts) | ⚠️ শুধু `/health` | `app.ts:59` |
 | API versioning | ⚠️ শুধু path-prefix `/api/v1` | `app.ts:79` |
 | Global Search API | ❌ নেই | §৭ |
-| Dashboard section admin-config | ❌ জেনেরিক flags | `app-settings.model.ts` |
+| Dashboard section admin-config | ✅ আছে (সংশোধিত): `homepageSections` key/visible/order + admin PUT + app consume | `app-settings.model.ts`, `admin.schemas.ts:23`, `Settings.tsx`, `home_providers.dart` |
 | Offline/retry UX ফাউন্ডেশন | ⚠️ আংশিক (states.dart আছে; dio retry interceptor নেই) | `mobile_app/lib/shared/widgets/` |
 | Backup/restore strategy | ⚠️ DEPLOYMENT_GUIDE.md এ উল্লেখ আছে কিন্তু automated restore-test নেই | docs/ |
 | FCM push real integration | ❌ টোকেন API আছে, প্রজেক্ট নেই (KI-3) | KNOWN_ISSUES.md |

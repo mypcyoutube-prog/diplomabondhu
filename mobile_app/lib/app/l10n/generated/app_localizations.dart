@@ -308,6 +308,36 @@ abstract class AppLocalizations {
   /// **'Search materials, exams...'**
   String get searchHint;
 
+  /// No description provided for @searchTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Search everything'**
+  String get searchTitle;
+
+  /// No description provided for @searchAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get searchAll;
+
+  /// No description provided for @searchMaterials.
+  ///
+  /// In en, this message translates to:
+  /// **'Materials'**
+  String get searchMaterials;
+
+  /// No description provided for @searchPosts.
+  ///
+  /// In en, this message translates to:
+  /// **'Posts'**
+  String get searchPosts;
+
+  /// No description provided for @searchStartTyping.
+  ///
+  /// In en, this message translates to:
+  /// **'Type at least 2 characters to search'**
+  String get searchStartTyping;
+
   /// No description provided for @quickAccess.
   ///
   /// In en, this message translates to:

@@ -117,6 +117,68 @@ void main() {
       expect(await storage.readAccessToken(), isNull);
     });
   });
+
+  group('ApiClient network retry', () {
+    test('retries GET requests after transport-level failures', () async {
+      final dio = Dio(BaseOptions(baseUrl: 'http://localhost'));
+      var calls = 0;
+      dio.httpClientAdapter = _FlakyAdapter(() {
+        calls += 1;
+        return calls >= 3;
+      });
+      final client = clientWith(dio);
+      final res = await client.getMap('/materials');
+      expect(res.data['ok'], true);
+      expect(calls, 3);
+    });
+
+    test('gives up after the retry limit', () async {
+      final dio = Dio(BaseOptions(baseUrl: 'http://localhost'));
+      var calls = 0;
+      dio.httpClientAdapter = _FlakyAdapter(() {
+        calls += 1;
+        return false;
+      });
+      final client = clientWith(dio);
+      await expectLater(
+        client.getMap('/materials'),
+        throwsA(isA<ApiException>()),
+      );
+      expect(calls, 3);
+    });
+  });
+}
+
+class _FlakyAdapter implements HttpClientAdapter {
+  final bool Function() succeedOnCall;
+
+  _FlakyAdapter(this.succeedOnCall);
+
+  @override
+  void close({bool force = false}) {}
+
+  @override
+  Future<ResponseBody> fetch(
+    RequestOptions options,
+    Stream<Uint8List>? requestStream,
+    Future<void>? cancelFuture,
+  ) async {
+    if (!succeedOnCall()) {
+      throw DioException(
+        requestOptions: options,
+        type: DioExceptionType.connectionError,
+        error: 'connection refused',
+      );
+    }
+    return ResponseBody.fromString(
+      jsonEncode({
+        'success': true,
+        'data': {'ok': true},
+      }),
+      200,
+      headers: {Headers.contentTypeHeader: [Headers.jsonContentType]},
+    );
+  }
 }
 
 class ResponsePayload {

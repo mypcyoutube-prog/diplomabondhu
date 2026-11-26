@@ -21,7 +21,7 @@
 | # | সিদ্ধান্ত | রেফারেন্স | প্রস্তাব |
 |---|---|---|---|
 | D-1 | C-1 (auth-guard reposition) + M-1 (index sync/pre-check) ফিক্স অনুমোদন | Improvement Plan | ✅ অনুমোদন করুন — ছোট, ঝুঁকিমুক্ত |
-| D-2 | M-2: Dashboard section admin-config schema অনুমোদন (DB field যোগ) | MIS-2 | করতে চাইলে অনুমোদন |
+| D-2 | ~~Dashboard sections~~ — **প্রয়োজন নেই**: সম্পূর্ণ chain (model→API→admin UI→app) আগে থেকেই আছে; অডিটের false positive সংশোধিত | MIS-2 সংশোধন | কিছু করার নেই |
 | D-3 | M-3: Global Search API অনুমোদন | MIS-3 | করতে চাইলে অনুমোদন |
 | D-4 | M-4: Flutter retry/timeout interceptor | M-4 | করতে চাইলে অনুমোদন |
 | D-5 | BTEB অফিসিয়াল ডকুমেন্ট (KI-1/KI-2) দেওয়া — GPA profiles publish-এর একমাত্র ব্লকার | KNOWN_ISSUES | Owner action |

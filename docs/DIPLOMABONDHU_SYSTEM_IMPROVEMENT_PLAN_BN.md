@@ -24,11 +24,8 @@
 - **সমাধান:** (ক) সার্ভার স্টার্টআপে গুরুত্বপূর্ণ মডেলগুলোতে `await Model.syncIndexes()`; (খ) admin create route-এ explicit pre-check (`findOne({regulationId, code, deletedAt: null})` → 409) — index-based guard এর পাশে belt-and-suspenders।
 - **Dependencies:** নেই। **টেস্ট:** academic.test.ts loop এ ≥৫ বার deterministic pass; full suite re-run।
 
-### M-2: Dashboard section অ্যাডমিন-কনফিগ (BUG-B2 → proposal MIS-2)
-- **সমস্যা:** Prompt-এর চাহিদা (enable/disable, reorder, section title, featured content) — `app-settings.model.ts` এ শুধু জেনেরিক `featureFlags: Mixed`।
-- **সমাধান (নতুন স্কিমা, অনুমোদন প্রয়োজন):** AppSettings-এ `dashboardSections: [{ key, titleBn/titleEn, enabled, order }]` — সেভ করতে `PUT /settings/app` (SETTINGS_MANAGE) এক্সটেনশন; ছাত্র অ্যাপ render-এ মানবে। ফিচার ডিলিট হবে না।
-- **Dependencies:** অনুমোদন; ডেটাবেস পরিবর্তন (schema field যোগ — migration ছাড়াই default [] compatible)।
-- **টেস্ট:** settings tests + Flutter home/widget test (hidden section রেন্ডার না হওয়া)।
+### M-2: ~~Dashboard section অ্যাডমিন-কনফিগ~~ — প্রত্যাহৃত (false positive, 0.11.13)
+- আসলে সম্পূর্ণ chain আগে থেকেই বিদ্যমান: `AppSettings.homepageSections` (key/visible/order) → `GET /settings/app` → `PUT /admin/settings` (SETTINGS_MANAGE + zod schema) → Admin UI "Homepage sections" editor → Flutter home consumption। প্রাথমিক অডিটের grep কেস-সংবেদনশীল ছিল বলে ভুলভাবে missing ধরা হয়েছিল। নতুন কিছু তৈরি করা হয়নি (duplicate system এড়ানো হলো)।
 
 ### M-3: Global Search API (proposal MIS-3)
 - **সমস্যা:** Audit §৯-এ নিশ্চিত — কেন্দ্রীয় সার্চ নেই।

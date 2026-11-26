@@ -115,6 +115,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get searchHint => 'Search materials, exams...';
 
   @override
+  String get searchTitle => 'Search everything';
+
+  @override
+  String get searchAll => 'All';
+
+  @override
+  String get searchMaterials => 'Materials';
+
+  @override
+  String get searchPosts => 'Posts';
+
+  @override
+  String get searchStartTyping => 'Type at least 2 characters to search';
+
+  @override
   String get quickAccess => 'Quick Access';
 
   @override

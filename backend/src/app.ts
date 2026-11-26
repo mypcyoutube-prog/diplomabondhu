@@ -1,4 +1,7 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import express from 'express';
+import mongoose from 'mongoose';
 import helmet from 'helmet';
 import cors from 'cors';
 import rateLimit from 'express-rate-limit';
@@ -18,6 +21,16 @@ import { communityRoutes } from './modules/community/community.routes';
 import { notificationsRoutes } from './modules/notifications/notifications.routes';
 import { resultsRoutes } from './modules/results/results.routes';
 import { errorHandler, notFoundHandler } from './middlewares/error-handler';
+import { searchRoutes } from './modules/search/search.routes';
+
+const APP_VERSION = (() => {
+  try {
+    const pkg = JSON.parse(readFileSync(join(__dirname, '../package.json'), 'utf8')) as { version?: string };
+    return pkg.version ?? 'dev';
+  } catch {
+    return 'dev';
+  }
+})();
 
 export function createApp(env: Env) {
   const app = express();
@@ -58,7 +71,15 @@ export function createApp(env: Env) {
     }));
   }
 
-  app.get('/health', (_req, res) => { res.json({ status: 'ok' }); });
+  app.get('/health', async (_req, res) => {
+    let db = 'up';
+    try {
+      await mongoose.connection.db?.admin().command({ ping: 1 });
+    } catch {
+      db = 'down';
+    }
+    res.json({ status: db === 'up' ? 'ok' : 'degraded', db, version: APP_VERSION, uptimeSec: Math.round(process.uptime()) });
+  });
 
   const api = express.Router();
   api.use('/auth', authRoutes(env));
@@ -73,6 +94,7 @@ export function createApp(env: Env) {
   api.use('/community', communityRoutes(env));
   api.use('/notifications', notificationsRoutes(env));
   api.use('/results', resultsRoutes(env));
+  api.use('/search', searchRoutes());
   api.use('/admin', adminRoutes(env));
   app.use('/api/v1', api);
 

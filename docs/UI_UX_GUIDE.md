@@ -164,3 +164,10 @@ Home ⇄ Library ⇄ Material Detail
 Deep links from notifications into material/exam/post screens (auth-guarded)
 ```
 Back behavior: Android back always pops route; runners block back with confirm sheet.
+
+## 7. GPA/CGPA Terminology (locked, added 0.11.13)
+
+- Per-semester calculation output is always **GPA**; combined multi-semester output is always **CGPA**. The two labels are never merged or renamed to a generic "Result".
+- The internal API path `/api/v1/gpa/results` stores saved calculations; it is **never surfaced in the UI as "Result"** — student-facing labels are **GPA History** (`gpaHistory` / `resultHistory` key) and CGPA history within the same screen.
+- Subject-wise grade, grade point, credit and full breakdown are always shown alongside the GPA/CGPA value.
+- The Target planner output is always visually marked as an estimate (`estimateDisclaimer`); it is never presented as an official result.

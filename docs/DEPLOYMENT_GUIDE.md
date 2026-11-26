@@ -135,3 +135,17 @@ dev (local) → staging (optional small VPS) → production
 - `/health` (app) + `/health/ready` (DB ping) for uptime checks.
 - Log retention 30 days; error alerts to owner's email.
 - Rollback: previous Docker image tag; DB restores from nightly backup.
+
+## 6. Backup & Restore Runbook (added 0.11.13)
+
+### Backup
+- **MongoDB (Atlas):** enable Atlas continuous backup / daily snapshot; keep ≥7 daily + 4 weekly snapshots.
+- **App Settings / files:** all settings live in MongoDB (same backups); materials reference external/file URLs — back up the source bucket separately (KI-7 decision).
+- **Render:** environment variables documented in `.env.example` and the Render Blueprint (`render.yaml`); store any secret changes in the team vault, never in the repo.
+
+### Restore drill (run at least once per quarter, record the result in the deploy log)
+1. Provision a scratch Atlas cluster; restore the latest snapshot into it.
+2. Start the API pointed at the scratch cluster (`MONGODB_URI=…`), keep `NODE_ENV=production`.
+3. Verify: `GET /health` returns `db: up`; `npm run seed:subjects`-seeded catalog loads; a known student can log in and their last GPA calculation history row is present.
+4. Verify result-service batch data: `GET /api/v1/results/admin/batches` with an admin token shows the expected batch count.
+5. Destroy the scratch cluster and record "restore drill passed <date>" here.
