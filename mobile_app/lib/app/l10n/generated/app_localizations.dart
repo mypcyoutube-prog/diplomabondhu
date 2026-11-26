@@ -1279,6 +1279,56 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Student'**
   String get roleStudent;
+  /// No description provided for @filterAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get filterAll;
+  /// No description provided for @examTypeModel.
+  ///
+  /// In en, this message translates to:
+  /// **'Model Test'**
+  String get examTypeModel;
+  /// No description provided for @examTypePrevious.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous'**
+  String get examTypePrevious;
+  /// No description provided for @examTypeChapter.
+  ///
+  /// In en, this message translates to:
+  /// **'Chapter'**
+  String get examTypeChapter;
+  /// No description provided for @examTypeSubject.
+  ///
+  /// In en, this message translates to:
+  /// **'Subject'**
+  String get examTypeSubject;
+  /// No description provided for @examTypeSemester.
+  ///
+  /// In en, this message translates to:
+  /// **'Semester'**
+  String get examTypeSemester;
+  /// No description provided for @minutesLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'min'**
+  String get minutesLabel;
+  /// No description provided for @negativeMarking.
+  ///
+  /// In en, this message translates to:
+  /// **'Negative marking'**
+  String get negativeMarking;
+  /// No description provided for @avgScore.
+  ///
+  /// In en, this message translates to:
+  /// **'Average'**
+  String get avgScore;
+  /// No description provided for @durationLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Duration'**
+  String get durationLabel;
   /// No description provided for @loadMore.
   ///
   /// In en, this message translates to:

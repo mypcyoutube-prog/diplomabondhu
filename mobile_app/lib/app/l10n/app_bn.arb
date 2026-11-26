@@ -243,5 +243,15 @@
   "reportWrongInfo": "ভুল তথ্য",
   "reportBrokenLink": "লিংক নষ্ট",
   "reportInappropriate": "অনুপযুক্ত কনটেন্ট",
-  "reportOther": "অন্যান্য"
+  "reportOther": "অন্যান্য",
+  "filterAll": "সব",
+  "examTypeModel": "মডেল টেস্ট",
+  "examTypePrevious": "পুরনো প্রশ্ন",
+  "examTypeChapter": "অধ্যায়",
+  "examTypeSubject": "বিষয়",
+  "examTypeSemester": "সেমিস্টার",
+  "minutesLabel": "মিনিট",
+  "negativeMarking": "নেগেটিভ মার্কিং",
+  "avgScore": "গড়",
+  "durationLabel": "সময়"
 }

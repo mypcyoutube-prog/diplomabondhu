@@ -243,5 +243,15 @@
   "reportWrongInfo": "Wrong information",
   "reportBrokenLink": "Broken link",
   "reportInappropriate": "Inappropriate content",
-  "reportOther": "Other"
+  "reportOther": "Other",
+  "filterAll": "All",
+  "examTypeModel": "Model Test",
+  "examTypePrevious": "Previous",
+  "examTypeChapter": "Chapter",
+  "examTypeSubject": "Subject",
+  "examTypeSemester": "Semester",
+  "minutesLabel": "min",
+  "negativeMarking": "Negative marking",
+  "avgScore": "Average",
+  "durationLabel": "Duration"
 }

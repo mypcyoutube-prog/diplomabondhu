@@ -1280,6 +1280,26 @@ class AppLocalizationsBn extends AppLocalizations {
   @override
   String get roleStudent => 'শিক্ষার্থী';
   @override
+  String get filterAll => 'সব';
+  @override
+  String get examTypeModel => 'মডেল টেস্ট';
+  @override
+  String get examTypePrevious => 'পুরনো প্রশ্ন';
+  @override
+  String get examTypeChapter => 'অধ্যায়';
+  @override
+  String get examTypeSubject => 'বিষয়';
+  @override
+  String get examTypeSemester => 'সেমিস্টার';
+  @override
+  String get minutesLabel => 'মিনিট';
+  @override
+  String get negativeMarking => 'নেগেটিভ মার্কিং';
+  @override
+  String get avgScore => 'গড়';
+  @override
+  String get durationLabel => 'সময়';
+  @override
   String get loadMore => 'আরও দেখুন';
   @override
   String get viewsLabel => 'ভিউ';

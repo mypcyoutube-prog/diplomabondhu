@@ -1281,6 +1281,26 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get roleStudent => 'Student';
   @override
+  String get filterAll => 'All';
+  @override
+  String get examTypeModel => 'Model Test';
+  @override
+  String get examTypePrevious => 'Previous';
+  @override
+  String get examTypeChapter => 'Chapter';
+  @override
+  String get examTypeSubject => 'Subject';
+  @override
+  String get examTypeSemester => 'Semester';
+  @override
+  String get minutesLabel => 'min';
+  @override
+  String get negativeMarking => 'Negative marking';
+  @override
+  String get avgScore => 'Average';
+  @override
+  String get durationLabel => 'Duration';
+  @override
   String get loadMore => 'Load more';
   @override
   String get viewsLabel => 'Views';
