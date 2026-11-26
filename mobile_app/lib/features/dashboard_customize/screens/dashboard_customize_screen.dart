@@ -38,7 +38,7 @@ class _DashboardCustomizeScreenState
       case 'exams':
         return l10n.exams;
       case 'gpa_calculator':
-        return l10n.gpa;
+        return l10n.cgpa;
       case 'planner':
         return l10n.planner;
     }

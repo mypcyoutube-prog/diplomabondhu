@@ -18,8 +18,6 @@ import '../../features/exams/screens/exam_runner_screen.dart';
 import '../../features/gpa/screens/cgpa_screen.dart';
 import '../../features/gpa/screens/gpa_history_screen.dart';
 import '../../features/gpa/screens/gpa_hub_screen.dart';
-import '../../features/gpa/screens/semester_gpa_screen.dart';
-import '../../features/gpa/screens/target_screen.dart';
 import '../../features/home/screens/home_screen.dart';
 import '../../features/library/screens/library_screen.dart';
 import '../../features/results/screens/result_checker_screen.dart';
@@ -114,20 +112,12 @@ final rootRouterProvider = Provider<GoRouter>((ref) {
             ExamResultScreen(attemptId: state.pathParameters['attemptId']!),
       ),
       GoRoute(
-        path: '/gpa/semester',
-        builder: (context, state) => const SemesterGpaScreen(),
-      ),
-      GoRoute(
         path: '/gpa/cgpa',
         builder: (context, state) => const CgpaScreen(),
       ),
       GoRoute(
         path: '/gpa/history',
         builder: (context, state) => const GpaHistoryScreen(),
-      ),
-      GoRoute(
-        path: '/gpa/target',
-        builder: (context, state) => const TargetScreen(),
       ),
       GoRoute(
         path: '/results/checker',
@@ -300,7 +290,7 @@ class _ShellScaffold extends StatelessWidget {
           NavigationDestination(
             icon: const Icon(Icons.calculate_outlined),
             selectedIcon: const Icon(Icons.calculate_rounded),
-            label: AppLocalizations.of(context)!.gpa,
+            label: AppLocalizations.of(context)!.cgpa,
           ),
           NavigationDestination(
             icon: const Icon(Icons.person_outlined),

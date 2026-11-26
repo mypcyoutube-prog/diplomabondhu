@@ -48,7 +48,7 @@ class HomeScreen extends ConsumerWidget {
     final quickAccess = <(String, IconData, String)>[
       (l10n.library, Icons.menu_book_rounded, '/library'),
       (l10n.exams, Icons.quiz_rounded, '/exams'),
-      (l10n.gpa, Icons.calculate_rounded, '/gpa'),
+      (l10n.cgpa, Icons.functions_rounded, '/gpa'),
       (l10n.planner, Icons.event_note_rounded, '/planner'),
     ];
 

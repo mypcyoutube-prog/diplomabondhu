@@ -4,8 +4,8 @@ import { CalculationProfile, type ICalculationProfile } from '../../models/calcu
 import { CalculationHistory } from '../../models/calculation-history.model';
 import { writeAudit } from '../../models/audit-log.model';
 import {
-  computeCgpa, computeSemester, computeTargetCgpa,
-  type CalculationProfileData, type CgpaInput, type SemesterResult, type SubjectInput
+  computeCgpa,
+  type CalculationProfileData, type CgpaInput
 } from './gpa.engine';
 
 const ALLOWED_TRANSITIONS: Record<string, string[]> = {
@@ -28,23 +28,13 @@ export async function getPublishedProfile(profileId: string): Promise<ICalculati
   return profile;
 }
 
-export async function calculateSemester(
-  profile: ICalculationProfile,
-  inputMode: 'marks' | 'grades',
-  subjects: SubjectInput[]
-): Promise<{ result: SemesterResult; profile: ICalculationProfile }> {
-  const normalized = subjects.map((s) => ({ ...s, inputMode }));
-  const result = computeSemester(profile.data as CalculationProfileData, normalized);
-  return { result, profile };
-}
-
 export async function calculateCgpa(profile: ICalculationProfile, semesterGpas: CgpaInput[]) {
   return computeCgpa(profile.data as CalculationProfileData, semesterGpas);
 }
 
 export async function saveResult(
   userId: string,
-  input: { kind: 'semester' | 'cgpa'; profileId: string; inputs: unknown; output: unknown; label?: string }
+  input: { kind: 'cgpa'; profileId: string; inputs: unknown; output: unknown; label?: string }
 ) {
   const profile = await getPublishedProfile(input.profileId);
   const doc = await CalculationHistory.create({
@@ -61,7 +51,7 @@ export async function saveResult(
 }
 
 export async function listHistory(userId: string, page: number, limit: number) {
-  const filter = { userId: new Types.ObjectId(userId), deletedAt: null };
+  const filter = { userId: new Types.ObjectId(userId), kind: 'cgpa', deletedAt: null };
   const [items, total] = await Promise.all([
     CalculationHistory.find(filter).sort({ createdAt: -1 }).skip((page - 1) * limit).limit(limit).lean(),
     CalculationHistory.countDocuments(filter)
@@ -83,11 +73,6 @@ export async function deleteHistoryItem(userId: string, id: string): Promise<voi
     { $set: { deletedAt: new Date() } }
   );
   if (result.matchedCount === 0) throw notFound('Result not found');
-}
-
-export async function targetEstimate(profileId: string, targetCgpa: number, completed: CgpaInput[], remainingSemesters: number[]) {
-  const profile = await getPublishedProfile(profileId);
-  return computeTargetCgpa(profile.data as CalculationProfileData, completed, targetCgpa, remainingSemesters);
 }
 
 export async function transitionProfile(profileId: string, to: string, actorId: string, note?: string) {

@@ -225,36 +225,13 @@ describe('GPA API: student calculation endpoints', () => {
       .set('Authorization', `Bearer ${st}`);
     expect(structure.status).toBe(404);
 
-    const calc = await request(app).post('/api/v1/gpa/calculate/semester')
+    const calc = await request(app).post('/api/v1/gpa/calculate/cgpa')
       .set('Authorization', `Bearer ${st}`)
       .send({
-        profileId: draftId, inputMode: 'marks',
-        subjects: [{ subjectId: '000000000000000000000001', code: '26651', name: 'Mathematics-1', credits: 4, subjectType: 'theory', marks: { ca: 24, final: 56 } }]
+        profileId: draftId,
+        semesterGpas: [{ semesterNumber: 1, gpa: 4.0 }]
       });
     expect(calc.status).toBe(404);
-  });
-
-  it('calculates semester GPA from marks and exposes a transparent breakdown', async () => {
-    const { profileId, st } = await publishedProfileId();
-
-    const structure = await request(app).get(`/api/v1/gpa/profiles/${profileId}/structure`)
-      .set('Authorization', `Bearer ${st}`);
-    expect(structure.status).toBe(200);
-    expect(structure.body.data.grading.table.length).toBe(10);
-
-    const calc = await request(app).post('/api/v1/gpa/calculate/semester')
-      .set('Authorization', `Bearer ${st}`)
-      .send({
-        profileId, inputMode: 'marks',
-        subjects: [
-          { subjectId: '000000000000000000000001', code: '26651', name: 'Mathematics-1', credits: 4, subjectType: 'theory', marks: { ca: 24, final: 56 } },
-          { subjectId: '000000000000000000000002', code: '26652', name: 'Physics', credits: 3, subjectType: 'theory', marks: { ca: 12, final: 28 } }
-        ]
-      });
-    expect(calc.status).toBe(200);
-    expect(calc.body.data.gpa).toBeCloseTo((4 * 4 + 2 * 3) / 7, 2);
-    expect(calc.body.data.profileVersion).toBe(1);
-    expect(calc.body.data.subjects[0].breakdown.length).toBeGreaterThan(0);
   });
 
   it('calculates CGPA and returns a class band on full completion', async () => {
@@ -276,10 +253,10 @@ describe('GPA API: student calculation endpoints', () => {
     const saved = await request(app).post('/api/v1/gpa/results')
       .set('Authorization', `Bearer ${st}`)
       .send({
-        kind: 'semester', profileId,
-        inputs: { subjects: [{ code: '26651', marks: { ca: 24, final: 56 } }] },
-        output: { gpa: 4.0 },
-        label: 'Semester 1 (provisional)'
+        kind: 'cgpa', profileId,
+        inputs: { semesterGpas: [{ semesterNumber: 1, gpa: 4.0 }] },
+        output: { cgpa: 4.0 },
+        label: 'CGPA (provisional)'
       });
     expect(saved.status).toBe(201);
     const resultId = saved.body.data.id;
@@ -303,20 +280,6 @@ describe('GPA API: student calculation endpoints', () => {
 
     const afterDelete = await request(app).get('/api/v1/gpa/results').set('Authorization', `Bearer ${st}`);
     expect(afterDelete.body.data.items.length).toBe(0);
-  });
-
-  it('returns a labelled estimate for target CGPA', async () => {
-    const { profileId, st } = await publishedProfileId();
-    const res = await request(app).post('/api/v1/gpa/target')
-      .set('Authorization', `Bearer ${st}`)
-      .send({
-        profileId, targetCgpa: 3.2,
-        completed: [{ semesterNumber: 1, gpa: 3.0 }],
-        remainingSemesters: [2]
-      });
-    expect(res.status).toBe(200);
-    expect(res.body.data.requiredAverageGpa).toBeCloseTo((3.2 * 10 - 15) / 5, 2);
-    expect(res.body.data.notes[0]).toContain('ESTIMATE');
   });
 
   it('lists only published profiles for students', async () => {

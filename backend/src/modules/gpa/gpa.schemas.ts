@@ -68,20 +68,6 @@ export const transitionSchema = z.object({
   note: z.string().max(500).optional()
 }).strict();
 
-export const semesterCalcSchema = z.object({
-  profileId: objectId,
-  inputMode: z.enum(['marks', 'grades']),
-  subjects: z.array(z.object({
-    subjectId: objectId,
-    code: z.string().trim().min(1).max(30),
-    name: z.string().trim().min(1).max(200),
-    credits: z.number().min(0.5).max(20),
-    subjectType: z.enum(['theory', 'practical', 'theory_practical', 'project', 'industrial_training']),
-    marks: z.record(z.string(), z.number()).optional(),
-    grade: z.string().trim().max(4).optional()
-  })).min(1).max(20)
-}).strict();
-
 export const cgpaCalcSchema = z.object({
   profileId: objectId,
   semesterGpas: z.array(z.object({
@@ -92,21 +78,11 @@ export const cgpaCalcSchema = z.object({
 }).strict();
 
 export const saveResultSchema = z.object({
-  kind: z.enum(['semester', 'cgpa']),
+  kind: z.literal('cgpa'),
   profileId: objectId,
   inputs: z.unknown(),
   output: z.unknown(),
   label: z.string().trim().max(200).optional()
-}).strict();
-
-export const targetSchema = z.object({
-  profileId: objectId,
-  targetCgpa: z.number().min(0).max(5),
-  completed: z.array(z.object({
-    semesterNumber: z.number().int().min(1),
-    gpa: z.number().min(0).max(5)
-  })).default([]),
-  remainingSemesters: z.array(z.number().int().min(1).max(12)).min(1)
 }).strict();
 
 export const idParam = z.object({ id: objectId });

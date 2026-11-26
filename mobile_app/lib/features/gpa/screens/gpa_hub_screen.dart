@@ -11,14 +11,12 @@ class GpaHubScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final items = <(String, IconData, String)>[
-      (l10n.semesterGpa, Icons.calculate_rounded, '/gpa/semester'),
       (l10n.cgpa, Icons.functions_rounded, '/gpa/cgpa'),
       (l10n.resultHistory, Icons.history_rounded, '/gpa/history'),
-      (l10n.targetPlanner, Icons.track_changes_rounded, '/gpa/target'),
     ];
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.gpa)),
+      appBar: AppBar(title: Text(l10n.cgpa)),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [

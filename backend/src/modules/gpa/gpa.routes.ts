@@ -9,7 +9,7 @@ import { PERMISSIONS } from '../../core/permissions';
 import { CalculationProfile } from '../../models/calculation-profile.model';
 import { writeAudit } from '../../models/audit-log.model';
 import * as svc from './gpa.service';
-import { cgpaCalcSchema, createProfileSchema, saveResultSchema, semesterCalcSchema, targetSchema, transitionSchema, updateProfileSchema, idParam } from './gpa.schemas';
+import { cgpaCalcSchema, createProfileSchema, saveResultSchema, transitionSchema, updateProfileSchema, idParam } from './gpa.schemas';
 import { Types } from 'mongoose';
 
 export function gpaRoutes(env: Env) {
@@ -36,20 +36,6 @@ export function gpaRoutes(env: Env) {
         assessments: profile.data.assessments,
         passRules: profile.data.passRules,
         cgpa: profile.data.cgpa
-      });
-    } catch (err) { next(err); }
-  });
-
-  router.post('/calculate/semester', validate({ body: semesterCalcSchema }), async (req, res, next) => {
-    try {
-      const profile = await svc.getPublishedProfile(req.body.profileId);
-      const { result } = await svc.calculateSemester(profile, req.body.inputMode, req.body.subjects);
-      return ok(res, {
-        gpa: result.gpa,
-        status: result.status,
-        subjects: result.subjects,
-        notes: result.notes,
-        profileVersion: profile.version
       });
     } catch (err) { next(err); }
   });
@@ -91,13 +77,6 @@ export function gpaRoutes(env: Env) {
       const params = (req as unknown as { validatedParams: { id: string } }).validatedParams;
       await svc.deleteHistoryItem(req.auth!.id, params.id);
       return ok(res, { deleted: true });
-    } catch (err) { next(err); }
-  });
-
-  router.post('/target', validate({ body: targetSchema }), async (req, res, next) => {
-    try {
-      const result = await svc.targetEstimate(req.body.profileId, req.body.targetCgpa, req.body.completed, req.body.remainingSemesters);
-      return ok(res, result);
     } catch (err) { next(err); }
   });
 

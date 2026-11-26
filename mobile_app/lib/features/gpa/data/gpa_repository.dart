@@ -18,19 +18,6 @@ class GpaRepository {
     return ProfileStructure.fromJson(res.data);
   }
 
-  Future<SemesterGpaResult> calculateSemester({
-    required String profileId,
-    required String inputMode,
-    required List<SubjectInput> subjects,
-  }) async {
-    final res = await _client.postMap('/gpa/calculate/semester', body: {
-      'profileId': profileId,
-      'inputMode': inputMode,
-      'subjects': subjects.map((s) => s.toJson()).toList(),
-    });
-    return SemesterGpaResult.fromJson(res);
-  }
-
   Future<CgpaResult> calculateCgpa({
     required String profileId,
     required List<({int semesterNumber, double gpa, double? credits})> semesterGpas,
@@ -73,21 +60,4 @@ class GpaRepository {
   }
 
   Future<void> deleteHistory(String id) => _client.deleteMap('/gpa/results/$id');
-
-  Future<TargetEstimate> target({
-    required String profileId,
-    required double targetCgpa,
-    required List<({int semesterNumber, double gpa})> completed,
-    required List<int> remainingSemesters,
-  }) async {
-    final res = await _client.postMap('/gpa/target', body: {
-      'profileId': profileId,
-      'targetCgpa': targetCgpa,
-      'completed': completed
-          .map((c) => {'semesterNumber': c.semesterNumber, 'gpa': c.gpa})
-          .toList(),
-      'remainingSemesters': remainingSemesters,
-    });
-    return TargetEstimate.fromJson(res);
-  }
 }

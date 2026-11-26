@@ -115,94 +115,8 @@ class CgpaSemesterWeight {
       );
 }
 
-class SubjectInput {
-  final String subjectId;
-  final String code;
-  final String name;
-  final double credits;
-  final String subjectType;
-  final Map<String, double> marks;
-  final String? grade;
 
-  const SubjectInput({
-    required this.subjectId,
-    required this.code,
-    required this.name,
-    required this.credits,
-    required this.subjectType,
-    this.marks = const {},
-    this.grade,
-  });
 
-  Map<String, dynamic> toJson() => {
-        'subjectId': subjectId,
-        'code': code,
-        'name': name,
-        'credits': credits,
-        'subjectType': subjectType,
-        if (marks.isNotEmpty) 'marks': marks,
-        if (grade != null) 'grade': grade,
-      };
-}
-
-class SubjectResult {
-  final String code;
-  final String name;
-  final double credits;
-  final String status;
-  final String? grade;
-  final double? point;
-  final double? creditPoints;
-  final List<String>? breakdown;
-  final List<String>? failureReasons;
-
-  const SubjectResult({
-    required this.code,
-    required this.name,
-    required this.credits,
-    required this.status,
-    this.grade,
-    this.point,
-    this.creditPoints,
-    this.breakdown,
-    this.failureReasons,
-  });
-
-  factory SubjectResult.fromJson(Map<String, dynamic> json) => SubjectResult(
-        code: json['code'] as String? ?? '',
-        name: json['name'] as String? ?? '',
-        credits: (json['credits'] as num?)?.toDouble() ?? 0,
-        status: json['status'] as String? ?? '',
-        grade: json['grade'] as String?,
-        point: (json['point'] as num?)?.toDouble(),
-        creditPoints: (json['creditPoints'] as num?)?.toDouble(),
-        breakdown: (json['breakdown'] as List?)?.cast<String>(),
-        failureReasons: (json['failureReasons'] as List?)?.cast<String>(),
-      );
-}
-
-class SemesterGpaResult {
-  final double gpa;
-  final String status;
-  final List<SubjectResult> subjects;
-  final List<String> notes;
-
-  const SemesterGpaResult({
-    required this.gpa,
-    required this.status,
-    required this.subjects,
-    required this.notes,
-  });
-
-  factory SemesterGpaResult.fromJson(Map<String, dynamic> json) => SemesterGpaResult(
-        gpa: (json['gpa'] as num).toDouble(),
-        status: json['status'] as String? ?? '',
-        subjects: (json['subjects'] as List? ?? [])
-            .map((e) => SubjectResult.fromJson(e as Map<String, dynamic>))
-            .toList(),
-        notes: (json['notes'] as List?)?.cast<String>() ?? [],
-      );
-}
 
 class CgpaResult {
   final double cgpa;
@@ -230,26 +144,6 @@ class CgpaResult {
       );
 }
 
-class TargetEstimate {
-  final double targetCgpa;
-  final double requiredGpa;
-  final bool feasible;
-  final List<String> notes;
-
-  const TargetEstimate({
-    required this.targetCgpa,
-    required this.requiredGpa,
-    required this.feasible,
-    required this.notes,
-  });
-
-  factory TargetEstimate.fromJson(Map<String, dynamic> json) => TargetEstimate(
-        targetCgpa: (json['targetCgpa'] as num?)?.toDouble() ?? 0,
-        requiredGpa: ((json['requiredAverageGpa'] ?? json['requiredGpa']) as num?)?.toDouble() ?? 0,
-        feasible: json['feasible'] as bool? ?? false,
-        notes: (json['notes'] as List?)?.cast<String>() ?? [],
-      );
-}
 
 class GpaHistoryItem {
   final String id;

@@ -22,7 +22,7 @@ const NAV: Array<{ section: string; items: NavItem[] }> = [
     section: 'Academics',
     items: [
       { to: '/academic', label: 'Academic Structure', permission: 'ACADEMIC_MANAGE' },
-      { to: '/gpa', label: 'GPA Profiles', permission: 'GPA_MANAGE' }
+      { to: '/gpa', label: 'CGPA Profiles', permission: 'GPA_MANAGE' }
     ]
   },
   {
