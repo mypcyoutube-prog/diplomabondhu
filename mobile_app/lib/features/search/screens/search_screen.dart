@@ -269,9 +269,25 @@ class _ResultCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final icon = switch (hit.type) {
+      'material' => Icons.menu_book_rounded,
+      'exam' => Icons.quiz_rounded,
+      'post' => Icons.forum_rounded,
+      'subject' => Icons.category_rounded,
+      _ => Icons.search_rounded,
+    };
     return Card(
       child: ListTile(
         onTap: onTap,
+        leading: Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: DbColors.teal.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(DbRadius.input),
+          ),
+          child: Icon(icon, size: 20, color: DbColors.teal),
+        ),
         title: Text(hit.title, maxLines: 2, overflow: TextOverflow.ellipsis),
         subtitle: Text(typeLabel, style: theme.textTheme.labelSmall),
       ),
