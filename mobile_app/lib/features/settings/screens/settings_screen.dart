@@ -8,6 +8,7 @@ import '../../../core/providers.dart';
 import '../../notifications/providers/notification_providers.dart';
 import '../../settings/providers/app_preferences.dart';
 import '../../../shared/widgets/states.dart';
+import 'package:go_router/go_router.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -183,10 +184,48 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       );
                       },
                     ),
+                    _QuietHoursSection(raw: raw),
                   ],
                 ),
               );
               },
+            ),
+          ),
+          const SizedBox(height: DbSpacing.sm),
+          Card(
+            child: Column(
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.space_dashboard_rounded),
+                  title: Text(l10n.workspaceTitle),
+                  trailing: const Icon(Icons.chevron_right_rounded),
+                  onTap: () => context.push('/workspace'),
+                ),
+                ListTile(
+                  leading: const Icon(Icons.folder_zip_rounded),
+                  title: Text(l10n.exportTitle),
+                  trailing: const Icon(Icons.chevron_right_rounded),
+                  onTap: () => context.push('/export'),
+                ),
+                ListTile(
+                  leading: const Icon(Icons.tune_rounded),
+                  title: Text(l10n.dashboardCustomizeTitle),
+                  trailing: const Icon(Icons.chevron_right_rounded),
+                  onTap: () => context.push('/dashboard-customize'),
+                ),
+                ListTile(
+                  leading: const Icon(Icons.devices_rounded),
+                  title: Text(l10n.syncDevicesTitle),
+                  trailing: const Icon(Icons.chevron_right_rounded),
+                  onTap: () => context.push('/sync-devices'),
+                ),
+                ListTile(
+                  leading: const Icon(Icons.auto_awesome_rounded),
+                  title: Text(l10n.studyPlanTitle),
+                  trailing: const Icon(Icons.chevron_right_rounded),
+                  onTap: () => context.push('/study-plan'),
+                ),
+              ],
             ),
           ),
           const SizedBox(height: DbSpacing.sm),
@@ -237,4 +276,94 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         'announcement' => l10n.announcements,
         _ => l10n.notifications,
       };
+}
+
+class _QuietHoursSection extends ConsumerStatefulWidget {
+  final Map<String, dynamic> raw;
+
+  const _QuietHoursSection({required this.raw});
+
+  @override
+  ConsumerState<_QuietHoursSection> createState() => _QuietHoursSectionState();
+}
+
+class _QuietHoursSectionState extends ConsumerState<_QuietHoursSection> {
+  bool _saving = false;
+
+  int _hourOf(String? hhmm, int fallback) {
+    final parsed = int.tryParse((hhmm ?? '').split(':').first);
+    return parsed == null || parsed < 0 || parsed > 23 ? fallback : parsed;
+  }
+
+  String _hhmm(int hour) => '${hour.toString().padLeft(2, '0')}:00';
+
+  Future<void> _save(bool enabled, int start, int end) async {
+    setState(() => _saving = true);
+    try {
+      await ref.read(notificationRepositoryProvider).updatePreferences(
+        (widget.raw['categories'] as Map<String, dynamic>? ?? {})
+            .map((k, v) => MapEntry(k, v == true)),
+        quietHours: {'enabled': enabled, 'start': _hhmm(start), 'end': _hhmm(end)},
+      );
+      ref.invalidate(notificationPrefsProvider);
+    } on ApiException {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text(AppLocalizations.of(context)!.errorGeneric),
+              backgroundColor: DbColors.errorLight),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final quiet =
+        widget.raw['quietHours'] as Map<String, dynamic>? ?? const {};
+    final enabled = (quiet['enabled'] as bool?) ?? false;
+    final start = _hourOf(quiet['start'] as String?, 22);
+    final end = _hourOf(quiet['end'] as String?, 7);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Divider(),
+        SwitchListTile(
+          contentPadding: EdgeInsets.zero,
+          dense: true,
+          title: Text(l10n.quietHoursLabel),
+          subtitle: Text(_hhmm(start) == _hhmm(end)
+              ? null
+              : '${_hhmm(start)} \u2192 ${_hhmm(end)}'),
+          value: enabled,
+          onChanged: _saving
+              ? null
+              : (v) => _save(v, start, end),
+        ),
+        if (enabled) ...[
+          Text('${_hhmm(start)} \u2192 ${_hhmm(end)}'),
+          Slider(
+            value: start.toDouble(),
+            min: 0,
+            max: 23,
+            divisions: 23,
+            label: _hhmm(start),
+            onChanged: _saving ? null : (v) => _save(true, v.toInt(), end),
+          ),
+          Slider(
+            value: end.toDouble(),
+            min: 0,
+            max: 23,
+            divisions: 23,
+            label: _hhmm(end),
+            onChanged: _saving ? null : (v) => _save(true, start, v.toInt()),
+          ),
+        ],
+      ],
+    );
+  }
 }

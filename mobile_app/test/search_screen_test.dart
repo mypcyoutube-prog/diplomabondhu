@@ -18,6 +18,12 @@ class _FakeSearchRepository implements SearchRepository {
     if (fail) throw StateError('boom');
     return bundle ?? const SearchBundle(hits: []);
   }
+
+  @override
+  Future<List<String>> history() async => const [];
+
+  @override
+  Future<void> clearHistory() async {}
 }
 
 Future<void> pumpSearch(

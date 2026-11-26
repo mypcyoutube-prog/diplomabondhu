@@ -18,6 +18,8 @@ const CommunityPage = lazy(() => import('./pages/Community').then((m) => ({ defa
 const AnnouncementsPage = lazy(() => import('./pages/Announcements').then((m) => ({ default: m.AnnouncementsPage })));
 const SettingsPage = lazy(() => import('./pages/Settings').then((m) => ({ default: m.SettingsPage })));
 const AuditLogsPage = lazy(() => import('./pages/AuditLogs').then((m) => ({ default: m.AuditLogsPage })));
+const AiSearchSettingsPage = lazy(() => import('./pages/AiSearchSettings').then((m) => ({ default: m.AiSearchSettingsPage })));
+const ScheduledNotificationsPage = lazy(() => import('./pages/ScheduledNotifications').then((m) => ({ default: m.ScheduledNotificationsPage })));
 
 function Protected({ permission, children }: { permission?: string; children: ReactNode }) {
   const { user, permissions, ready } = useAuth();
@@ -49,6 +51,8 @@ export default function App() {
         <Route path="/community" element={<Protected permission="MODERATE"><CommunityPage /></Protected>} />
         <Route path="/announcements" element={<Protected permission="NOTIFY_MANAGE"><AnnouncementsPage /></Protected>} />
         <Route path="/settings" element={<Protected permission="SETTINGS_MANAGE"><SettingsPage /></Protected>} />
+        <Route path="/ai-search" element={<Protected permission="SETTINGS_MANAGE"><AiSearchSettingsPage /></Protected>} />
+        <Route path="/scheduled-notifications" element={<Protected permission="NOTIFY_MANAGE"><ScheduledNotificationsPage /></Protected>} />
         <Route path="/audit-logs" element={<Protected permission="AUDIT_READ"><AuditLogsPage /></Protected>} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />

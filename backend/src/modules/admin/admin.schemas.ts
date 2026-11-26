@@ -23,7 +23,8 @@ export const settingsUpdateSchema = z.object({
   homepageSections: z.array(z.object({
     key: z.string().trim().min(1).max(50),
     visible: z.boolean(),
-    order: z.number().int().min(0).max(100)
+    order: z.number().int().min(0).max(100),
+    customizable: z.boolean().optional()
   })).optional(),
   featureFlags: z.record(z.string(), z.unknown()).optional(),
   maintenanceMode: z.boolean().optional(),

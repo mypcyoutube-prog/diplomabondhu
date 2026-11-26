@@ -6,7 +6,8 @@ class SearchHit {
 
   String get id => raw['_id']?.toString() ?? '';
 
-  String get title => (raw['title'] as String?) ?? '';
+  String get title =>
+      (raw['title'] ?? raw['name'] ?? raw['code'])?.toString() ?? '';
 }
 
 class SearchBundle {

@@ -39,12 +39,16 @@ const NAV: Array<{ section: string; items: NavItem[] }> = [
   },
   {
     section: 'Communication',
-    items: [{ to: '/announcements', label: 'Announcements', permission: 'NOTIFY_MANAGE' }]
+    items: [
+      { to: '/announcements', label: 'Announcements', permission: 'NOTIFY_MANAGE' },
+      { to: '/scheduled-notifications', label: 'Scheduled & Delivery', permission: 'NOTIFY_MANAGE' }
+    ]
   },
   {
     section: 'System',
     items: [
       { to: '/settings', label: 'App Settings', permission: 'SETTINGS_MANAGE' },
+      { to: '/ai-search', label: 'AI & Search', permission: 'SETTINGS_MANAGE' },
       { to: '/audit-logs', label: 'Audit Logs', permission: 'AUDIT_READ' }
     ]
   }

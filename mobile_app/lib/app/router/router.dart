@@ -31,6 +31,12 @@ import '../../features/profile/screens/profile_screen.dart';
 import '../../features/settings/providers/app_preferences.dart';
 import '../../features/settings/screens/settings_screen.dart';
 import '../../features/subjects/screens/subject_catalog_screen.dart';
+import '../../features/commandcenter/screens/command_center_screen.dart';
+import '../../features/dashboard_customize/screens/dashboard_customize_screen.dart';
+import '../../features/export/screens/export_screen.dart';
+import '../../features/studyplan/screens/study_plan_screen.dart';
+import '../../features/sync/screens/sync_devices_screen.dart';
+import '../../features/workspace/screens/workspace_screen.dart';
 import '../../features/subjects/screens/technology_subjects_screen.dart';
 import '../l10n/generated/app_localizations.dart';
 
@@ -169,6 +175,36 @@ final rootRouterProvider = Provider<GoRouter>((ref) {
         path: '/notifications',
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) => const NotificationsScreen(),
+      ),
+      GoRoute(
+        path: '/workspace',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const WorkspaceScreen(),
+      ),
+      GoRoute(
+        path: '/dashboard-customize',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const DashboardCustomizeScreen(),
+      ),
+      GoRoute(
+        path: '/export',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const ExportScreen(),
+      ),
+      GoRoute(
+        path: '/study-plan',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const StudyPlanScreen(),
+      ),
+      GoRoute(
+        path: '/commands',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const CommandCenterScreen(),
+      ),
+      GoRoute(
+        path: '/sync-devices',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const SyncDevicesScreen(),
       ),
       GoRoute(
         path: '/settings',

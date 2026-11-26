@@ -37,4 +37,14 @@ class SearchRepository {
     }
     return SearchBundle(hits: hits, counts: counts);
   }
+
+  Future<List<String>> history() async {
+    final res = await _client.getMap('/search/history');
+    return ((res.data['items'] as List?) ?? const [])
+        .map((e) => ((e as Map<String, dynamic>)['q'] as String?) ?? '')
+        .where((q) => q.isNotEmpty)
+        .toList();
+  }
+
+  Future<void> clearHistory() => _client.deleteMap('/search/history');
 }

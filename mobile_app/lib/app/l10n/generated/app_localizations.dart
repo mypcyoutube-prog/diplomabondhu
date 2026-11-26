@@ -1159,7 +1159,92 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, one{1 year ago} other{{count} years ago}}'**
   String resultTimeAgoYears(num count);
+
+  String get workspaceTitle;
+
+  String get workspaceCollections;
+
+  String get workspaceRecent;
+
+  String get workspaceNewNote;
+
+  String get noteTitleHint;
+
+  String get noteBodyHint;
+
+  String get dashboardCustomizeTitle;
+
+  String get dashboardCustomizeHint;
+
+  String get dashboardSave;
+
+  String get dashboardSaved;
+
+  String get dashboardResetLayout;
+
+  String get dashboardResetDone;
+
+  String get dashboardLockedSection;
+
+  String get exportTitle;
+
+  String get exportSelectData;
+
+  String get exportCreate;
+
+  String get exportCreated;
+
+  String get exportHistory;
+
+  String get exportReady;
+
+  String get exportExpired;
+
+  String get exportFailed;
+
+  String get exportProcessing;
+
+  String get exportTooMany;
+
+  String get exportCopied;
+
+  String get studyPlanTitle;
+
+  String get studyPlanGenerate;
+
+  String get studyPlanGenerated;
+
+  String get studyPlanEstimated;
+
+  String get studyPlanApply;
+
+  String get studyPlanApplyConfirm;
+
+  String get studyPlanTasksAdded;
+
+  String get studyPlanHoursHint;
+
+  String get studyPlanGoalHint;
+
+  String get studyPlanSubjectsHint;
+
+  String get studyPlanDays;
+
+  String get studyPlanNotConfigured;
+
+  String get studyPlanLimitReached;
+
+  String get commandCenterTitle;
+
+  String get commandSearchHint;
+
+  String get syncDevicesTitle;
+
+  String get searchRecent;
+
+  String get quietHoursLabel;
 }
+
 
 class _AppLocalizationsDelegate
     extends LocalizationsDelegate<AppLocalizations> {

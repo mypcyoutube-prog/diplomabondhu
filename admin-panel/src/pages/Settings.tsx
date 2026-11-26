@@ -69,7 +69,7 @@ function DriveKeyCard() {
 
 interface AppSettingsData {
   branding: { appName: string; logoUrl?: string };
-  homepageSections: Array<{ key: string; visible: boolean; order: number }>;
+  homepageSections: Array<{ key: string; visible: boolean; order: number; customizable?: boolean }>;
   featureFlags: Record<string, unknown>;
   maintenanceMode: boolean;
   supportInfo: { email?: string; phone?: string; url?: string };
@@ -114,7 +114,7 @@ export function SettingsPage() {
   if (settings.isError) return <ErrorState message={settings.error.message} onRetry={() => void settings.refetch()} />;
   if (!form) return null;
 
-  const setSection = (key: string, patch: Partial<{ visible: boolean; order: number }>) => {
+  const setSection = (key: string, patch: Partial<{ visible: boolean; order: number; customizable?: boolean }>) => {
     setForm({
       ...form,
       homepageSections: form.homepageSections.map((s) => (s.key === key ? { ...s, ...patch } : s))
@@ -167,10 +167,19 @@ export function SettingsPage() {
           <h2 className="mb-4 font-semibold text-navy dark:text-white">Homepage sections</h2>
           <div className="space-y-2">
             {form.homepageSections.map((s) => (
-              <div key={s.key} className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2 dark:bg-navy-700">
-                <label className="flex items-center gap-2 text-sm">
+              <div key={s.key} className="flex items-center justify-between gap-2 rounded-lg bg-slate-50 px-3 py-2 dark:bg-navy-700">
+                <label className="flex items-center gap-2 text-sm" title="Visible on the student homepage">
                   <input type="checkbox" checked={s.visible} onChange={(e) => setSection(s.key, { visible: e.target.checked })} className="h-4 w-4" />
                   <span className="font-medium text-slate-700 dark:text-slate-200">{s.key}</span>
+                </label>
+                <label className="flex items-center gap-1 text-xs text-slate-500 dark:text-slate-300" title="Students may hide or reorder this section">
+                  <input
+                    type="checkbox"
+                    checked={s.customizable !== false}
+                    onChange={(e) => setSection(s.key, { customizable: e.target.checked })}
+                    className="h-4 w-4"
+                  />
+                  customizable
                 </label>
                 <input
                   type="number"

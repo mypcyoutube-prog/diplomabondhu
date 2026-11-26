@@ -30,6 +30,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     ('material', Icons.menu_book_rounded),
     ('exam', Icons.quiz_rounded),
     ('post', Icons.forum_rounded),
+    ('subject', Icons.category_rounded),
   ];
 
   @override
@@ -63,6 +64,8 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         return l10n.exams;
       case 'post':
         return l10n.searchPosts;
+      case 'subject':
+        return l10n.searchSubjects;
     }
     return type;
   }
@@ -76,6 +79,8 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         context.push('/exams/${hit.id}');
       case 'post':
         context.push('/community/${hit.id}');
+      case 'subject':
+        context.push('/search?q=${Uri.encodeComponent(hit.title)}');
     }
   }
 
@@ -123,7 +128,12 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           const SizedBox(height: DbSpacing.sm + 4),
           Expanded(
             child: !canSearch
-                ? DbEmptyView(message: l10n.searchStartTyping, icon: Icons.search_rounded)
+                ? _RecentSearches(
+                    onSelected: (q) {
+                      _controller.text = q;
+                      setState(() => _submitted = q);
+                    },
+                  )
                 : ref.watch(searchBundleProvider((_submitted, _type))).when(
                       loading: () => const DbLoadingView(),
                       error: (e, _) => DbErrorView(
@@ -174,6 +184,47 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _RecentSearches extends ConsumerWidget {
+  final ValueChanged<String> onSelected;
+
+  const _RecentSearches({required this.onSelected});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    final history = ref.watch(searchHistoryProvider);
+    return history.when(
+      loading: () => DbEmptyView(
+          message: l10n.searchStartTyping, icon: Icons.search_rounded),
+      error: (e, _) => DbEmptyView(
+          message: l10n.searchStartTyping, icon: Icons.search_rounded),
+      data: (items) {
+        if (items.isEmpty) {
+          return DbEmptyView(
+              message: l10n.searchStartTyping, icon: Icons.search_rounded);
+        }
+        return ListView(
+          padding: const EdgeInsets.all(DbSpacing.md),
+          children: [
+            DbSectionHeader(title: l10n.searchRecent),
+            const SizedBox(height: DbSpacing.sm),
+            Wrap(
+              spacing: DbSpacing.sm,
+              runSpacing: DbSpacing.sm,
+              children: items
+                  .map((q) => ActionChip(
+                        label: Text(q),
+                        onPressed: () => onSelected(q),
+                      ))
+                  .toList(),
+            ),
+          ],
+        );
+      },
     );
   }
 }

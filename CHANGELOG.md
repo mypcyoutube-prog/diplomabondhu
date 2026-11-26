@@ -1,5 +1,64 @@
 # CHANGELOG.md — DiplomaBondhu
 
+## [0.12.0] — Advanced Smart Features Expansion (S1–S9)
+
+Owner-approved expansion (see docs/DIPLOMABONDHU_SMART_EXPANSION_PLAN_BN.md). All existing
+features preserved; backend 185/185 tests green + typecheck clean; admin 8/8 + build green.
+
+**Backend (commit c04e637 + follow-ups):**
+- **Smart search v2 (F-1):** new `subject` scope (BtebSubject name/code), synonym expansion from
+  `AppSettings.searchSynonyms`, search history (per-user, kept to 20, upsert on grouped search),
+  `GET /search/suggest` (history + material titles + subject names, max 8), `GET/DELETE /search/history`,
+  admin `GET /search/admin/analytics` (top + zero-result queries) and `GET/PUT /search/admin/config`
+  (synonym groups). Auth required only for personal history/suggest; global search unchanged for guests.
+- **Per-student dashboard prefs (F-3/F-9):** `DashboardPref` model + `GET/PUT /me/dashboard-preferences`,
+  `POST /me/dashboard-preferences/reset`; merged view enforces admin visibility and the new
+  `customizable` flag on `homepageSections` (non-customizable sections cannot be hidden — 400).
+- **Workspace (F-5):** notes CRUD (search/pin/archive/soft-delete), collections (dup name 409,
+  items add/remove with ownership + published checks), `GET /workspace/recent` (MaterialView),
+  `GET /workspace/bookmarks` — all ownership-enforced.
+- **Cross-device sync (F-4):** `SyncDevice` register/list/revoke, `GET /sync/changes?since=` delta
+  (bookmarks/tasks/goals/notes), `POST /sync/push` last-write-wins with conflicts, notes-create only.
+- **Smart notifications (F-8):** quiet hours on notification preferences (HH:mm, default 22:00→07:00),
+  scheduled announcements auto-publish every 60s (`processDueAnnouncements`), 6h per-user duplicate
+  suppression, admin `GET /notifications/admin/delivery-stats`.
+- **AI study plan (F-7):** provider abstraction (`src/core/ai.ts`, OpenAI-compatible; disabled → 503
+  until `AI_PROVIDER=openai` + `AI_API_KEY`), `POST /ai/study-plan/generate` with daily quota
+  (`AI_PLAN_DAILY_LIMIT`, default 5), list/edit/apply (creates planner Tasks)/delete; plans always
+  marked `estimated:true`. Usage logged in `AiUsageLog`.
+- **Data export (F-10):** `POST/GET /export/jobs`, `GET /export/jobs/:id/download` (owner-only,
+  7-day expiry → 410, max 5 active, 2MB cap, audit-logged) for notes/bookmarks/collections/tasks/
+  goals/calculation-history, JSON or CSV.
+- Admin schema: `homepageSections[].customizable` accepted in `PUT /admin/settings`.
+- 29 new backend tests across 7 files (workspace, dashboard-prefs, sync, ai-study-plan, export,
+  search-smart, notifications-smart): 151 → 185.
+
+**Flutter app (no Dart SDK here — KI-10; run `flutter test`/`flutter analyze` where the SDK exists):**
+- New features: `workspace` (notes/collections/recent), `dashboard_customize` (show-hide + reorder +
+  reset), `export` (dataset selection, JSON/CSV, history, clipboard download), `studyplan` (generate
+  form with hours/days sliders, "Estimated" badge, apply-to-tasks confirm, 503 "AI not configured"),
+  `commandcenter` (searchable command registry, deep-links to 17 destinations), `sync` (device
+  register/list/revoke screen).
+- Search screen: subject chip, recent-searches chips (from `/search/history`), subject hits fall back
+  to name/code.
+- Home: command-center appbar icon; home sections now render per the merged per-student preferences
+  (order/visibility); always-visible academic info + search kept.
+- Settings: tiles for workspace/export/dashboard-customize/sync-devices/study-plan; quiet-hours UI
+  (switch + start/end sliders) in notification preferences.
+- Router: `/workspace`, `/dashboard-customize`, `/export`, `/study-plan`, `/commands`, `/sync-devices`.
+- l10n: 42 new keys (en + bn, ARB + hand-updated generated files).
+- New widget tests (fake-repo pattern): workspace, export, study-plan, dashboard-customize (+ updated
+  search fake).
+
+**Admin panel:**
+- New pages: `AiSearchSettings` (`/ai-search`: AI provider status, search analytics, synonyms editor)
+  and `ScheduledNotifications` (`/scheduled-notifications`: delivery stats, upcoming scheduled
+  announcements), lazy-loaded with permission gates (SETTINGS_MANAGE / NOTIFY_MANAGE).
+- `Settings.tsx`: per-section `customizable` toggle in the homepage sections editor.
+
+**Deferred (unchanged scope):** AI Document Reader (F-2) awaits the file-storage decision (KI-7);
+FCM push stays stubbed (KI-3); AI stays disabled until the provider key is configured.
+
 ## [0.11.13] — Global Search (API + app), network retry, health v2, admin code-split, docs
 
 Remaining approved items from the Phase-1 audit / improvement plan (see docs/DIPLOMABONDHU_*_BN.md):

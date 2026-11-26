@@ -22,6 +22,12 @@ class NotificationRepository {
   Future<Map<String, dynamic>> preferences() =>
       _client.getMap('/notifications/preferences').then((r) => r.data);
 
-  Future<void> updatePreferences(Map<String, bool> categories) =>
-      _client.putMap('/notifications/preferences', body: {'categories': categories});
+  Future<void> updatePreferences(
+    Map<String, bool> categories, {
+    Map<String, dynamic>? quietHours,
+  }) =>
+      _client.putMap('/notifications/preferences', body: {
+        'categories': categories,
+        if (quietHours != null) 'quietHours': quietHours,
+      });
 }

@@ -15,3 +15,7 @@ final searchBundleProvider =
       .watch(searchRepositoryProvider)
       .search(params.$1, type: params.$2);
 });
+
+final searchHistoryProvider = FutureProvider.autoDispose<List<String>>(
+  (ref) => ref.watch(searchRepositoryProvider).history(),
+);
