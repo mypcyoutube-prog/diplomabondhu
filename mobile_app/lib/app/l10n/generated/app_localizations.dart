@@ -1329,6 +1329,31 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Duration'**
   String get durationLabel;
+  /// No description provided for @cgpaGpaHint.
+  ///
+  /// In en, this message translates to:
+  /// **'GPA (0-5)'**
+  String get cgpaGpaHint;
+  /// No description provided for @cgpaCreditsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Credits'**
+  String get cgpaCreditsHint;
+  /// No description provided for @profileLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile'**
+  String get profileLabel;
+  /// No description provided for @todayProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Today's progress'**
+  String get todayProgress;
+  /// No description provided for @tasksDone.
+  ///
+  /// In en, this message translates to:
+  /// **'done'**
+  String get tasksDone;
   /// No description provided for @loadMore.
   ///
   /// In en, this message translates to:

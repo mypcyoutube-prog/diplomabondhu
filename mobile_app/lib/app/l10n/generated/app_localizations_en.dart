@@ -1301,6 +1301,16 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get durationLabel => 'Duration';
   @override
+  String get cgpaGpaHint => 'GPA (0-5)';
+  @override
+  String get cgpaCreditsHint => 'Credits';
+  @override
+  String get profileLabel => 'Profile';
+  @override
+  String get todayProgress => 'Today's progress';
+  @override
+  String get tasksDone => 'done';
+  @override
   String get loadMore => 'Load more';
   @override
   String get viewsLabel => 'Views';

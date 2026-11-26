@@ -253,5 +253,10 @@
   "minutesLabel": "মিনিট",
   "negativeMarking": "নেগেটিভ মার্কিং",
   "avgScore": "গড়",
-  "durationLabel": "সময়"
+  "durationLabel": "সময়",
+  "cgpaGpaHint": "GPA (0-5)",
+  "cgpaCreditsHint": "ক্রেডিট",
+  "profileLabel": "প্রোফাইল",
+  "todayProgress": "আজকের অগ্রগতি",
+  "tasksDone": "সম্পন্ন"
 }

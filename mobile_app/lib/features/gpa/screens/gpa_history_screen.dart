@@ -2,11 +2,18 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/l10n/generated/app_localizations.dart';
+import '../../../app/theme/theme.dart';
 import '../../../shared/widgets/async_value_view.dart';
 import '../providers/gpa_providers.dart';
 
 class GpaHistoryScreen extends ConsumerWidget {
   const GpaHistoryScreen({super.key});
+
+  String _formatDate(DateTime dt) {
+    final m = dt.month.toString().padLeft(2, '0');
+    final d = dt.day.toString().padLeft(2, '0');
+    return '$d/$m/${dt.year} · ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -26,19 +33,43 @@ class GpaHistoryScreen extends ConsumerWidget {
           separatorBuilder: (_, _) => const SizedBox(height: 8),
           itemBuilder: (context, i) {
             final item = items[i];
-            final gpa = item.output['gpa'] ?? item.output['cgpa'];
+            final gpa = (item.output['cgpa'] ?? item.output['gpa'])?.toString() ?? '';
+            final kind = item.kind;
+
             return Card(
               child: ListTile(
-                title: Text(item.label ?? item.kind),
+                leading: Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: DbColors.teal.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(DbRadius.input),
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    gpa.isEmpty ? '—' : gpa,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 13,
+                      color: DbColors.teal,
+                    ),
+                  ),
+                ),
+                title: Text(
+                  item.label ?? kind,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
                 subtitle: item.createdAt == null
                     ? null
-                    : Text(item.createdAt!.toLocal().toString().split('.').first),
-                trailing: Text(
-                  gpa?.toString() ?? '',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w800,
+                    : Text(
+                        _formatDate(item.createdAt!.toLocal()),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Theme.of(context).colorScheme.outline,
+                        ),
                       ),
-                ),
               ),
             );
           },

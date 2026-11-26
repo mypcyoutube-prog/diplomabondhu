@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/l10n/generated/app_localizations.dart';
 import '../../../app/theme/theme.dart';
 import '../../../shared/widgets/states.dart';
+import '../data/gpa_models.dart';
 import '../providers/gpa_providers.dart';
 
 class CgpaScreen extends ConsumerStatefulWidget {
@@ -81,96 +82,235 @@ class _CgpaScreenState extends ConsumerState<CgpaScreen> {
           if (list.isEmpty) {
             return DbEmptyView(message: l10n.comingSoon, icon: Icons.lock_rounded);
           }
-          _profileId ??= list.first.id;
+          if (_profileId == null || !list.any((p) => p.id == _profileId)) {
+            _profileId = list.first.id;
+          }
+          final selected = list.firstWhere((p) => p.id == _profileId);
           final structureAsync = ref.watch(profileStructureProvider(_profileId!));
-          return structureAsync.when(
-            loading: () => const DbLoadingView(),
-            error: (e, _) => DbErrorView(
-              message: l10n.errorGeneric,
-              onRetry: () => ref.invalidate(profileStructureProvider(_profileId!)),
-            ),
-            data: (structure) {
-              final weights = structure.semesterWeights;
-              return ListView(
-                padding: const EdgeInsets.all(16),
-                children: [
-                  for (final w in weights)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: Row(
-                        children: [
-                          SizedBox(
-                            width: 110,
-                            child: Text('Sem ${w.semesterNumber} (${w.percent}%)'),
-                          ),
-                          Expanded(
-                            child: TextField(
-                              controller: _gpaFields.putIfAbsent(
-                                w.semesterNumber,
-                                () => TextEditingController(),
-                              ),
-                              keyboardType: TextInputType.number,
-                              decoration: InputDecoration(hintText: 'GPA (0-5)'),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          if (structure.cgpaStrategy == 'credit_weighted')
-                            SizedBox(
-                              width: 110,
-                              child: TextField(
-                                controller: _creditFields.putIfAbsent(
-                                  w.semesterNumber,
-                                  () => TextEditingController(),
-                                ),
-                                keyboardType: TextInputType.number,
-                                decoration: const InputDecoration(hintText: 'Credits'),
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                  if (_error != null)
-                    Text(_error!, style: const TextStyle(color: DbColors.errorLight)),
-                  const SizedBox(height: 12),
-                  FilledButton.icon(
-                    onPressed: _calculating ? null : _calculate,
-                    icon: const Icon(Icons.functions_rounded),
-                    label: Text(l10n.calculate),
+          return ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              if (list.length > 1)
+                DropdownButtonFormField<String>(
+                  value: selected.id,
+                  decoration: InputDecoration(
+                    labelText: l10n.profileLabel,
+                    prefixIcon: const Icon(Icons.tune_rounded),
                   ),
-                  if (_result != null) ...[
-                    const SizedBox(height: 16),
-                    Card(
-                      color: DbColors.teal.withValues(alpha: 0.08),
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          children: [
-                            Text(
-                              ((_result!['cgpa'] as num?) ?? 0).toStringAsFixed(2),
-                              style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                                    fontWeight: FontWeight.w800,
-                                    color: DbColors.navy,
-                                  ),
-                            ),
-                            Text(l10n.cgpa),
-                            if (_result!['classBand'] != null)
-                              Text('${_result!['classBand']}'),
-                            for (final n in (_result!['notes'] as List? ?? []).cast<String>())
-                              Padding(
-                                padding: const EdgeInsets.only(top: 4),
-                                child: Text(n, style: Theme.of(context).textTheme.bodySmall),
-                              ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ],
-              );
-            },
+                  items: list
+                      .map((p) => DropdownMenuItem(
+                            value: p.id,
+                            child: Text('v${p.version} · ${p.status}'),
+                          ))
+                      .toList(),
+                  onChanged: (id) {
+                    if (id == null || id == _profileId) return;
+                    setState(() {
+                      for (final c in _gpaFields.values) {
+                        c.dispose();
+                      }
+                      for (final c in _creditFields.values) {
+                        c.dispose();
+                      }
+                      _gpaFields.clear();
+                      _creditFields.clear();
+                      _profileId = id;
+                      _result = null;
+                      _error = null;
+                    });
+                  },
+                ),
+              structureAsync.when(
+                loading: () => const Padding(
+                  padding: EdgeInsets.all(32),
+                  child: DbLoadingView(),
+                ),
+                error: (e, _) => DbErrorView(
+                  message: l10n.errorGeneric,
+                  onRetry: () =>
+                      ref.invalidate(profileStructureProvider(_profileId!)),
+                ),
+                data: (structure) => _buildForm(context, l10n, structure),
+              ),
+            ],
           );
         },
       ),
+    );
+  }
+
+  Widget _buildForm(
+      BuildContext context, AppLocalizations l10n, ProfileStructure structure) {
+    final weights = structure.semesterWeights;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const SizedBox(height: DbSpacing.md),
+        Row(
+          children: [
+            SizedBox(
+              width: 96,
+              child: Text(
+                l10n.semester,
+                style: Theme.of(context)
+                    .textTheme
+                    .labelMedium
+                    ?.copyWith(fontWeight: FontWeight.w700),
+              ),
+            ),
+            Expanded(
+              child: Text(
+                l10n.cgpaGpaHint,
+                style: Theme.of(context)
+                    .textTheme
+                    .labelMedium
+                    ?.copyWith(fontWeight: FontWeight.w700),
+              ),
+            ),
+            if (structure.cgpaStrategy == 'credit_weighted')
+              SizedBox(
+                width: 110,
+                child: Text(
+                  l10n.cgpaCreditsHint,
+                  style: Theme.of(context)
+                      .textTheme
+                      .labelMedium
+                      ?.copyWith(fontWeight: FontWeight.w700),
+                ),
+              ),
+          ],
+        ),
+        const SizedBox(height: DbSpacing.sm),
+        for (final w in weights)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Row(
+              children: [
+                SizedBox(
+                  width: 96,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 8, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: DbColors.teal.withValues(alpha: 0.10),
+                      borderRadius: BorderRadius.circular(DbRadius.badge),
+                    ),
+                    child: Text(
+                      '${w.semesterNumber} · ${w.percent}%',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: DbColors.teal,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: TextField(
+                    controller: _gpaFields.putIfAbsent(
+                      w.semesterNumber,
+                      () => TextEditingController(),
+                    ),
+                    keyboardType: TextInputType.number,
+                    decoration:
+                        InputDecoration(hintText: l10n.cgpaGpaHint),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                if (structure.cgpaStrategy == 'credit_weighted')
+                  SizedBox(
+                    width: 110,
+                    child: TextField(
+                      controller: _creditFields.putIfAbsent(
+                        w.semesterNumber,
+                        () => TextEditingController(),
+                      ),
+                      keyboardType: TextInputType.number,
+                      decoration:
+                          InputDecoration(hintText: l10n.cgpaCreditsHint),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        if (_error != null) ...[
+          const SizedBox(height: DbSpacing.xs),
+          Text(_error!, style: const TextStyle(color: DbColors.errorLight)),
+        ],
+        const SizedBox(height: DbSpacing.md),
+        FilledButton.icon(
+          onPressed: _calculating ? null : _calculate,
+          icon: _calculating
+              ? const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(
+                      strokeWidth: 2, color: Colors.white),
+                )
+              : const Icon(Icons.functions_rounded),
+          label: Text(l10n.calculate),
+        ),
+        if (_result != null) ...[
+          const SizedBox(height: DbSpacing.lg),
+          Container(
+            padding: const EdgeInsets.all(DbSpacing.lg),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [DbColors.navy, DbColors.navyDark],
+              ),
+              borderRadius: BorderRadius.circular(DbRadius.card),
+            ),
+            child: Column(
+              children: [
+                Text(
+                  ((_result!['cgpa'] as num?) ?? 0).toStringAsFixed(2),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 44,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                Text(
+                  l10n.cgpa,
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.8),
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                if (_result!['classBand'] != null &&
+                    (_result!['classBand'] as String).isNotEmpty) ...[
+                  const SizedBox(height: DbSpacing.sm),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: DbSpacing.sm + 2, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: DbColors.emerald.withValues(alpha: 0.25),
+                      borderRadius: BorderRadius.circular(DbRadius.badge),
+                    ),
+                    child: Text(
+                      _result!['classBand'] as String,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          for (final n in (_result!['notes'] as List? ?? []).cast<String>())
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Text(n, style: Theme.of(context).textTheme.bodySmall),
+            ),
+        ],
+      ],
     );
   }
 }

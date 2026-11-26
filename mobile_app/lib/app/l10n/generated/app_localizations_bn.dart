@@ -1300,6 +1300,16 @@ class AppLocalizationsBn extends AppLocalizations {
   @override
   String get durationLabel => 'সময়';
   @override
+  String get cgpaGpaHint => 'GPA (0-5)';
+  @override
+  String get cgpaCreditsHint => 'ক্রেডিট';
+  @override
+  String get profileLabel => 'প্রোফাইল';
+  @override
+  String get todayProgress => 'আজকের অগ্রগতি';
+  @override
+  String get tasksDone => 'সম্পন্ন';
+  @override
   String get loadMore => 'আরও দেখুন';
   @override
   String get viewsLabel => 'ভিউ';

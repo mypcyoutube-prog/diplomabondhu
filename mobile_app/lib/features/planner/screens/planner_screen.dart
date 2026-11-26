@@ -38,16 +38,74 @@ class PlannerScreen extends ConsumerWidget {
               onRetry: () => ref.invalidate(tasksProvider),
               isEmpty: (t) => t.where((x) => !x.isDone).isEmpty,
               emptyIcon: Icons.task_alt_rounded,
-              builder: (context, t) => _TaskList(
-                tasks: t.where((x) => !x.isDone).toList(),
-              ),
+              builder: (context, t) {
+                final all = t.toList();
+                final done = all.where((x) => x.isDone).length;
+                final percent = all.isEmpty ? 0 : (done * 100 ~/ all.length);
+                return Column(
+                  children: [
+                    Container(
+                      margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                      padding: const EdgeInsets.all(DbSpacing.md),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [DbColors.navy, DbColors.navyDark],
+                        ),
+                        borderRadius: BorderRadius.circular(DbRadius.card),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                l10n.todayProgress,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 13,
+                                ),
+                              ),
+                              Text(
+                                '$done/${all.length} ${l10n.tasksDone}',
+                                style: TextStyle(
+                                  color: Colors.white.withValues(alpha: 0.8),
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: DbSpacing.sm),
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(DbRadius.full),
+                            child: LinearProgressIndicator(
+                              value: percent / 100,
+                              color: DbColors.emeraldDark,
+                              backgroundColor: Colors.white24,
+                              minHeight: 8,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Expanded(
+                      child: _TaskList(
+                        tasks: all.where((x) => !x.isDone).toList(),
+                      ),
+                    ),
+                  ],
+                );
+              },
             ),
             AsyncValueView(
               value: tasks,
               onRetry: () => ref.invalidate(tasksProvider),
               isEmpty: (t) => t.isEmpty,
               emptyIcon: Icons.task_alt_rounded,
-              builder: (context, t) => _TaskList(tasks: t),
+              builder: (context, t) => _TaskList(tasks: t.toList()),
             ),
             AsyncValueView(
               value: goals,

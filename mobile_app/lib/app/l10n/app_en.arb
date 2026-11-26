@@ -253,5 +253,10 @@
   "minutesLabel": "min",
   "negativeMarking": "Negative marking",
   "avgScore": "Average",
-  "durationLabel": "Duration"
+  "durationLabel": "Duration",
+  "cgpaGpaHint": "GPA (0-5)",
+  "cgpaCreditsHint": "Credits",
+  "profileLabel": "Profile",
+  "todayProgress": "Today's progress",
+  "tasksDone": "done"
 }
