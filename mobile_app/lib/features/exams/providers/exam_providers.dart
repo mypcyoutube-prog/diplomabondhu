@@ -46,7 +46,7 @@ class ExamListController extends AsyncNotifier<ExamPageData> {
         page: current.page + 1,
       ));
     } catch (e, st) {
-      state = AsyncError(e, st).copyWithPrevious(AsyncData(current));
+      state = AsyncError<ExamPageData>(e, st).copyWithPrevious(AsyncData(current));
     }
   }
 }

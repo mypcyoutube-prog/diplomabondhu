@@ -50,7 +50,7 @@ class LibraryController extends AsyncNotifier<MaterialPage> {
         total: next.total,
       ));
     } catch (e, st) {
-      state = AsyncError(e, st).copyWithPrevious(AsyncData(current));
+      state = AsyncError<MaterialPage>(e, st).copyWithPrevious(AsyncData(current));
     }
   }
 }
