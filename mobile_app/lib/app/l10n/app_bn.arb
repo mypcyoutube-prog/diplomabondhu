@@ -224,5 +224,11 @@
   "commandSearchHint": "ফিচার ও কমান্ড খুঁজুন",
   "syncDevicesTitle": "সিংক্রনীত ডিভাইস",
   "searchRecent": "সাম্প্রতিক সর্চ",
-  "quietHoursLabel": "ক্যুআইয়েট হাউর্স"
+  "quietHoursLabel": "ক্যুআইয়েট হাউর্স",
+  "editProfile": "প্রোফাইল সম্পাদনা",
+  "memberSince": "যোগ দিয়েছেন",
+  "profileUpdated": "প্রোফাইল আপডেট হয়েছে",
+  "phoneLabel": "ফোন",
+  "statusActive": "সক্রিয়",
+  "roleStudent": "শিক্ষার্থী"
 }

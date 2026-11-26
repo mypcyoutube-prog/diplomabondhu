@@ -43,6 +43,15 @@ class AuthRepository {
     return _persist(res);
   }
 
+  Future<User> updateProfile({String? name, String? phone}) async {
+    final body = <String, dynamic>{};
+    if (name != null && name.trim().isNotEmpty) body['name'] = name.trim();
+    if (phone != null && phone.trim().isNotEmpty) body['phone'] = phone.trim();
+    if (body.isEmpty) return restore();
+    final res = await _client.patchMap('/users/me', body: body);
+    return User.fromJson(res['user'] as Map<String, dynamic>);
+  }
+
   Future<User> restore() async {
     final refresh = await _tokens.readRefreshToken();
     final access = await _tokens.readAccessToken();

@@ -46,6 +46,7 @@ class User {
   final String status;
   final UserPrefs prefs;
   final UserAcademicInfo? academic;
+  final DateTime? createdAt;
 
   const User({
     required this.id,
@@ -56,6 +57,7 @@ class User {
     required this.status,
     required this.prefs,
     this.academic,
+    this.createdAt,
   });
 
   bool get isStudent => role == 'student';
@@ -70,6 +72,9 @@ class User {
         prefs: UserPrefs.fromJson(json['prefs'] as Map<String, dynamic>? ?? {}),
         academic: json['academic'] is Map<String, dynamic>
             ? UserAcademicInfo.fromJson(json['academic'] as Map<String, dynamic>)
+            : null,
+        createdAt: json['createdAt'] is String
+            ? DateTime.tryParse(json['createdAt'] as String)
             : null,
       );
 }

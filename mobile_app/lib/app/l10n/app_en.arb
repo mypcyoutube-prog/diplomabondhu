@@ -224,5 +224,11 @@
   "commandSearchHint": "Search features and commands",
   "syncDevicesTitle": "Synced devices",
   "searchRecent": "Recent searches",
-  "quietHoursLabel": "Quiet hours"
+  "quietHoursLabel": "Quiet hours",
+  "editProfile": "Edit Profile",
+  "memberSince": "Member since",
+  "profileUpdated": "Profile updated",
+  "phoneLabel": "Phone",
+  "statusActive": "Active",
+  "roleStudent": "Student"
 }

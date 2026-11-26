@@ -1262,6 +1262,23 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get quietHoursLabel => 'ক্যুআইয়েট হাউর্স';
+  @override
+  String get editProfile => 'প্রোফাইল সম্পাদনা';
+
+  @override
+  String get memberSince => 'যোগ দিয়েছেন';
+
+  @override
+  String get profileUpdated => 'প্রোফাইল আপডেট হয়েছে';
+
+  @override
+  String get phoneLabel => 'ফোন';
+
+  @override
+  String get statusActive => 'সক্রিয়';
+
+  @override
+  String get roleStudent => 'শিক্ষার্থী';
 
   @override
   String get searchRecent => 'সাম্প্রতিক সর্চ';

@@ -1264,6 +1264,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get quietHoursLabel => 'Quiet hours';
 
   @override
+  String get editProfile => 'Edit Profile';
+
+  @override
+  String get memberSince => 'Member since';
+
+  @override
+  String get profileUpdated => 'Profile updated';
+
+  @override
+  String get phoneLabel => 'Phone';
+
+  @override
+  String get statusActive => 'Active';
+
+  @override
+  String get roleStudent => 'Student';
+
+  @override
   String get searchRecent => 'Recent searches';
 
 }
