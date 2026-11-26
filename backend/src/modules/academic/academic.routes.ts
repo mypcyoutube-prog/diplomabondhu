@@ -1,13 +1,15 @@
 import { Router } from 'express';
+import type { FilterQuery } from 'mongoose';
 import { z } from 'zod';
 import type { Model } from 'mongoose';
 
 type AnyModel = Model<any>;
+import { conflict } from '../../core/errors';
 import type { Env } from '../../config/env';
 import { requireAuth } from '../../middlewares/auth';
 import { requirePermission } from '../../middlewares/rbac';
 import { validate } from '../../middlewares/validate';
-import { ok } from '../../core/response';
+import { ok, fail } from '../../core/response';
 import { PERMISSIONS } from '../../core/permissions';
 import { writeAudit } from '../../models/audit-log.model';
 import { Institute, EducationProgram, Regulation, AcademicSession, Technology, Semester, Subject, Chapter } from '../../models/academic.models';
@@ -22,6 +24,7 @@ interface EntityConfig {
   model: AnyModel;
   name: string;
   bodySchema: z.ZodObject<any>;
+  uniqueFields?: string[];
 }
 
 export function academicRoutes(env: Env) {
@@ -59,20 +62,32 @@ export function academicRoutes(env: Env) {
   const admin = Router();
   admin.use(requireAuth(env.JWT_ACCESS_SECRET), requirePermission(PERMISSIONS.ACADEMIC_MANAGE));
 
-  const adminEntities: Array<{ path: string; model: AnyModel; name: string; bodySchema: z.ZodObject<any> }> = [
-    { path: '/programs', model: EducationProgram, name: 'EducationProgram', bodySchema: programBodySchema },
-    { path: '/regulations', model: Regulation, name: 'Regulation', bodySchema: regulationBodySchema },
-    { path: '/institutes', model: Institute, name: 'Institute', bodySchema: instituteBodySchema },
-    { path: '/sessions', model: AcademicSession, name: 'AcademicSession', bodySchema: sessionBodySchema },
-    { path: '/technologies', model: Technology, name: 'Technology', bodySchema: technologyBodySchema },
-    { path: '/semesters', model: Semester, name: 'Semester', bodySchema: semesterBodySchema },
-    { path: '/subjects', model: Subject, name: 'Subject', bodySchema: subjectBodySchema },
-    { path: '/chapters', model: Chapter, name: 'Chapter', bodySchema: chapterBodySchema }
+  const adminEntities: Array<{ path: string; model: AnyModel; name: string; bodySchema: z.ZodObject<any>; uniqueFields?: string[] }> = [
+    { path: '/programs', model: EducationProgram, name: 'EducationProgram', bodySchema: programBodySchema, uniqueFields: ['code'] },
+    { path: '/regulations', model: Regulation, name: 'Regulation', bodySchema: regulationBodySchema, uniqueFields: ['programId', 'year'] },
+    { path: '/institutes', model: Institute, name: 'Institute', bodySchema: instituteBodySchema, uniqueFields: ['code'] },
+    { path: '/sessions', model: AcademicSession, name: 'AcademicSession', bodySchema: sessionBodySchema, uniqueFields: ['programId', 'regulationId', 'startYear'] },
+    { path: '/technologies', model: Technology, name: 'Technology', bodySchema: technologyBodySchema, uniqueFields: ['programId', 'code'] },
+    { path: '/semesters', model: Semester, name: 'Semester', bodySchema: semesterBodySchema, uniqueFields: ['programId', 'regulationId', 'number'] },
+    { path: '/subjects', model: Subject, name: 'Subject', bodySchema: subjectBodySchema, uniqueFields: ['regulationId', 'code'] },
+    { path: '/chapters', model: Chapter, name: 'Chapter', bodySchema: chapterBodySchema, uniqueFields: ['subjectId', 'number'] }
   ];
 
-  for (const { path, model, name, bodySchema } of adminEntities) {
+  for (const { path, model, name, bodySchema, uniqueFields } of adminEntities) {
     admin.post(path, validate({ body: bodySchema }), async (req, res, next) => {
       try {
+        if (uniqueFields) {
+          const probe: Record<string, FilterQuery<never>> = {};
+          let complete = true;
+          for (const f of uniqueFields) {
+            const value = (req.body as Record<string, unknown>)[f];
+            if (value === undefined || value === null) { complete = false; break; }
+            probe[f] = value as FilterQuery<never>;
+          }
+          if (complete && await model.exists(probe)) {
+            return fail(res, 409, 'CONFLICT', `Duplicate value for ${uniqueFields.join(', ')}`);
+          }
+        }
         const item = await svc.createDoc(model, req.body);
         await writeAudit({ actorId: req.auth!.id, action: `academic.${name}.created`, targetType: name, targetId: String((item as { _id: unknown })._id), after: item, ip: req.ip });
         return ok(res, { item }, 201);

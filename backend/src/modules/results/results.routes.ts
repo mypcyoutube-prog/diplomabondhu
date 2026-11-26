@@ -58,6 +58,8 @@ export function resultsRoutes(env: Env) {
     } catch (err) { next(err); }
   });
 
+  router.use('/admin', requireAuth(env.JWT_ACCESS_SECRET), requirePermission(PERMISSIONS.CONTENT_MANAGE));
+
   router.get('/admin/parse-job/:jobId', async (req, res, next) => {
     try {
       if (!env.RESULT_SERVICE_URL || !env.RESULT_SERVICE_TOKEN) {
@@ -85,8 +87,6 @@ export function resultsRoutes(env: Env) {
       return res.status(status).set('content-type', 'application/json').send(body);
     } catch (err) { next(err); }
   });
-
-  router.use('/admin', requireAuth(env.JWT_ACCESS_SECRET), requirePermission(PERMISSIONS.CONTENT_MANAGE));
 
   router.get('/admin/batches', async (_req, res, next) => {
     try {

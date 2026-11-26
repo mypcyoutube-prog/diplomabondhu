@@ -1,5 +1,20 @@
 # CHANGELOG.md — DiplomaBondhu
 
+## [0.11.12] — Security fix: unauthenticated results/admin proxies + deterministic academic duplicate guards
+
+Phase-1 audit (see docs/DIPLOMABONDHU_FULL_AUDIT_REPORT_BN.md) found two issues, fixed with owner approval:
+
+- **SEC-1 (major):** `GET /results/admin/parse-job/:jobId` and `GET /results/admin/import-progress/:batchId`
+  were registered before the `router.use('/admin', requireAuth, requirePermission)` guard in
+  `results.routes.ts`, so they were reachable without authentication (when the result service was
+  configured). The guard now applies to every `/results/admin` route; new tests assert 401 for both.
+- **BUG-B1 (major, test flake + startup gap):** the unique-index duplicate guard for academic
+  entities depends on Mongo's background index build, so a fast duplicate POST could return 201
+  instead of 409 (observed as a flaky `academic.test.ts` failure: 201 vs 409). Admin creates now
+  run an explicit existence check per entity against the same fields as its unique index before
+  inserting, and `server.ts` awaits `mongoose.syncIndexes()` on startup. Full suite is now
+  stable: 151/151 in 3 consecutive runs (150 existing tests + 1 new auth test).
+
 ## [0.11.11] — Fix: repeated referred subject was shown once per record
 
 Owner report: with the 7th + 6th semester PDFs uploaded, the banner says

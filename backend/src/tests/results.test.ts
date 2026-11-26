@@ -320,6 +320,11 @@ describe('student result endpoints', () => {
     expect((await request(app).get('/api/v1/results/check?examId=x&roll=410123')).status).toBe(401);
   });
 
+  it('requires authentication for admin proxy routes', async () => {
+    expect((await request(app).get(`${ADMIN}/parse-job/${'b'.repeat(24)}`)).status).toBe(401);
+    expect((await request(app).get(`${ADMIN}/import-progress/${'a'.repeat(24)}`)).status).toBe(401);
+  });
+
   it('lists exams via meta', async () => {
     await seedResult();
     const token = await studentToken(testEnv);

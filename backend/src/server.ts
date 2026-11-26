@@ -7,7 +7,8 @@ async function main() {
   const env = loadEnv();
   setLogLevel(env.LOG_LEVEL === 'debug' ? 'debug' : env.LOG_LEVEL);
   await mongoose.connect(env.MONGODB_URI);
-  logger.info('Connected to MongoDB');
+  await mongoose.syncIndexes();
+  logger.info('Connected to MongoDB (indexes synced)');
   const app = createApp(env);
   app.listen(env.PORT, () => logger.info(`DiplomaBondhu API listening on port ${env.PORT}`));
 }
