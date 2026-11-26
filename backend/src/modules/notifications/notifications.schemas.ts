@@ -12,7 +12,12 @@ export const preferencesSchema = z.object({
     community: z.boolean().optional(),
     announcement: z.boolean().optional(),
     system: z.boolean().optional()
-  }).strict()
+  }).strict(),
+  quietHours: z.object({
+    enabled: z.boolean(),
+    start: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/),
+    end: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/)
+  }).strict().optional()
 }).strict();
 
 export const announcementBodySchema = z.object({

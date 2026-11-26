@@ -22,6 +22,11 @@ import { notificationsRoutes } from './modules/notifications/notifications.route
 import { resultsRoutes } from './modules/results/results.routes';
 import { errorHandler, notFoundHandler } from './middlewares/error-handler';
 import { searchRoutes } from './modules/search/search.routes';
+import { dashboardPrefsRoutes } from './modules/dashboard-prefs/dashboard-prefs.routes';
+import { workspaceRoutes } from './modules/workspace/workspace.routes';
+import { syncRoutes } from './modules/sync/sync.routes';
+import { aiRoutes } from './modules/ai/ai.routes';
+import { exportRoutes } from './modules/export/export.routes';
 
 const APP_VERSION = (() => {
   try {
@@ -94,7 +99,12 @@ export function createApp(env: Env) {
   api.use('/community', communityRoutes(env));
   api.use('/notifications', notificationsRoutes(env));
   api.use('/results', resultsRoutes(env));
-  api.use('/search', searchRoutes());
+  api.use('/search', searchRoutes(env));
+  api.use('/me/dashboard-preferences', dashboardPrefsRoutes(env));
+  api.use('/workspace', workspaceRoutes(env));
+  api.use('/sync', syncRoutes(env));
+  api.use('/ai', aiRoutes(env));
+  api.use('/export', exportRoutes(env));
   api.use('/admin', adminRoutes(env));
   app.use('/api/v1', api);
 

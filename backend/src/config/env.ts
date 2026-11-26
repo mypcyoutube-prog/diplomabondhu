@@ -14,7 +14,12 @@ const envSchema = z.object({
   RESULT_SERVICE_URL: z.string().default(''),
   RESULT_SERVICE_TOKEN: z.string().default(''),
   RESULTS_DB: z.string().default('results_db'),
-  GOOGLE_DRIVE_API_KEY: z.string().default('')
+  GOOGLE_DRIVE_API_KEY: z.string().default(''),
+  AI_PROVIDER: z.enum(['', 'openai']).default(''),
+  AI_API_KEY: z.string().default(''),
+  AI_BASE_URL: z.string().default('https://api.openai.com/v1'),
+  AI_MODEL: z.string().default('gpt-4o-mini'),
+  AI_PLAN_DAILY_LIMIT: z.coerce.number().default(5)
 });
 
 export type Env = z.infer<typeof envSchema>;

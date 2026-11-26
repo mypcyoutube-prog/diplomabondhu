@@ -4,6 +4,8 @@ export interface IBookmark extends mongoose.Document {
   userId: mongoose.Types.ObjectId;
   materialId: mongoose.Types.ObjectId;
   deletedAt?: Date;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 const schema = new Schema<IBookmark>({

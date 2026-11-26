@@ -17,7 +17,12 @@ export const testEnv: Env = {
   RESULT_SERVICE_URL: '',
   RESULT_SERVICE_TOKEN: '',
   RESULTS_DB: 'results_db',
-  GOOGLE_DRIVE_API_KEY: ''
+  GOOGLE_DRIVE_API_KEY: '',
+  AI_PROVIDER: '',
+  AI_API_KEY: '',
+  AI_BASE_URL: 'https://api.openai.com/v1',
+  AI_MODEL: 'gpt-4o-mini',
+  AI_PLAN_DAILY_LIMIT: 5
 };
 
 export async function startMongo(): Promise<void> {

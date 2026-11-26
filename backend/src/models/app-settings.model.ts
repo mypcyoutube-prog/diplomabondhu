@@ -2,7 +2,8 @@ import mongoose, { Schema } from 'mongoose';
 
 export interface IAppSettings extends mongoose.Document {
   branding: { appName: string; logoUrl?: string };
-  homepageSections: { key: string; visible: boolean; order: number }[];
+  homepageSections: { key: string; visible: boolean; order: number; customizable?: boolean }[];
+  searchSynonyms: string[][];
   featureFlags: Record<string, unknown>;
   integrations: { googleDriveApiKey?: string };
   maintenanceMode: boolean;
@@ -19,8 +20,10 @@ const appSettingsSchema = new Schema<IAppSettings>({
   homepageSections: [{
     key: { type: String, required: true },
     visible: { type: Boolean, default: true },
-    order: { type: Number, default: 0 }
+    order: { type: Number, default: 0 },
+    customizable: { type: Boolean, default: true }
   }],
+  searchSynonyms: { type: [[String]], default: [] },
   featureFlags: { type: Schema.Types.Mixed, default: {} },
   integrations: {
     googleDriveApiKey: { type: String, select: false }

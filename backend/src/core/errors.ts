@@ -4,7 +4,9 @@ export type ErrorCode =
   | 'FORBIDDEN'
   | 'NOT_FOUND'
   | 'CONFLICT'
+  | 'GONE'
   | 'RATE_LIMITED'
+  | 'SERVICE_UNAVAILABLE'
   | 'INTERNAL';
 
 const statusByCode: Record<ErrorCode, number> = {
@@ -13,7 +15,9 @@ const statusByCode: Record<ErrorCode, number> = {
   FORBIDDEN: 403,
   NOT_FOUND: 404,
   CONFLICT: 409,
+  GONE: 410,
   RATE_LIMITED: 429,
+  SERVICE_UNAVAILABLE: 503,
   INTERNAL: 500
 };
 
@@ -35,3 +39,5 @@ export const unauthenticated = (m = 'Authentication required') => new AppError('
 export const forbidden = (m = 'You do not have permission to perform this action') => new AppError('FORBIDDEN', m);
 export const notFound = (m = 'Resource not found') => new AppError('NOT_FOUND', m);
 export const conflict = (m: string) => new AppError('CONFLICT', m);
+export const gone = (m = 'Resource expired') => new AppError('GONE', m);
+export const serviceUnavailable = (m: string) => new AppError('SERVICE_UNAVAILABLE', m);

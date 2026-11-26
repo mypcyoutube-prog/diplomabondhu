@@ -34,7 +34,7 @@ export function notificationsRoutes(env: Env) {
   });
 
   router.put('/preferences', validate({ body: preferencesSchema }), async (req, res, next) => {
-    try { return ok(res, await svc.updatePreferences(req.auth!.id, req.body.categories)); }
+    try { return ok(res, await svc.updatePreferences(req.auth!.id, req.body.categories, req.body.quietHours)); }
     catch (err) { next(err); }
   });
 
@@ -87,6 +87,11 @@ export function notificationsRoutes(env: Env) {
       await svc.deleteAnnouncement(params.id, req.auth!.id);
       return ok(res, { deleted: true });
     } catch (err) { next(err); }
+  });
+
+  admin.get('/delivery-stats', async (_req, res, next) => {
+    try { return ok(res, await svc.getDeliveryStats()); }
+    catch (err) { next(err); }
   });
 
   router.use('/admin', admin);
