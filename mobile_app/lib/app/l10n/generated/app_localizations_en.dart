@@ -441,7 +441,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get errorNetwork =>
-      'Cannot reach the server. Make sure the backend is running (npm run dev, port 5000) and try again.';
+      'Cannot reach the server. Make sure the backend is running (npm run dev, port 4100) and try again.';
 
   @override
   String get passwordTooShort => 'Password must be at least 8 characters';

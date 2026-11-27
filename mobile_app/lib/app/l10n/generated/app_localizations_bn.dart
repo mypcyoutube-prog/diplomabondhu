@@ -441,7 +441,7 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get errorNetwork =>
-      'সার্ভারে সংযোগ করা যাচ্ছে না। নিশ্চিত করুন backend চালু আছে (npm run dev, port 5000), তারপর আবার চেষ্টা করুন।';
+      'সার্ভারে সংযোগ করা যাচ্ছে না। নিশ্চিত করুন backend চালু আছে (npm run dev, port 4100), তারপর আবার চেষ্টা করুন।';
 
   @override
   String get passwordTooShort => 'পাসওয়ার্ড কমপক্ষে ৮ অক্ষরের হতে হবে';
