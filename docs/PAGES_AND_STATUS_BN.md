@@ -92,7 +92,7 @@ AiSearchSettings, Settings (Home notice bar + Result display সহ), AuditLogs.
 
 | # | কাজ | জায়গা | অগ্রাধিকার |
 |---|-----|--------|-----------|
-| 1 | **বাকি পেজের professional polish** — Home হয়ে গেছে; Study, Result, Community, Profile, Exam, GPA, Search, Workspace ইত্যাদি পেজেও একই premium look (gradient, press-scale, see-all) | Student App | উঁচু |
+| 1 | **বাকি পেজের professional polish** — Home ও Study হয়ে গেছে; Result, Community, Profile, Exam, GPA, Search, Workspace ইত্যাদি পেজেও একই premium look (gradient, press-scale, see-all) | Student App | উঁচু |
 | 2 | **Dark theme contrast verification** — নতুন Home ডিজাইন dark mode-এ যাচাই | Student App | উঁচু |
 | 3 | **Flutter widget tests** — নতুন স্ক্রিনের (Notices, Result Tab, Home v2) টেস্ট নেই | Student App | মাঝারি |
 | 4 | **Help Center পেজ** — Home প্ল্যানে উল্লেখ ছিল, এখনো আলাদা পেজ নেই | Student App | মাঝারি |
