@@ -13,8 +13,9 @@ interface Material {
   viewCount: number;
   downloadCount: number;
   downloadAllowed: boolean;
+  previewAllowed: boolean;
   hierarchyRefs: Record<string, string>;
-  payload: { fileUrl?: string; externalUrl?: string; examYear?: number };
+  payload: { fileUrl?: string; externalUrl?: string; examYear?: number; thumbnailUrl?: string; author?: string; edition?: string; durationSec?: number };
 }
 
 interface Report {
@@ -22,6 +23,8 @@ interface Report {
   materialId: string;
   reporterId: string;
   reason: string;
+  reasonCode?: string;
+  details?: string;
   status: string;
   createdAt: string;
 }
@@ -56,7 +59,8 @@ export function MaterialsPage() {
 
   const [form, setForm] = useState({
     type: 'book', title: '', titleBn: '', description: '', fileUrl: '', externalUrl: '',
-    examYear: '', downloadAllowed: false,
+    examYear: '', downloadAllowed: false, previewAllowed: true,
+    thumbnailUrl: '', author: '', edition: '', durationSec: '',
     programId: '', regulationId: '', technologyId: '', semesterId: '', subjectId: '', chapterId: ''
   });
 
@@ -78,7 +82,7 @@ export function MaterialsPage() {
   );
 
   const openCreate = () => {
-    setForm({ type: 'book', title: '', titleBn: '', description: '', fileUrl: '', externalUrl: '', examYear: '', downloadAllowed: false, programId: '', regulationId: '', technologyId: '', semesterId: '', subjectId: '', chapterId: '' });
+    setForm({ type: 'book', title: '', titleBn: '', description: '', fileUrl: '', externalUrl: '', examYear: '', downloadAllowed: false, previewAllowed: true, thumbnailUrl: '', author: '', edition: '', durationSec: '', programId: '', regulationId: '', technologyId: '', semesterId: '', subjectId: '', chapterId: '' });
     setFormError(null);
     setShowForm(true);
   };
@@ -89,6 +93,11 @@ export function MaterialsPage() {
       fileUrl: m.payload?.fileUrl ?? '', externalUrl: m.payload?.externalUrl ?? '',
       examYear: m.payload?.examYear ? String(m.payload.examYear) : '',
       downloadAllowed: m.downloadAllowed,
+      previewAllowed: m.previewAllowed ?? true,
+      thumbnailUrl: m.payload?.thumbnailUrl ?? '',
+      author: m.payload?.author ?? '',
+      edition: m.payload?.edition ?? '',
+      durationSec: m.payload?.durationSec != null ? String(m.payload.durationSec) : '',
       programId: m.hierarchyRefs?.programId ?? '', regulationId: m.hierarchyRefs?.regulationId ?? '',
       technologyId: m.hierarchyRefs?.technologyId ?? '', semesterId: m.hierarchyRefs?.semesterId ?? '',
       subjectId: m.hierarchyRefs?.subjectId ?? '', chapterId: m.hierarchyRefs?.chapterId ?? ''
@@ -110,8 +119,13 @@ export function MaterialsPage() {
     if (form.fileUrl) payload.fileUrl = form.fileUrl;
     if (form.externalUrl) payload.externalUrl = form.externalUrl;
     if (form.examYear) payload.examYear = Number(form.examYear);
+    if (form.thumbnailUrl) payload.thumbnailUrl = form.thumbnailUrl;
+    if (form.author) payload.author = form.author;
+    if (form.edition) payload.edition = form.edition;
+    if (form.durationSec) payload.durationSec = Number(form.durationSec);
     const body: Record<string, unknown> = {
-      type: form.type, title: form.title.trim(), hierarchyRefs, payload, downloadAllowed: form.downloadAllowed
+      type: form.type, title: form.title.trim(), hierarchyRefs, payload,
+      downloadAllowed: form.downloadAllowed, previewAllowed: form.previewAllowed
     };
     if (form.titleBn) body.titleBn = form.titleBn.trim();
     if (form.description) body.description = form.description.trim();
@@ -147,7 +161,12 @@ export function MaterialsPage() {
           <Table head={['Reason', 'Reported at', 'Actions']}>
             {reports.data.data.items.map((r) => (
               <tr key={r._id}>
-                <td className="px-4 py-3 text-slate-600 dark:text-slate-300">{r.reason}</td>
+                <td className="px-4 py-3 text-slate-600 dark:text-slate-300">
+                  {r.reasonCode ? (
+                    <span className="mr-2 inline-block rounded-full bg-teal/10 px-2 py-0.5 text-xs font-semibold text-teal">{r.reasonCode}</span>
+                  ) : null}
+                  {r.details || r.reason}
+                </td>
                 <td className="px-4 py-3 text-slate-500">{new Date(r.createdAt).toLocaleString()}</td>
                 <td className="px-4 py-3">
                   <div className="flex gap-2">
@@ -217,9 +236,19 @@ export function MaterialsPage() {
             <Input label="File URL (uploaded PDF)" value={form.fileUrl} onChange={(v) => setForm({ ...form, fileUrl: v })} placeholder="https://cdn.example.com/file.pdf" />
             <Input label="External URL" value={form.externalUrl} onChange={(v) => setForm({ ...form, externalUrl: v })} placeholder="https://…" />
             <Input label="Exam year (past questions)" type="number" value={form.examYear} onChange={(v) => setForm({ ...form, examYear: v })} />
+            <Input label="Thumbnail URL" value={form.thumbnailUrl} onChange={(v) => setForm({ ...form, thumbnailUrl: v })} placeholder="https://…/cover.jpg" />
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <Input label="Author" value={form.author} onChange={(v) => setForm({ ...form, author: v })} />
+              <Input label="Edition" value={form.edition} onChange={(v) => setForm({ ...form, edition: v })} />
+              <Input label="Duration (seconds, video)" type="number" value={form.durationSec} onChange={(v) => setForm({ ...form, durationSec: v })} />
+            </div>
             <label className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
               <input type="checkbox" checked={form.downloadAllowed} onChange={(e) => setForm({ ...form, downloadAllowed: e.target.checked })} className="h-4 w-4" />
               Download allowed
+            </label>
+            <label className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
+              <input type="checkbox" checked={form.previewAllowed} onChange={(e) => setForm({ ...form, previewAllowed: e.target.checked })} className="h-4 w-4" />
+              Preview allowed
             </label>
             <div className="rounded-lg bg-slate-50 p-3 dark:bg-navy-700">
               <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">Hierarchy</p>

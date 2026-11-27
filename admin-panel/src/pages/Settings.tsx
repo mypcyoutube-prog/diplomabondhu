@@ -80,6 +80,7 @@ interface AppSettingsData {
   homepageSections: Array<{ key: string; visible: boolean; order: number; customizable?: boolean }>;
   resultDisplay: { enabled: boolean; examId: string; startsAt: string | null; endsAt: string | null };
   homeNotice: { text: string; link: string; visible: boolean; startsAt: string | null; endsAt: string | null };
+  libraryCategories: { book: boolean; note: boolean; video: boolean; subject_material: boolean; past_question: boolean };
   featureFlags: Record<string, unknown>;
   maintenanceMode: boolean;
   supportInfo: { email?: string; phone?: string; url?: string };
@@ -120,6 +121,7 @@ export function SettingsPage() {
           startsAt: form.homeNotice.startsAt || null,
           endsAt: form.homeNotice.endsAt || null
         },
+        libraryCategories: form.libraryCategories,
         featureFlags: form.featureFlags,
         maintenanceMode: form.maintenanceMode,
         supportInfo: form.supportInfo,
@@ -312,6 +314,32 @@ export function SettingsPage() {
                 />
               </label>
             </div>
+          </div>
+        </Card>
+
+        <Card className="p-5">
+          <h2 className="mb-1 font-semibold text-navy dark:text-white">Study library categories</h2>
+          <p className="mb-3 text-sm text-slate-600 dark:text-slate-300">
+            Hidden categories disappear from the student Study tab. Content is kept — only visibility changes.
+          </p>
+          <div className="grid grid-cols-2 gap-2">
+            {([
+              ['book', 'Books'],
+              ['note', 'Notes'],
+              ['video', 'Videos'],
+              ['subject_material', 'Subject materials'],
+              ['past_question', 'Previous questions']
+            ] as const).map(([key, label]) => (
+              <label key={key} className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
+                <input
+                  type="checkbox"
+                  checked={form.libraryCategories[key]}
+                  onChange={(e) => setForm({ ...form, libraryCategories: { ...form.libraryCategories, [key]: e.target.checked } })}
+                  className="h-4 w-4"
+                />
+                {label}
+              </label>
+            ))}
           </div>
         </Card>
 
