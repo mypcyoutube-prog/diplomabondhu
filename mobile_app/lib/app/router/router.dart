@@ -26,6 +26,7 @@ import '../../features/results/screens/result_tab_screen.dart';
 import '../../features/notices/screens/notices_screen.dart';
 import '../../features/notices/screens/notice_detail_screen.dart';
 import '../../features/library/screens/material_detail_screen.dart';
+import '../../features/library/screens/pdf_viewer_screen.dart';
 import '../../features/notifications/screens/notifications_screen.dart';
 import '../../features/search/screens/search_screen.dart';
 import '../../features/planner/screens/planner_screen.dart';
@@ -253,6 +254,15 @@ final rootRouterProvider = Provider<GoRouter>((ref) {
                   builder: (context, state) => MaterialDetailScreen(
                     materialId: state.pathParameters['id']!,
                   ),
+                  routes: [
+                    GoRoute(
+                      path: 'preview',
+                      parentNavigatorKey: _rootNavigatorKey,
+                      builder: (context, state) => PdfViewerScreen(
+                        materialId: state.pathParameters['id']!,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),

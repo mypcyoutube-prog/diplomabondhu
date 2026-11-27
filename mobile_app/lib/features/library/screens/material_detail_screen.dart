@@ -1,5 +1,7 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:material_ui/material_ui.dart' hide Material;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -244,9 +246,15 @@ class _MaterialDetailScreenState extends ConsumerState<MaterialDetailScreen> {
               ] else ...[
                 if (material.previewAllowed && material.payload.fileUrl != null) ...[
                   FilledButton.icon(
-                    onPressed: () => _openExternal(material.payload.fileUrl!),
+                    onPressed: () {
+                      if (kIsWeb) {
+                        _openExternal(material.payload.fileUrl!);
+                      } else {
+                        context.push('/library/${material.id}/preview');
+                      }
+                    },
                     icon: const Icon(Icons.picture_as_pdf_rounded),
-                    label: Text(l10n.openLink),
+                    label: Text(l10n.viewPdf),
                   ),
                   const SizedBox(height: 8),
                 ],
