@@ -14,6 +14,7 @@ import '../../library/providers/library_providers.dart';
 import '../../notices/data/notice.dart';
 import '../../notices/providers/notice_providers.dart';
 import '../../../shared/widgets/async_value_view.dart';
+import '../../../shared/widgets/pressable_scale.dart';
 import '../../../shared/widgets/states.dart';
 import '../providers/home_providers.dart';
 
@@ -619,38 +620,6 @@ class HomeScreen extends ConsumerWidget {
 }
 
 /// Wraps a tappable child with a subtle press-down scale animation.
-class PressableScale extends StatefulWidget {
-  final Widget child;
-  final VoidCallback? onTap;
-
-  const PressableScale({super.key, required this.child, this.onTap});
-
-  @override
-  State<PressableScale> createState() => _PressableScaleState();
-}
-
-class _PressableScaleState extends State<PressableScale> {
-  bool _pressed = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTapDown: widget.onTap == null
-          ? null
-          : (_) => setState(() => _pressed = true),
-      onTapUp: (_) => setState(() => _pressed = false),
-      onTapCancel: () => setState(() => _pressed = false),
-      onTap: widget.onTap,
-      child: AnimatedScale(
-        scale: _pressed ? 0.97 : 1.0,
-        duration: DbDurations.fast,
-        curve: DbCurves.emphasized,
-        child: widget.child,
-      ),
-    );
-  }
-}
-
 /// Compact horizontal ticker: fixed NOTICE chip on the left, notice titles
 /// scrolling right-to-left with fade edges. Tapping a title opens its detail
 /// page; the chip opens the All Notices page.

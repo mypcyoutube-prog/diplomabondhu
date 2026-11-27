@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/l10n/generated/app_localizations.dart';
 import '../../../app/theme/theme.dart';
+import '../../../shared/widgets/pressable_scale.dart';
 import '../../../shared/widgets/states.dart';
 import '../providers/workspace_providers.dart';
 
@@ -152,10 +153,45 @@ class _NotesListState extends ConsumerState<_NotesList> {
                 padding: const EdgeInsets.all(DbSpacing.md),
                 children: [
                   for (final note in notes)
-                    Card(
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 10),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).cardColor,
+                        borderRadius: BorderRadius.circular(DbRadius.card),
+                        boxShadow: DbShadows.card,
+                      ),
                       child: ListTile(
-                        title: Text(note.title, maxLines: 1, overflow: TextOverflow.ellipsis),
-                        subtitle: Text(note.body, maxLines: 2, overflow: TextOverflow.ellipsis),
+                        leading: Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            gradient: note.pinned
+                                ? const LinearGradient(colors: [
+                                    DbColors.warningLight,
+                                    DbColors.errorLight
+                                  ])
+                                : const LinearGradient(colors: [
+                                    DbColors.teal,
+                                    DbColors.emerald
+                                  ]),
+                            borderRadius:
+                                BorderRadius.circular(DbRadius.input),
+                          ),
+                          child: Icon(
+                            note.pinned
+                                ? Icons.push_pin_rounded
+                                : Icons.sticky_note_2_rounded,
+                            size: 20,
+                            color: Colors.white,
+                          ),
+                        ),
+                        title: Text(note.title,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style:
+                                const TextStyle(fontWeight: FontWeight.w600)),
+                        subtitle: Text(note.body,
+                            maxLines: 2, overflow: TextOverflow.ellipsis),
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
@@ -163,6 +199,7 @@ class _NotesListState extends ConsumerState<_NotesList> {
                               icon: Icon(
                                 note.pinned ? Icons.push_pin_rounded : Icons.push_pin_outlined,
                                 size: 20,
+                                color: note.pinned ? DbColors.warningLight : null,
                               ),
                               onPressed: () async {
                                 await ref.read(workspaceRepositoryProvider).updateNote(note.id, pinned: !note.pinned);
@@ -170,7 +207,8 @@ class _NotesListState extends ConsumerState<_NotesList> {
                               },
                             ),
                             IconButton(
-                              icon: const Icon(Icons.delete_outline_rounded, size: 20),
+                              icon: const Icon(Icons.delete_outline_rounded,
+                                  size: 20, color: DbColors.textSecondaryLight),
                               onPressed: () async {
                                 await ref.read(workspaceRepositoryProvider).deleteNote(note.id);
                                 ref.invalidate(workspaceNotesProvider);
@@ -211,11 +249,59 @@ class _CollectionsList extends ConsumerWidget {
           padding: const EdgeInsets.all(DbSpacing.md),
           children: [
             for (final collection in collections)
-              Card(
-                child: ListTile(
-                  leading: const Icon(Icons.folder_rounded, color: DbColors.teal),
-                  title: Text(collection.name),
-                  trailing: Text('${collection.itemCount}'),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: PressableScale(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: DbSpacing.md, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).cardColor,
+                      borderRadius: BorderRadius.circular(DbRadius.card),
+                      boxShadow: DbShadows.card,
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(colors: [
+                              DbColors.teal,
+                              DbColors.emerald,
+                            ]),
+                            borderRadius:
+                                BorderRadius.circular(DbRadius.input),
+                          ),
+                          child: const Icon(Icons.folder_rounded,
+                              color: Colors.white, size: 20),
+                        ),
+                        const SizedBox(width: DbSpacing.md),
+                        Expanded(
+                          child: Text(collection.name,
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.w600)),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: DbColors.teal.withValues(alpha: 0.1),
+                            borderRadius:
+                                BorderRadius.circular(DbRadius.badge),
+                          ),
+                          child: Text(
+                            '${collection.itemCount}',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: DbColors.teal,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
           ],
@@ -246,10 +332,45 @@ class _RecentList extends ConsumerWidget {
           padding: const EdgeInsets.all(DbSpacing.md),
           children: [
             for (final item in items)
-              Card(
-                child: ListTile(
-                  title: Text(item.title, maxLines: 1, overflow: TextOverflow.ellipsis),
-                  onTap: item.materialId.isEmpty ? null : () => context.push('/library/${item.materialId}'),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: PressableScale(
+                  onTap: item.materialId.isEmpty
+                      ? null
+                      : () => context.push('/library/${item.materialId}'),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: DbSpacing.md, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).cardColor,
+                      borderRadius: BorderRadius.circular(DbRadius.card),
+                      boxShadow: DbShadows.card,
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: DbColors.infoLight.withValues(alpha: 0.12),
+                            borderRadius:
+                                BorderRadius.circular(DbRadius.input),
+                          ),
+                          child: const Icon(Icons.history_rounded,
+                              color: DbColors.infoLight, size: 20),
+                        ),
+                        const SizedBox(width: DbSpacing.md),
+                        Expanded(
+                          child: Text(item.title,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.w600)),
+                        ),
+                        const Icon(Icons.chevron_right_rounded),
+                      ],
+                    ),
+                  ),
                 ),
               ),
           ],

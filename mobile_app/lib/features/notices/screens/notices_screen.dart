@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/l10n/generated/app_localizations.dart';
 import '../../../app/theme/theme.dart';
 import '../../../shared/widgets/async_value_view.dart';
+import '../../../shared/widgets/pressable_scale.dart';
 import '../providers/notice_providers.dart';
 
 class NoticesScreen extends ConsumerStatefulWidget {
@@ -57,46 +58,104 @@ class _NoticesScreenState extends ConsumerState<NoticesScreen> {
                   separatorBuilder: (_, _) => const SizedBox(height: DbSpacing.sm),
                   itemBuilder: (context, i) {
                     final notice = items[i];
-                    return Card(
-                      child: ListTile(
-                        onTap: () => context.push('/notices/${notice.id}'),
-                        title: Text(
-                          notice.title,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontWeight: FontWeight.w600),
+                    return PressableScale(
+                      onTap: () => context.push('/notices/${notice.id}'),
+                      child: Container(
+                        padding: const EdgeInsets.all(DbSpacing.md),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).cardColor,
+                          borderRadius: BorderRadius.circular(DbRadius.card),
+                          boxShadow: DbShadows.card,
                         ),
-                        subtitle: Padding(
-                          padding: const EdgeInsets.only(top: 4),
-                          child: Row(
-                            children: [
-                              Icon(
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                gradient: notice.isBteb
+                                    ? const LinearGradient(
+                                        colors: [
+                                            DbColors.emerald,
+                                            DbColors.emeraldDark
+                                          ])
+                                    : const LinearGradient(
+                                        colors: [
+                                            DbColors.teal,
+                                            DbColors.emerald
+                                          ]),
+                                borderRadius:
+                                    BorderRadius.circular(DbRadius.input),
+                              ),
+                              child: Icon(
                                 notice.isBteb
                                     ? Icons.verified_rounded
                                     : Icons.campaign_rounded,
-                                size: 14,
-                                color: notice.isBteb
-                                    ? DbColors.emeraldDark
-                                    : DbColors.teal,
+                                size: 20,
+                                color: Colors.white,
                               ),
-                              const SizedBox(width: 4),
-                              Text(
-                                notice.isBteb ? 'BTEB' : 'DiplomaBondhu',
-                                style: const TextStyle(fontSize: 12),
+                            ),
+                            const SizedBox(width: DbSpacing.md),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    notice.title,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.w600),
+                                  ),
+                                  const SizedBox(height: 5),
+                                  Wrap(
+                                    spacing: 6,
+                                    runSpacing: 4,
+                                    crossAxisAlignment:
+                                        WrapCrossAlignment.center,
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 7, vertical: 2),
+                                        decoration: BoxDecoration(
+                                          color: (notice.isBteb
+                                                  ? DbColors.emerald
+                                                  : DbColors.teal)
+                                              .withValues(alpha: 0.1),
+                                          borderRadius: BorderRadius.circular(
+                                              DbRadius.badge),
+                                        ),
+                                        child: Text(
+                                          notice.isBteb
+                                              ? 'BTEB'
+                                              : 'DiplomaBondhu',
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.w700,
+                                            color: notice.isBteb
+                                                ? DbColors.emeraldDark
+                                                : DbColors.teal,
+                                          ),
+                                        ),
+                                      ),
+                                      if (notice.publishedAt != null)
+                                        Text(
+                                          DateFormat.yMMMd()
+                                              .format(notice.publishedAt!),
+                                          style: const TextStyle(
+                                              fontSize: 12,
+                                              color: DbColors
+                                                  .textSecondaryLight),
+                                        ),
+                                    ],
+                                  ),
+                                ],
                               ),
-                              if (notice.publishedAt != null) ...[
-                                const SizedBox(width: 8),
-                                Text(
-                                  DateFormat.yMMMd()
-                                      .format(notice.publishedAt!),
-                                  style: const TextStyle(fontSize: 12),
-                                ),
-                              ],
-                            ],
-                          ),
-                        ),
-                        trailing:
+                            ),
                             const Icon(Icons.chevron_right_rounded),
+                          ],
+                        ),
                       ),
                     );
                   },

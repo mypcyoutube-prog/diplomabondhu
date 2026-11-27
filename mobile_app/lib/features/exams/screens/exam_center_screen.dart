@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../app/l10n/generated/app_localizations.dart';
 import '../../../app/theme/theme.dart';
 import '../../../shared/widgets/async_value_view.dart';
+import '../../../shared/widgets/pressable_scale.dart';
 import '../../../shared/widgets/states.dart';
 import '../data/exam.dart';
 import '../providers/exam_providers.dart';
@@ -58,6 +59,7 @@ class ExamCenterScreen extends ConsumerWidget {
                     colors: [DbColors.navy, DbColors.navyDark],
                   ),
                   borderRadius: BorderRadius.circular(DbRadius.card),
+                  boxShadow: DbShadows.card,
                 ),
                 child: Row(
                   children: [
@@ -209,23 +211,34 @@ class _ExamCard extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
     final minutes = Duration(seconds: exam.durationSec).inMinutes;
 
-    return Card(
-      child: InkWell(
-        borderRadius: BorderRadius.circular(DbRadius.card),
-        onTap: () => context.push('/exams/${exam.id}'),
-        child: Padding(
-          padding: const EdgeInsets.all(DbSpacing.md),
-          child: Row(
-            children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: _accent.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(DbRadius.input),
+    return PressableScale(
+      onTap: () => context.push('/exams/${exam.id}'),
+      child: Container(
+        padding: const EdgeInsets.all(DbSpacing.md),
+        decoration: BoxDecoration(
+          color: Theme.of(context).cardColor,
+          borderRadius: BorderRadius.circular(DbRadius.card),
+          boxShadow: DbShadows.card,
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    _accent,
+                    Color.alphaBlend(
+                        _accent.withValues(alpha: 0.75), Colors.black),
+                  ],
                 ),
-                child: Icon(_icon, color: _accent, size: 26),
+                borderRadius: BorderRadius.circular(DbRadius.input),
               ),
+              child: Icon(_icon, color: Colors.white, size: 26),
+            ),
               const SizedBox(width: DbSpacing.md),
               Expanded(
                 child: Column(
@@ -269,7 +282,6 @@ class _ExamCard extends ConsumerWidget {
             ],
           ),
         ),
-      ),
     );
   }
 }

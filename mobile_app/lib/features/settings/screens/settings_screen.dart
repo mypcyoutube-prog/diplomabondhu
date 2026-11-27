@@ -196,31 +196,71 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             child: Column(
               children: [
                 ListTile(
-                  leading: const Icon(Icons.space_dashboard_rounded),
+                  leading: Container(
+                    width: 38,
+                    height: 38,
+                    decoration: BoxDecoration(
+                      color: DbColors.teal.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(DbRadius.input),
+                    ),
+                    child: Icon(Icons.space_dashboard_rounded, color: DbColors.teal, size: 20),
+                  ),
                   title: Text(l10n.workspaceTitle),
                   trailing: const Icon(Icons.chevron_right_rounded),
                   onTap: () => context.push('/workspace'),
                 ),
                 ListTile(
-                  leading: const Icon(Icons.folder_zip_rounded),
+                  leading: Container(
+                    width: 38,
+                    height: 38,
+                    decoration: BoxDecoration(
+                      color: DbColors.infoLight.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(DbRadius.input),
+                    ),
+                    child: Icon(Icons.folder_zip_rounded, color: DbColors.infoLight, size: 20),
+                  ),
                   title: Text(l10n.exportTitle),
                   trailing: const Icon(Icons.chevron_right_rounded),
                   onTap: () => context.push('/export'),
                 ),
                 ListTile(
-                  leading: const Icon(Icons.tune_rounded),
+                  leading: Container(
+                    width: 38,
+                    height: 38,
+                    decoration: BoxDecoration(
+                      color: DbColors.emerald.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(DbRadius.input),
+                    ),
+                    child: Icon(Icons.tune_rounded, color: DbColors.emerald, size: 20),
+                  ),
                   title: Text(l10n.dashboardCustomizeTitle),
                   trailing: const Icon(Icons.chevron_right_rounded),
                   onTap: () => context.push('/dashboard-customize'),
                 ),
                 ListTile(
-                  leading: const Icon(Icons.devices_rounded),
+                  leading: Container(
+                    width: 38,
+                    height: 38,
+                    decoration: BoxDecoration(
+                      color: DbColors.navy.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(DbRadius.input),
+                    ),
+                    child: Icon(Icons.devices_rounded, color: DbColors.navy, size: 20),
+                  ),
                   title: Text(l10n.syncDevicesTitle),
                   trailing: const Icon(Icons.chevron_right_rounded),
                   onTap: () => context.push('/sync-devices'),
                 ),
                 ListTile(
-                  leading: const Icon(Icons.auto_awesome_rounded),
+                  leading: Container(
+                    width: 38,
+                    height: 38,
+                    decoration: BoxDecoration(
+                      color: DbColors.teal.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(DbRadius.input),
+                    ),
+                    child: Icon(Icons.auto_awesome_rounded, color: DbColors.teal, size: 20),
+                  ),
                   title: Text(l10n.studyPlanTitle),
                   trailing: const Icon(Icons.chevron_right_rounded),
                   onTap: () => context.push('/study-plan'),
@@ -233,7 +273,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             child: Column(
               children: [
                 ListTile(
-                  leading: const Icon(Icons.lock_rounded),
+                  leading: Container(
+                    width: 38,
+                    height: 38,
+                    decoration: BoxDecoration(
+                      color: DbColors.warningLight.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(DbRadius.input),
+                    ),
+                    child: Icon(Icons.lock_rounded, color: DbColors.warningLight, size: 20),
+                  ),
                   title: Text(l10n.changePassword),
                   trailing: _changingPassword
                       ? const SizedBox(

@@ -36,13 +36,22 @@ class GpaHistoryScreen extends ConsumerWidget {
             final gpa = (item.output['cgpa'] ?? item.output['gpa'])?.toString() ?? '';
             final kind = item.kind;
 
-            return Card(
-              child: ListTile(
+            return Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(DbRadius.card),
+                boxShadow: DbShadows.card,
+              ),
+              child: Card(
+                child: ListTile(
                 leading: Container(
                   width: 44,
                   height: 44,
                   decoration: BoxDecoration(
-                    color: DbColors.teal.withValues(alpha: 0.12),
+                    gradient: const LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [DbColors.teal, DbColors.emerald],
+                    ),
                     borderRadius: BorderRadius.circular(DbRadius.input),
                   ),
                   alignment: Alignment.center,
@@ -51,7 +60,7 @@ class GpaHistoryScreen extends ConsumerWidget {
                     style: const TextStyle(
                       fontWeight: FontWeight.w800,
                       fontSize: 13,
-                      color: DbColors.teal,
+                      color: Colors.white,
                     ),
                   ),
                 ),
@@ -70,6 +79,7 @@ class GpaHistoryScreen extends ConsumerWidget {
                           color: Theme.of(context).colorScheme.outline,
                         ),
                       ),
+              ),
               ),
             );
           },

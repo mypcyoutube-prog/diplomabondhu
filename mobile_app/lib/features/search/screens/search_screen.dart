@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/l10n/generated/app_localizations.dart';
 import '../../../app/theme/theme.dart';
+import '../../../shared/widgets/pressable_scale.dart';
 import '../../../shared/widgets/states.dart';
 import '../data/search_models.dart';
 import '../providers/search_providers.dart';
@@ -276,20 +277,65 @@ class _ResultCard extends StatelessWidget {
       'subject' => Icons.category_rounded,
       _ => Icons.search_rounded,
     };
-    return Card(
-      child: ListTile(
-        onTap: onTap,
-        leading: Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            color: DbColors.teal.withValues(alpha: 0.12),
-            borderRadius: BorderRadius.circular(DbRadius.input),
-          ),
-          child: Icon(icon, size: 20, color: DbColors.teal),
+    final accent = switch (hit.type) {
+      'material' => DbColors.teal,
+      'exam' => DbColors.warningLight,
+      'post' => DbColors.infoLight,
+      'subject' => DbColors.emerald,
+      _ => DbColors.teal,
+    };
+    return PressableScale(
+      onTap: onTap,
+      child: Container(
+        padding:
+            const EdgeInsets.symmetric(horizontal: DbSpacing.md, vertical: 10),
+        decoration: BoxDecoration(
+          color: theme.cardColor,
+          borderRadius: BorderRadius.circular(DbRadius.card),
+          boxShadow: DbShadows.card,
         ),
-        title: Text(hit.title, maxLines: 2, overflow: TextOverflow.ellipsis),
-        subtitle: Text(typeLabel, style: theme.textTheme.labelSmall),
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    accent,
+                    Color.alphaBlend(accent.withValues(alpha: 0.75), Colors.black),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(DbRadius.input),
+              ),
+              child: Icon(icon, size: 20, color: Colors.white),
+            ),
+            const SizedBox(width: DbSpacing.md),
+            Expanded(
+              child: Text(hit.title,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontWeight: FontWeight.w600)),
+            ),
+            Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+              decoration: BoxDecoration(
+                color: accent.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(DbRadius.badge),
+              ),
+              child: Text(
+                typeLabel,
+                style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: accent),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

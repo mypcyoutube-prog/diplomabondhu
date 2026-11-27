@@ -90,27 +90,42 @@ class _ResultTabScreenState extends ConsumerState<ResultTabScreen> {
               DbSpacing.md, DbSpacing.xl),
           children: [
             if (roll.isEmpty)
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(DbSpacing.lg),
-                  child: Column(
-                    children: [
-                      const Icon(Icons.badge_outlined,
-                          color: DbColors.teal, size: 40),
-                      const SizedBox(height: DbSpacing.md),
-                      Text(
-                        l10n.addRollHint,
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.bodyMedium,
+              Container(
+                padding: const EdgeInsets.all(DbSpacing.lg),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).cardColor,
+                  borderRadius: BorderRadius.circular(DbRadius.card),
+                  boxShadow: DbShadows.card,
+                ),
+                child: Column(
+                  children: [
+                    Container(
+                      width: 72,
+                      height: 72,
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [DbColors.teal, DbColors.emerald],
+                        ),
+                        borderRadius: BorderRadius.circular(DbRadius.input),
                       ),
-                      const SizedBox(height: DbSpacing.md),
-                      FilledButton.icon(
-                        onPressed: () => context.push('/profile'),
-                        icon: const Icon(Icons.person_rounded),
-                        label: Text(l10n.openProfile),
-                      ),
-                    ],
-                  ),
+                      child: const Icon(Icons.badge_outlined,
+                          color: Colors.white, size: 36),
+                    ),
+                    const SizedBox(height: DbSpacing.md),
+                    Text(
+                      l10n.addRollHint,
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                    const SizedBox(height: DbSpacing.md),
+                    FilledButton.icon(
+                      onPressed: () => context.push('/profile'),
+                      icon: const Icon(Icons.person_rounded),
+                      label: Text(l10n.openProfile),
+                    ),
+                  ],
                 ),
               )
             else ...[
@@ -123,13 +138,25 @@ class _ResultTabScreenState extends ConsumerState<ResultTabScreen> {
                   icon: Icons.search_off_rounded,
                 )
               else if (_timeline != null)
-                ResultTimelineCard(timeline: _timeline!),
+                Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(DbRadius.card),
+                    boxShadow: DbShadows.card,
+                  ),
+                  child: ResultTimelineCard(timeline: _timeline!),
+                ),
             ],
             if (roll.isNotEmpty && !_checking) ...[
               const SizedBox(height: DbSpacing.md),
               Center(
-                child: TextButton.icon(
+                child: OutlinedButton.icon(
                   onPressed: () => context.push('/results/checker'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: DbColors.teal,
+                    side: BorderSide(
+                      color: DbColors.teal.withValues(alpha: 0.4),
+                    ),
+                  ),
                   icon: const Icon(Icons.search_rounded),
                   label: Text(l10n.resultChecker),
                 ),

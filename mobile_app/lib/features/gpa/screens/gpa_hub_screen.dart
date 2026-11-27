@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/l10n/generated/app_localizations.dart';
 import '../../../app/theme/theme.dart';
+import '../../../shared/widgets/pressable_scale.dart';
 
 class GpaHubScreen extends StatelessWidget {
   const GpaHubScreen({super.key});
@@ -29,6 +30,7 @@ class GpaHubScreen extends StatelessWidget {
                 colors: [DbColors.navy, DbColors.navyDark],
               ),
               borderRadius: BorderRadius.circular(DbRadius.card),
+              boxShadow: DbShadows.card,
             ),
             child: Row(
               children: [
@@ -59,22 +61,41 @@ class GpaHubScreen extends StatelessWidget {
           const SizedBox(height: DbSpacing.md),
           for (final item in items)
             Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Card(
-                child: ListTile(
-                  leading: Container(
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      color: DbColors.teal.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(DbRadius.input),
-                    ),
-                    child: Icon(item.$2, color: DbColors.teal, size: 24),
+              padding: const EdgeInsets.only(bottom: 10),
+              child: PressableScale(
+                onTap: () => context.push(item.$3),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: DbSpacing.md, vertical: DbSpacing.md),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).cardColor,
+                    borderRadius: BorderRadius.circular(DbRadius.card),
+                    boxShadow: DbShadows.card,
                   ),
-                  title: Text(item.$1,
-                      style: const TextStyle(fontWeight: FontWeight.w600)),
-                  trailing: const Icon(Icons.chevron_right_rounded),
-                  onTap: () => context.push(item.$3),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [DbColors.teal, DbColors.emerald],
+                          ),
+                          borderRadius: BorderRadius.circular(DbRadius.input),
+                        ),
+                        child: Icon(item.$2, color: Colors.white, size: 22),
+                      ),
+                      const SizedBox(width: DbSpacing.md),
+                      Expanded(
+                        child: Text(item.$1,
+                            style: const TextStyle(
+                                fontWeight: FontWeight.w600)),
+                      ),
+                      const Icon(Icons.chevron_right_rounded),
+                    ],
+                  ),
                 ),
               ),
             ),

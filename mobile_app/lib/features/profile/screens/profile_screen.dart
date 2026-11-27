@@ -8,6 +8,7 @@ import '../../auth/data/user.dart';
 import '../../auth/providers/auth_controller.dart';
 import '../../../core/api/api_client.dart';
 import '../../../core/providers.dart';
+import '../../../shared/widgets/pressable_scale.dart';
 import '../../../shared/widgets/states.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
@@ -214,15 +215,26 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final joined = user.createdAt;
 
     Widget quickTile(String label, IconData icon, String route) {
-      return InkWell(
-        borderRadius: BorderRadius.circular(DbRadius.card),
+      return PressableScale(
         onTap: () => context.push(route),
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: DbSpacing.md),
           child: Column(
             children: [
-              Icon(icon, color: DbColors.teal, size: 26),
-              const SizedBox(height: DbSpacing.xs),
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [DbColors.teal, DbColors.emerald],
+                  ),
+                  borderRadius: BorderRadius.circular(DbRadius.input),
+                ),
+                child: Icon(icon, color: Colors.white, size: 22),
+              ),
+              const SizedBox(height: DbSpacing.sm),
               Text(
                 label,
                 textAlign: TextAlign.center,
@@ -251,6 +263,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 colors: [DbColors.navy, DbColors.navyDark],
               ),
               borderRadius: BorderRadius.circular(DbRadius.card),
+              boxShadow: DbShadows.card,
             ),
             child: Column(
               children: [
@@ -491,21 +504,46 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             child: Column(
               children: [
                 ListTile(
-                  leading: const Icon(Icons.settings_rounded),
+                  leading: Container(
+                    width: 38,
+                    height: 38,
+                    decoration: BoxDecoration(
+                      color: DbColors.teal.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(DbRadius.input),
+                    ),
+                    child: const Icon(Icons.settings_rounded,
+                        color: DbColors.teal, size: 20),
+                  ),
                   title: Text(l10n.settings),
                   trailing: const Icon(Icons.chevron_right_rounded),
                   onTap: () => context.push('/settings'),
                 ),
                 if (_deletionRequested)
                   ListTile(
-                    leading: const Icon(Icons.hourglass_top_rounded,
-                        color: DbColors.warningLight),
+                    leading: Container(
+                      width: 38,
+                      height: 38,
+                      decoration: BoxDecoration(
+                        color: DbColors.warningLight.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(DbRadius.input),
+                      ),
+                      child: const Icon(Icons.hourglass_top_rounded,
+                          color: DbColors.warningLight, size: 20),
+                    ),
                     title: Text(l10n.deleteAccountRequested),
                   )
                 else
                   ListTile(
-                    leading: const Icon(Icons.delete_forever_rounded,
-                        color: DbColors.errorLight),
+                    leading: Container(
+                      width: 38,
+                      height: 38,
+                      decoration: BoxDecoration(
+                        color: DbColors.errorLight.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(DbRadius.input),
+                      ),
+                      child: const Icon(Icons.delete_forever_rounded,
+                          color: DbColors.errorLight, size: 20),
+                    ),
                     title: Text(
                       l10n.deleteAccountRequest,
                       style: const TextStyle(color: DbColors.errorLight),
@@ -513,7 +551,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     onTap: () => _requestDeletion(l10n),
                   ),
                 ListTile(
-                  leading: const Icon(Icons.logout_rounded, color: DbColors.errorLight),
+                  leading: Container(
+                    width: 38,
+                    height: 38,
+                    decoration: BoxDecoration(
+                      color: DbColors.errorLight.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(DbRadius.input),
+                    ),
+                    child: const Icon(Icons.logout_rounded,
+                        color: DbColors.errorLight, size: 20),
+                  ),
                   title: Text(
                     l10n.logout,
                     style: const TextStyle(color: DbColors.errorLight),

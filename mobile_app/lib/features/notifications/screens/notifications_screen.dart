@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../app/l10n/generated/app_localizations.dart';
 import '../../../app/theme/theme.dart';
 import '../../../shared/widgets/async_value_view.dart';
+import '../../../shared/widgets/pressable_scale.dart';
 import '../data/notification_models.dart';
 import '../providers/notification_providers.dart';
 
@@ -82,62 +83,97 @@ class NotificationsScreen extends ConsumerWidget {
               final n = data.items[i];
               final unread = !n.read;
 
-              return Card(
-                color: unread ? DbColors.teal.withValues(alpha: 0.06) : null,
-                child: ListTile(
-                  onTap: () => _openLink(context, ref, n),
-                  leading: Container(
-                    width: 42,
-                    height: 42,
-                    decoration: BoxDecoration(
-                      color: unread
-                          ? DbColors.teal.withValues(alpha: 0.14)
-                          : DbColors.fillLight,
-                      borderRadius: BorderRadius.circular(DbRadius.input),
-                    ),
-                    child: Icon(
-                      _iconFor(n.type),
-                      size: 22,
-                      color: unread ? DbColors.teal : DbColors.textSecondaryLight,
-                    ),
+              return PressableScale(
+                onTap: () => _openLink(context, ref, n),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: unread
+                        ? DbColors.teal.withValues(alpha: 0.06)
+                        : Theme.of(context).cardColor,
+                    borderRadius: BorderRadius.circular(DbRadius.card),
+                    boxShadow: DbShadows.card,
                   ),
-                  title: Text(
-                    n.title,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: unread
-                        ? const TextStyle(fontWeight: FontWeight.w700)
-                        : null,
-                  ),
-                  subtitle: Column(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: DbSpacing.md, vertical: 10),
+                  child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      if (n.body != null && n.body!.isNotEmpty)
-                        Text(
-                          n.body!,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
+                      Container(
+                        width: 42,
+                        height: 42,
+                        decoration: BoxDecoration(
+                          gradient: unread
+                              ? const LinearGradient(colors: [
+                                  DbColors.teal,
+                                  DbColors.emerald
+                                ])
+                              : null,
+                          color: unread
+                              ? null
+                              : DbColors.fillLight,
+                          borderRadius:
+                              BorderRadius.circular(DbRadius.input),
                         ),
-                      if (n.createdAt != null)
-                        Text(
-                          _formatTime(n.createdAt!.toLocal()),
-                          style: const TextStyle(
-                            fontSize: 11,
-                            color: DbColors.textSecondaryLight,
-                          ),
+                        child: Icon(
+                          _iconFor(n.type),
+                          size: 22,
+                          color: unread
+                              ? Colors.white
+                              : DbColors.textSecondaryLight,
                         ),
-                    ],
-                  ),
-                  trailing: unread
-                      ? Container(
+                      ),
+                      const SizedBox(width: DbSpacing.md),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              n.title,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: unread
+                                  ? const TextStyle(
+                                      fontWeight: FontWeight.w700)
+                                  : const TextStyle(
+                                      fontWeight: FontWeight.w500),
+                            ),
+                            if (n.body != null && n.body!.isNotEmpty) ...[
+                              const SizedBox(height: 2),
+                              Text(
+                                n.body!,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  color: DbColors.textSecondaryLight,
+                                ),
+                              ),
+                            ],
+                            if (n.createdAt != null) ...[
+                              const SizedBox(height: 4),
+                              Text(
+                                _formatTime(n.createdAt!.toLocal()),
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  color: DbColors.textSecondaryLight,
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                      if (unread)
+                        Container(
                           width: 8,
                           height: 8,
+                          margin: const EdgeInsets.only(top: 4),
                           decoration: const BoxDecoration(
                             color: DbColors.teal,
                             shape: BoxShape.circle,
                           ),
-                        )
-                      : null,
+                        ),
+                    ],
+                  ),
                 ),
               );
             },

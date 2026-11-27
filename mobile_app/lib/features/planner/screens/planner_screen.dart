@@ -115,24 +115,77 @@ class PlannerScreen extends ConsumerWidget {
               builder: (context, g) => ListView(
                 padding: const EdgeInsets.all(16),
                 children: g
-                    .map((goal) => Card(
-                          child: Padding(
-                            padding: const EdgeInsets.all(16),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(goal.title,
-                                    style: const TextStyle(fontWeight: FontWeight.w600)),
-                                const SizedBox(height: 8),
-                                LinearProgressIndicator(
+                    .map((goal) => Container(
+                          margin: const EdgeInsets.only(bottom: 10),
+                          padding: const EdgeInsets.all(DbSpacing.md),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).cardColor,
+                            borderRadius:
+                                BorderRadius.circular(DbRadius.card),
+                            boxShadow: DbShadows.card,
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Container(
+                                    width: 36,
+                                    height: 36,
+                                    decoration: BoxDecoration(
+                                      gradient: const LinearGradient(
+                                          colors: [
+                                              DbColors.emerald,
+                                              DbColors.emeraldDark
+                                            ]),
+                                      borderRadius: BorderRadius.circular(
+                                          DbRadius.input),
+                                    ),
+                                    child: const Icon(
+                                        Icons.track_changes_rounded,
+                                        color: Colors.white,
+                                        size: 18),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: Text(goal.title,
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(
+                                            fontWeight: FontWeight.w600)),
+                                  ),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 8, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: DbColors.emerald
+                                          .withValues(alpha: 0.1),
+                                      borderRadius: BorderRadius.circular(
+                                          DbRadius.badge),
+                                    ),
+                                    child: Text(
+                                      '${goal.progressPercent}%',
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w700,
+                                        color: DbColors.emeraldDark,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 10),
+                              ClipRRect(
+                                borderRadius:
+                                    BorderRadius.circular(DbRadius.full),
+                                child: LinearProgressIndicator(
                                   value: goal.progressPercent / 100,
                                   color: DbColors.emerald,
-                                  minHeight: 6,
+                                  backgroundColor: DbColors.fillLight,
+                                  minHeight: 8,
                                 ),
-                                const SizedBox(height: 4),
-                                Text('${goal.progressPercent}%'),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
                         ))
                     .toList(),
@@ -185,10 +238,16 @@ class _TaskList extends ConsumerWidget {
       separatorBuilder: (_, _) => const SizedBox(height: 8),
       itemBuilder: (context, i) {
         final task = tasks[i];
-        return Card(
+        return Container(
+          decoration: BoxDecoration(
+            color: Theme.of(context).cardColor,
+            borderRadius: BorderRadius.circular(DbRadius.card),
+            boxShadow: DbShadows.card,
+          ),
           child: CheckboxListTile(
             value: task.isDone,
             controlAffinity: ListTileControlAffinity.leading,
+            activeColor: DbColors.teal,
             onChanged: (v) async {
               try {
                 await ref.read(plannerRepositoryProvider).setTaskStatus(task.id, v ?? false);
@@ -203,15 +262,38 @@ class _TaskList extends ConsumerWidget {
             title: Text(
               task.title,
               style: task.isDone
-                  ? const TextStyle(decoration: TextDecoration.lineThrough)
-                  : null,
+                  ? const TextStyle(
+                      decoration: TextDecoration.lineThrough,
+                      color: DbColors.textSecondaryLight)
+                  : const TextStyle(fontWeight: FontWeight.w600),
             ),
             subtitle: task.dueAt != null
-                ? Text(
-                    task.dueAt!.toLocal().toString().split('.').first,
-                    style: TextStyle(
-                      color: task.isOverdue ? DbColors.errorLight : null,
-                    ),
+                ? Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        task.isOverdue
+                            ? Icons.warning_amber_rounded
+                            : Icons.schedule_rounded,
+                        size: 13,
+                        color: task.isOverdue
+                            ? DbColors.errorLight
+                            : DbColors.textSecondaryLight,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        task.dueAt!.toLocal().toString().split('.').first,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: task.isOverdue
+                              ? FontWeight.w600
+                              : FontWeight.w400,
+                          color: task.isOverdue
+                              ? DbColors.errorLight
+                              : DbColors.textSecondaryLight,
+                        ),
+                      ),
+                    ],
                   )
                 : null,
           ),
