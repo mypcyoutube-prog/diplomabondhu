@@ -165,17 +165,17 @@ class HomeScreen extends ConsumerWidget {
   }
 
   /// Result bar during an admin-configured display window: the student's own
-  /// roll (saved in profile) is matched automatically. Without a window the
-  /// admin notice bar takes the same slot.
+  /// roll (saved in profile) is matched automatically. Outside a window the
+  /// admin notice lives inside the notice ticker, so nothing renders here.
   Widget _resultOrNoticeBar(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context)!;
     final settings = ref.watch(appSettingsProvider).value;
-    if (settings == null) return const SizedBox.shrink();
+    if (settings == null || !settings.resultDisplayActive) {
+      return const SizedBox.shrink();
+    }
 
-    if (settings.resultDisplayActive) {
-      final result = ref.watch(homeResultProvider);
-      return result.maybeWhen(
-        data: (record) {
+    final result = ref.watch(homeResultProvider);
+    return result.maybeWhen(
+      data: (record) {
           if (record == null) return const SizedBox.shrink();
           final value = record.cgpa ?? record.gpa;
           final metricLabel = record.cgpa != null ? 'CGPA' : 'GPA';
@@ -254,48 +254,7 @@ class HomeScreen extends ConsumerWidget {
             ),
           );
         },
-        orElse: () => const SizedBox.shrink(),
-      );
-    }
-
-    if (!settings.homeNoticeActive) return const SizedBox.shrink();
-    final notice = settings.homeNotice;
-    return PressableScale(
-      onTap: () => _openLink(context, notice.link),
-      child: Container(
-        padding: const EdgeInsets.symmetric(
-            horizontal: DbSpacing.md, vertical: DbSpacing.sm + 4),
-        decoration: BoxDecoration(
-          color: DbColors.teal.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(DbRadius.card),
-          border: Border.all(color: DbColors.teal.withValues(alpha: 0.25)),
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(7),
-              decoration: BoxDecoration(
-                color: DbColors.teal.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(DbRadius.input),
-              ),
-              child: const Icon(Icons.campaign_rounded,
-                  color: DbColors.teal, size: 18),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                notice.text,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                    fontWeight: FontWeight.w600, fontSize: 13),
-              ),
-            ),
-            const Icon(Icons.chevron_right_rounded,
-                color: DbColors.textSecondaryLight, size: 20),
-          ],
-        ),
-      ),
+      orElse: () => const SizedBox.shrink(),
     );
   }
 
@@ -674,11 +633,31 @@ class _NoticeTickerState extends ConsumerState<_NoticeTicker> {
     });
   }
 
+  void _openTickerLink(BuildContext context, String linkUrl) {
+    if (linkUrl.isEmpty) return;
+    if (linkUrl.startsWith('/')) {
+      context.push(linkUrl);
+      return;
+    }
+    final uri = Uri.tryParse(linkUrl);
+    if (uri != null && (uri.scheme == 'http' || uri.scheme == 'https')) {
+      launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final settings = ref.watch(appSettingsProvider).value;
+    final adminNotice = (settings != null &&
+            settings.homeNoticeActive &&
+            settings.homeNotice.text.isNotEmpty)
+        ? settings.homeNotice
+        : null;
     final items = widget.notices.value ?? const <Notice>[];
-    if (items.isEmpty) return const SizedBox.shrink();
+    if (adminNotice == null && items.isEmpty) {
+      return const SizedBox.shrink();
+    }
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -743,6 +722,37 @@ class _NoticeTickerState extends ConsumerState<_NoticeTicker> {
                   physics: const NeverScrollableScrollPhysics(),
                   child: Row(
                     children: [
+                      if (adminNotice != null)
+                        Padding(
+                          padding:
+                              const EdgeInsets.symmetric(horizontal: 6),
+                          child: GestureDetector(
+                            onTap: () =>
+                                _openTickerLink(context, adminNotice.link),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.campaign_rounded,
+                                    size: 13, color: DbColors.teal),
+                                const SizedBox(width: 4),
+                                Text(
+                                  adminNotice.text,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600),
+                                ),
+                                const SizedBox(width: 6),
+                                Text('\u2022',
+                                    style: TextStyle(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurfaceVariant)),
+                              ],
+                            ),
+                          ),
+                        ),
                       for (final notice in items.take(20))
                         Padding(
                           padding:
