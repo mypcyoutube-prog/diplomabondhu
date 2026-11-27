@@ -513,9 +513,6 @@ class HomeScreen extends ConsumerWidget {
     final sectionChildren = <Widget>[];
     for (final section in _orderedSections(dashPrefs)) {
       if (section.key == 'announcements') {
-        sectionChildren
-          ..add(_bannersStrip(ref, (link) => _openLink(context, link)))
-          ..add(const SizedBox(height: 12));
         continue;
       }
       final widget = sectionWidget(section.key);
@@ -525,6 +522,8 @@ class HomeScreen extends ConsumerWidget {
           ..add(const SizedBox(height: 18));
       }
     }
+    final showBanners =
+        _orderedSections(dashPrefs).any((s) => s.key == 'announcements');
 
     return Scaffold(
       appBar: AppBar(
@@ -606,9 +605,13 @@ class HomeScreen extends ConsumerWidget {
                   : const SizedBox.shrink(),
               orElse: () => const SizedBox.shrink(),
             ),
-            _resultOrNoticeBar(context, ref),
-            const SizedBox(height: 12),
+            if (showBanners) ...[
+              _bannersStrip(ref, (link) => _openLink(context, link)),
+              const SizedBox(height: 12),
+            ],
             _NoticeTicker(notices: notices),
+            const SizedBox(height: 12),
+            _resultOrNoticeBar(context, ref),
             const SizedBox(height: 18),
             ...sectionChildren,
           ],
