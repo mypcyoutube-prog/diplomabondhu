@@ -2,6 +2,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../app/theme/theme.dart';
 import '../../features/auth/providers/auth_controller.dart';
 import '../../features/auth/screens/forgot_password_screen.dart';
 import '../../features/auth/screens/login_screen.dart';
@@ -89,7 +90,7 @@ final rootRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/resolve',
-        builder: (context, state) => const SizedBox.shrink(),
+        builder: (context, state) => const _ResolveScreen(),
       ),
       GoRoute(
         path: '/onboarding',
@@ -290,6 +291,22 @@ final rootRouterProvider = Provider<GoRouter>((ref) {
     ],
   );
 });
+
+/// Placeholder while the session is being restored. Never blank: shows the
+/// brand background with a spinner so a stuck restore is always visible.
+class _ResolveScreen extends StatelessWidget {
+  const _ResolveScreen();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(
+      backgroundColor: DbColors.navy,
+      body: Center(
+        child: CircularProgressIndicator(color: Colors.white),
+      ),
+    );
+  }
+}
 
 class _ShellScaffold extends StatelessWidget {
   final StatefulNavigationShell shell;
