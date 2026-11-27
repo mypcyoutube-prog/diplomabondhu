@@ -1,5 +1,6 @@
 import 'package:material_ui/material_ui.dart' hide Material;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../app/l10n/generated/app_localizations.dart';
@@ -20,6 +21,7 @@ class MaterialDetailScreen extends ConsumerStatefulWidget {
 
 class _MaterialDetailScreenState extends ConsumerState<MaterialDetailScreen> {
   bool _toggling = false;
+  bool _downloading = false;
 
   IconData _typeIcon(String type) => switch (type) {
         'book' => Icons.menu_book_rounded,
@@ -76,6 +78,24 @@ class _MaterialDetailScreenState extends ConsumerState<MaterialDetailScreen> {
     }
   }
 
+  Future<void> _download(AppLocalizations l10n, Material material) async {
+    setState(() => _downloading = true);
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      final url = await ref.read(materialRepositoryProvider).downloadUrl(material.id);
+      await _openExternal(url);
+    } catch (_) {
+      messenger.showSnackBar(SnackBar(content: Text(l10n.errorGeneric)));
+    } finally {
+      if (mounted) setState(() => _downloading = false);
+    }
+  }
+
+  void _share(Material material) {
+    final url = material.payload.fileUrl ?? material.payload.externalUrl ?? '';
+    Share.share('${material.title}\n$url');
+  }
+
   String _formatSize(int bytes) {
     if (bytes >= 1024 * 1024) return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
     if (bytes >= 1024) return '${(bytes / 1024).toStringAsFixed(0)} KB';
@@ -103,6 +123,10 @@ class _MaterialDetailScreenState extends ConsumerState<MaterialDetailScreen> {
               '${material.payload.pageCount} ${l10n.pagesLabel}',
             if (material.payload.sizeBytes != null)
               '${l10n.sizeLabel}: ${_formatSize(material.payload.sizeBytes!)}',
+            if (material.payload.author?.isNotEmpty == true)
+              '${l10n.authorLabel}: ${material.payload.author}',
+            if (material.payload.edition?.isNotEmpty == true)
+              '${l10n.editionLabel}: ${material.payload.edition}',
           ];
 
           return ListView(
@@ -217,27 +241,57 @@ class _MaterialDetailScreenState extends ConsumerState<MaterialDetailScreen> {
                   label: Text(l10n.openLink),
                 ),
                 const SizedBox(height: 8),
-              ] else if (material.downloadAllowed) ...[
-                FilledButton.icon(
-                  onPressed: material.payload.fileUrl == null
-                      ? null
-                      : () => _openExternal(material.payload.fileUrl!),
-                  icon: const Icon(Icons.download_rounded),
-                  label: Text(l10n.openLink),
-                ),
-                const SizedBox(height: 8),
+              ] else ...[
+                if (material.previewAllowed && material.payload.fileUrl != null) ...[
+                  FilledButton.icon(
+                    onPressed: () => _openExternal(material.payload.fileUrl!),
+                    icon: const Icon(Icons.picture_as_pdf_rounded),
+                    label: Text(l10n.openLink),
+                  ),
+                  const SizedBox(height: 8),
+                ],
+                if (material.downloadAllowed && material.payload.fileUrl != null) ...[
+                  OutlinedButton.icon(
+                    onPressed: _downloading
+                        ? null
+                        : () => _download(l10n, material),
+                    icon: _downloading
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2))
+                        : const Icon(Icons.download_rounded),
+                    label: Text(l10n.openLink),
+                  ),
+                  const SizedBox(height: 8),
+                ],
               ],
-              OutlinedButton.icon(
-                onPressed: _toggling
-                    ? null
-                    : () => _toggleBookmark(l10n, material),
-                icon: bookmarked.maybeWhen(
-                  data: (b) => Icon(b
-                      ? Icons.bookmark_rounded
-                      : Icons.bookmark_border_rounded),
-                  orElse: () => const Icon(Icons.bookmark_border_rounded),
-                ),
-                label: Text(l10n.bookmark),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: _toggling
+                          ? null
+                          : () => _toggleBookmark(l10n, material),
+                      icon: bookmarked.maybeWhen(
+                        data: (b) => Icon(b
+                            ? Icons.bookmark_rounded
+                            : Icons.bookmark_border_rounded),
+                        orElse: () =>
+                            const Icon(Icons.bookmark_border_rounded),
+                      ),
+                      label: Text(l10n.bookmark),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () => _share(material),
+                      icon: const Icon(Icons.share_rounded),
+                      label: Text(l10n.share),
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 8),
               TextButton.icon(
@@ -256,7 +310,8 @@ class _MaterialDetailScreenState extends ConsumerState<MaterialDetailScreen> {
     final l10n = AppLocalizations.of(context)!;
     final controller = TextEditingController();
     var typeIndex = 0;
-    final types = [l10n.reportWrongInfo, l10n.reportBrokenLink, l10n.reportInappropriate, l10n.reportOther];
+    const codes = ['broken_link', 'wrong_info', 'wrong_file', 'duplicate', 'other'];
+    final types = [l10n.reportBrokenLink, l10n.reportWrongInfo, l10n.reportWrongFile, l10n.reportDuplicate, l10n.reportOther];
     final ok = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
@@ -290,7 +345,7 @@ class _MaterialDetailScreenState extends ConsumerState<MaterialDetailScreen> {
                 controller: controller,
                 maxLines: 3,
                 maxLength: 1000,
-                decoration: const InputDecoration(hintText: '...'),
+                decoration: InputDecoration(hintText: l10n.reportDetailsLabel),
               ),
               const SizedBox(height: 12),
               FilledButton(
@@ -303,14 +358,17 @@ class _MaterialDetailScreenState extends ConsumerState<MaterialDetailScreen> {
       ),
     );
     if (ok != true) return;
-    final reason = '${types[typeIndex]}: ${controller.text.trim()}';
     try {
       await ref
           .read(materialRepositoryProvider)
-          .report(widget.materialId, reason);
+          .report(
+            widget.materialId,
+            reasonCode: codes[typeIndex],
+            details: controller.text.trim(),
+          );
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.requestAccepted)),
+          SnackBar(content: Text(l10n.reportSubmitted)),
         );
       }
     } catch (_) {

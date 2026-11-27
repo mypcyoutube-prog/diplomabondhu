@@ -848,6 +848,66 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get seeAll => 'See all';
+
+  @override
+  String get sortBy => 'Sort by';
+
+  @override
+  String get sortLatest => 'Latest added';
+
+  @override
+  String get sortOldest => 'Oldest';
+
+  @override
+  String get sortPopular => 'Most viewed';
+
+  @override
+  String get sortTitleAZ => 'Title A–Z';
+
+  @override
+  String get endOfList => 'You have reached the end';
+
+  @override
+  String get myBookmarks => 'My Bookmarks';
+
+  @override
+  String get clearFilters => 'Clear filters';
+
+  @override
+  String get all => 'All';
+
+  @override
+  String get filterTechnology => 'Technology';
+
+  @override
+  String get filterSemester => 'Semester';
+
+  @override
+  String get filterSubject => 'Subject';
+
+  @override
+  String get filterYear => 'Year';
+
+  @override
+  String get reportWrongFile => 'Wrong file';
+
+  @override
+  String get reportDuplicate => 'Duplicate material';
+
+  @override
+  String get reportSubmitted => 'Report submitted. Thank you.';
+
+  @override
+  String get reportDetailsLabel => 'Details (optional)';
+
+  @override
+  String get bookmarkEmpty => 'No bookmarks yet';
+
+  @override
+  String get authorLabel => 'Author';
+
+  @override
+  String get editionLabel => 'Edition';
   @override
   String get noticeTickerLabel => 'NOTICE';
   @override

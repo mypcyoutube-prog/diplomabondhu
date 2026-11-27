@@ -15,6 +15,8 @@ class AppSettingsData {
       resultDisplay;
   final ({String text, String link, bool visible, DateTime? startsAt, DateTime? endsAt})
       homeNotice;
+  final ({bool book, bool note, bool video, bool subjectMaterial, bool pastQuestion})
+      libraryCategories;
 
   const AppSettingsData({
     required this.appName,
@@ -24,6 +26,7 @@ class AppSettingsData {
     required this.supportInfo,
     required this.resultDisplay,
     required this.homeNotice,
+    required this.libraryCategories,
   });
 
   static DateTime? _date(dynamic value) =>
@@ -77,6 +80,16 @@ class AppSettingsData {
         startsAt: _date(hn['startsAt']),
         endsAt: _date(hn['endsAt']),
       ),
+      libraryCategories: (() {
+        final lc = json['libraryCategories'] as Map<String, dynamic>? ?? {};
+        return (
+          book: lc['book'] as bool? ?? true,
+          note: lc['note'] as bool? ?? true,
+          video: lc['video'] as bool? ?? true,
+          subjectMaterial: lc['subject_material'] as bool? ?? true,
+          pastQuestion: lc['past_question'] as bool? ?? true,
+        );
+      })(),
       featureFlags: json['featureFlags'] as Map<String, dynamic>? ?? {},
       maintenanceMode: json['maintenanceMode'] as bool? ?? false,
       supportInfo: json['supportInfo'] as Map<String, dynamic>? ?? {},

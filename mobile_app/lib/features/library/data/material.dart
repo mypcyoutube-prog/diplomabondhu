@@ -31,8 +31,22 @@ class MaterialPayload {
   final int? examYear;
   final int? sizeBytes;
   final int? pageCount;
+  final String? thumbnailUrl;
+  final String? author;
+  final String? edition;
+  final int? durationSec;
 
-  const MaterialPayload({this.fileUrl, this.externalUrl, this.examYear, this.sizeBytes, this.pageCount});
+  const MaterialPayload({
+    this.fileUrl,
+    this.externalUrl,
+    this.examYear,
+    this.sizeBytes,
+    this.pageCount,
+    this.thumbnailUrl,
+    this.author,
+    this.edition,
+    this.durationSec,
+  });
 
   factory MaterialPayload.fromJson(Map<String, dynamic> json) => MaterialPayload(
         fileUrl: json['fileUrl'] as String?,
@@ -40,6 +54,10 @@ class MaterialPayload {
         examYear: json['examYear'] as int?,
         sizeBytes: json['sizeBytes'] as int?,
         pageCount: json['pageCount'] as int?,
+        thumbnailUrl: json['thumbnailUrl'] as String?,
+        author: json['author'] as String?,
+        edition: json['edition'] as String?,
+        durationSec: json['durationSec'] as int?,
       );
 }
 
@@ -52,6 +70,7 @@ class Material {
   final MaterialHierarchy hierarchy;
   final MaterialPayload payload;
   final bool downloadAllowed;
+  final bool previewAllowed;
   final int viewCount;
   final DateTime? createdAt;
 
@@ -64,6 +83,7 @@ class Material {
     required this.hierarchy,
     required this.payload,
     required this.downloadAllowed,
+    this.previewAllowed = true,
     required this.viewCount,
     this.createdAt,
   });
@@ -80,6 +100,7 @@ class Material {
             json['hierarchyRefs'] as Map<String, dynamic>? ?? {}),
         payload: MaterialPayload.fromJson(json['payload'] as Map<String, dynamic>? ?? {}),
         downloadAllowed: json['downloadAllowed'] as bool? ?? false,
+        previewAllowed: json['previewAllowed'] as bool? ?? true,
         viewCount: json['viewCount'] as int? ?? 0,
         createdAt: json['createdAt'] == null ? null : DateTime.tryParse(json['createdAt'] as String),
       );
@@ -89,6 +110,12 @@ class MaterialPage {
   final List<Material> items;
   final int page;
   final int total;
+  final Map<String, int> counts;
 
-  const MaterialPage({required this.items, required this.page, required this.total});
+  const MaterialPage({
+    required this.items,
+    required this.page,
+    required this.total,
+    this.counts = const {},
+  });
 }

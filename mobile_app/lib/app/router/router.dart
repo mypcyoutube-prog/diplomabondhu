@@ -19,6 +19,7 @@ import '../../features/gpa/screens/cgpa_screen.dart';
 import '../../features/gpa/screens/gpa_history_screen.dart';
 import '../../features/gpa/screens/gpa_hub_screen.dart';
 import '../../features/home/screens/home_screen.dart';
+import '../../features/library/screens/bookmarks_screen.dart';
 import '../../features/library/screens/library_screen.dart';
 import '../../features/results/screens/result_checker_screen.dart';
 import '../../features/results/screens/result_tab_screen.dart';
@@ -179,6 +180,11 @@ final rootRouterProvider = Provider<GoRouter>((ref) {
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) =>
             PostDetailScreen(postId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/bookmarks',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const BookmarksScreen(),
       ),
       GoRoute(
         path: '/search',

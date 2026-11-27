@@ -850,6 +850,66 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get seeAll => 'সব দেখুন';
+
+  @override
+  String get sortBy => 'সাজান';
+
+  @override
+  String get sortLatest => 'নতুন যোগ হয়েছে';
+
+  @override
+  String get sortOldest => 'পুরনো আগে';
+
+  @override
+  String get sortPopular => 'সর্বাধিক দেখা';
+
+  @override
+  String get sortTitleAZ => 'শিরোনাম A–Z';
+
+  @override
+  String get endOfList => 'শেষ পর্যন্ত দেখা হয়েছে';
+
+  @override
+  String get myBookmarks => 'আমার বুকমার্ক';
+
+  @override
+  String get clearFilters => 'ফিল্টার সরান';
+
+  @override
+  String get all => 'সব';
+
+  @override
+  String get filterTechnology => 'টেকনোলজি';
+
+  @override
+  String get filterSemester => 'সেমিস্টার';
+
+  @override
+  String get filterSubject => 'সাবজেক্ট';
+
+  @override
+  String get filterYear => 'সাল';
+
+  @override
+  String get reportWrongFile => 'ভুল ফাইল';
+
+  @override
+  String get reportDuplicate => 'ডুপ্লিকেট ম্যাটেরিয়াল';
+
+  @override
+  String get reportSubmitted => 'রিপোর্ট জমা হয়েছে। ধন্যবাদ।';
+
+  @override
+  String get reportDetailsLabel => 'বিস্তারিত (ঐচ্ছিক)';
+
+  @override
+  String get bookmarkEmpty => 'এখনো কোনো বুকমার্ক নেই';
+
+  @override
+  String get authorLabel => 'লেখক';
+
+  @override
+  String get editionLabel => 'সংস্করণ';
   @override
   String get noticeTickerLabel => 'নোটিশ';
   @override

@@ -1451,6 +1451,126 @@ abstract class AppLocalizations {
   /// **'See all'**
   String get seeAll;
 
+  /// No description provided for @sortBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Sort by'**
+  String get sortBy;
+
+  /// No description provided for @sortLatest.
+  ///
+  /// In en, this message translates to:
+  /// **'Latest added'**
+  String get sortLatest;
+
+  /// No description provided for @sortOldest.
+  ///
+  /// In en, this message translates to:
+  /// **'Oldest'**
+  String get sortOldest;
+
+  /// No description provided for @sortPopular.
+  ///
+  /// In en, this message translates to:
+  /// **'Most viewed'**
+  String get sortPopular;
+
+  /// No description provided for @sortTitleAZ.
+  ///
+  /// In en, this message translates to:
+  /// **'Title A–Z'**
+  String get sortTitleAZ;
+
+  /// No description provided for @endOfList.
+  ///
+  /// In en, this message translates to:
+  /// **'You have reached the end'**
+  String get endOfList;
+
+  /// No description provided for @myBookmarks.
+  ///
+  /// In en, this message translates to:
+  /// **'My Bookmarks'**
+  String get myBookmarks;
+
+  /// No description provided for @clearFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear filters'**
+  String get clearFilters;
+
+  /// No description provided for @all.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get all;
+
+  /// No description provided for @filterTechnology.
+  ///
+  /// In en, this message translates to:
+  /// **'Technology'**
+  String get filterTechnology;
+
+  /// No description provided for @filterSemester.
+  ///
+  /// In en, this message translates to:
+  /// **'Semester'**
+  String get filterSemester;
+
+  /// No description provided for @filterSubject.
+  ///
+  /// In en, this message translates to:
+  /// **'Subject'**
+  String get filterSubject;
+
+  /// No description provided for @filterYear.
+  ///
+  /// In en, this message translates to:
+  /// **'Year'**
+  String get filterYear;
+
+  /// No description provided for @reportWrongFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Wrong file'**
+  String get reportWrongFile;
+
+  /// No description provided for @reportDuplicate.
+  ///
+  /// In en, this message translates to:
+  /// **'Duplicate material'**
+  String get reportDuplicate;
+
+  /// No description provided for @reportSubmitted.
+  ///
+  /// In en, this message translates to:
+  /// **'Report submitted. Thank you.'**
+  String get reportSubmitted;
+
+  /// No description provided for @reportDetailsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Details (optional)'**
+  String get reportDetailsLabel;
+
+  /// No description provided for @bookmarkEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No bookmarks yet'**
+  String get bookmarkEmpty;
+
+  /// No description provided for @authorLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Author'**
+  String get authorLabel;
+
+  /// No description provided for @editionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Edition'**
+  String get editionLabel;
+
 
   /// No description provided for @noticeTickerLabel.
   ///
