@@ -146,7 +146,7 @@ class HomeScreen extends ConsumerWidget {
   /// admin notice bar takes the same slot.
   Widget _resultOrNoticeBar(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
-    final settings = ref.watch(appSettingsProvider).valueOrNull;
+    final settings = ref.watch(appSettingsProvider).value;
     if (settings == null) return const SizedBox.shrink();
 
     if (settings.resultDisplayActive) {
@@ -332,7 +332,7 @@ class HomeScreen extends ConsumerWidget {
   }
 
   Widget _sectionHeader(BuildContext context, String title, String route,
-      VoidCallback openLink) {
+      void Function(String route) openLink) {
     return DbSectionHeader(
       title: title,
       trailing: TextButton(
@@ -545,7 +545,7 @@ class HomeScreen extends ConsumerWidget {
             const SizedBox(width: 8),
             Flexible(
               child: Text(
-                settings.valueOrNull?.appName ?? 'DiplomaBondhu',
+                settings.value?.appName ?? 'DiplomaBondhu',
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(fontWeight: FontWeight.w800),
               ),
@@ -659,7 +659,7 @@ class _NoticeTickerState extends ConsumerState<_NoticeTicker> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final items = widget.notices.valueOrNull ?? const <Notice>[];
+    final items = widget.notices.value ?? const <Notice>[];
     if (items.isEmpty) return const SizedBox.shrink();
 
     final isDark = Theme.of(context).brightness == Brightness.dark;

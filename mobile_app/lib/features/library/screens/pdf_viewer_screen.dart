@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_pdfview/flutter_pdfview.dart';
 import 'package:material_ui/material_ui.dart' hide Material;
@@ -40,7 +41,7 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
   }
 
   Future<void> _openExternalAndPop() async {
-    final material = ref.read(materialDetailProvider(widget.materialId)).valueOrNull;
+    final material = ref.read(materialDetailProvider(widget.materialId)).value;
     final url = material?.payload.fileUrl;
     final navigator = Navigator.of(context);
     if (url != null) {
@@ -61,7 +62,7 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
       _error = null;
       _progress = 0;
     });
-    final material = ref.read(materialDetailProvider(widget.materialId)).valueOrNull;
+    final material = ref.read(materialDetailProvider(widget.materialId)).value;
     final url = material?.payload.fileUrl;
     if (url == null || url.isEmpty) {
       setState(() => _error = l10n?.errorGeneric ?? 'Failed to load');
@@ -96,14 +97,14 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(detail.valueOrNull?.title ?? l10n.viewPdf,
+        title: Text(detail.value?.title ?? l10n.viewPdf,
             maxLines: 1, overflow: TextOverflow.ellipsis),
         actions: [
           IconButton(
             tooltip: l10n.openLink,
             icon: const Icon(Icons.open_in_new_rounded),
             onPressed: () {
-              final url = detail.valueOrNull?.payload.fileUrl;
+              final url = detail.value?.payload.fileUrl;
               if (url != null) _launch(url);
             },
           ),

@@ -145,10 +145,10 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     final l10n = AppLocalizations.of(context)!;
     final page = ref.watch(libraryControllerProvider);
     final filter = ref.watch(libraryFilterProvider);
-    final settings = ref.watch(appSettingsProvider).valueOrNull;
+    final settings = ref.watch(appSettingsProvider).value;
     final tabs = _visibleTabs(settings?.libraryCategories ??
         (book: true, note: true, video: true, subjectMaterial: true, pastQuestion: true));
-    final counts = page.valueOrNull?.counts ?? const <String, int>{};
+    final counts = page.value?.counts ?? const <String, int>{};
     final sortLabel = switch (filter.sort) {
       'oldest' => l10n.sortOldest,
       'popular' => l10n.sortPopular,

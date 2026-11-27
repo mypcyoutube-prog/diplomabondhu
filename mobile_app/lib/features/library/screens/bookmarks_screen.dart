@@ -23,7 +23,7 @@ class _BookmarksScreenState extends ConsumerState<BookmarksScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final bookmarks = ref.watch(bookmarksProvider);
-    final filtered = bookmarks.valueOrNull
+    final filtered = bookmarks.value
         ?.where((m) =>
             _query.isEmpty ||
             m.title.toLowerCase().contains(_query.toLowerCase()))
