@@ -12,6 +12,8 @@ export interface IUser extends mongoose.Document {
   status: UserStatus;
   profile: {
     pictureUrl?: string;
+    roll?: string;
+    registrationNo?: string;
     instituteId?: mongoose.Types.ObjectId;
     programId?: mongoose.Types.ObjectId;
     regulationId?: mongoose.Types.ObjectId;
@@ -42,6 +44,8 @@ const userSchema = new Schema<IUser>(
     status: { type: String, enum: ['active', 'suspended', 'pending_deletion'], default: 'active', index: true },
     profile: {
       pictureUrl: String,
+      roll: { type: String, trim: true, maxlength: 32 },
+      registrationNo: { type: String, trim: true, maxlength: 32 },
       instituteId: { type: Schema.Types.ObjectId, ref: 'Institute' },
       programId: { type: Schema.Types.ObjectId, ref: 'EducationProgram' },
       regulationId: { type: Schema.Types.ObjectId, ref: 'Regulation' },

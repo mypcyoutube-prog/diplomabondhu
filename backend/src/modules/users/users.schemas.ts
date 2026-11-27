@@ -5,7 +5,9 @@ const objectId = z.string().regex(/^[0-9a-fA-F]{24}$/);
 export const updateProfileSchema = z.object({
   name: z.string().trim().min(2).max(120).optional(),
   phone: z.string().trim().regex(/^01[3-9]\d{8}$/).optional(),
-  pictureUrl: z.string().url().max(500).optional()
+  pictureUrl: z.string().url().max(500).optional(),
+  roll: z.string().trim().min(1).max(32).optional(),
+  registrationNo: z.string().trim().min(1).max(32).optional()
 }).strict();
 
 export const academicInfoSchema = z.object({

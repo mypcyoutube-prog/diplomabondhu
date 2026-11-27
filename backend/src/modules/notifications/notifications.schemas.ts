@@ -24,6 +24,8 @@ export const announcementBodySchema = z.object({
   title: z.string().trim().min(3).max(300),
   body: z.string().trim().min(3).max(5000),
   category: z.enum(['announcement', 'academic', 'exam', 'material', 'system']).default('announcement'),
+  source: z.enum(['admin', 'bteb']).default('admin'),
+  pdfUrl: z.string().url().max(1000).optional(),
   targeting: z.object({
     all: z.boolean().default(true),
     programIds: z.array(objectId).default([]),

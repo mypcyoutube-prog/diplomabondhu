@@ -5,7 +5,9 @@ import { ok } from '../../core/response';
 export const DEFAULT_HOMEPAGE_SECTIONS = [
   { key: 'announcements', visible: true, order: 10 },
   { key: 'quick_access', visible: true, order: 20 },
-  { key: 'materials', visible: true, order: 30 },
+  { key: 'services', visible: true, order: 25 },
+  { key: 'resources', visible: true, order: 30 },
+  { key: 'materials', visible: true, order: 35 },
   { key: 'exams', visible: true, order: 40 },
   { key: 'gpa_calculator', visible: true, order: 50 },
   { key: 'planner', visible: true, order: 60 },
@@ -33,6 +35,19 @@ export function settingsRoutes() {
       return ok(res, {
         branding: s.branding,
         homepageSections: [...s.homepageSections].sort((a, b) => a.order - b.order),
+        resultDisplay: {
+          enabled: s.resultDisplay?.enabled ?? false,
+          examId: s.resultDisplay?.examId ?? '',
+          startsAt: s.resultDisplay?.startsAt ?? null,
+          endsAt: s.resultDisplay?.endsAt ?? null
+        },
+        homeNotice: {
+          text: s.homeNotice?.text ?? '',
+          link: s.homeNotice?.link ?? '',
+          visible: s.homeNotice?.visible ?? true,
+          startsAt: s.homeNotice?.startsAt ?? null,
+          endsAt: s.homeNotice?.endsAt ?? null
+        },
         featureFlags: s.featureFlags,
         maintenanceMode: s.maintenanceMode,
         supportInfo: s.supportInfo,

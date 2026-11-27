@@ -82,6 +82,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   void _showEditSheet(AppLocalizations l10n, User user) {
     final nameController = TextEditingController(text: user.name);
     final phoneController = TextEditingController(text: user.phone ?? '');
+    final rollController = TextEditingController(text: user.academic?.roll ?? '');
+    final regController = TextEditingController(text: user.academic?.registrationNo ?? '');
     var saving = false;
 
     showModalBottomSheet<void>(
@@ -122,6 +124,23 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   prefixIcon: const Icon(Icons.phone_outlined),
                 ),
               ),
+              const SizedBox(height: DbSpacing.md),
+              TextField(
+                controller: rollController,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(
+                  labelText: l10n.rollNumber,
+                  prefixIcon: const Icon(Icons.badge_outlined),
+                ),
+              ),
+              const SizedBox(height: DbSpacing.md),
+              TextField(
+                controller: regController,
+                decoration: InputDecoration(
+                  labelText: l10n.registrationNumber,
+                  prefixIcon: const Icon(Icons.numbers_rounded),
+                ),
+              ),
               const SizedBox(height: DbSpacing.lg),
               FilledButton.icon(
                 onPressed: saving
@@ -141,6 +160,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                               .updateProfile(
                                 name: name,
                                 phone: phoneController.text.trim(),
+                                roll: rollController.text.trim(),
+                                registrationNo: regController.text.trim(),
                               );
                           if (!sheetContext.mounted) return;
                           Navigator.pop(sheetContext);
@@ -440,7 +461,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   const SizedBox(height: DbSpacing.sm),
                   if (academic == null ||
                       (academic.instituteId == null &&
-                          academic.semesterNumber == null))
+                          academic.semesterNumber == null &&
+                          (academic.roll == null || academic.roll!.isEmpty)))
                     Text(
                       l10n.academicInfoMissing,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -448,6 +470,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           ),
                     )
                   else ...[
+                    if (academic.roll != null && academic.roll!.isNotEmpty)
+                      DbInfoRow(label: l10n.rollNumber, value: academic.roll!),
+                    if (academic.registrationNo != null &&
+                        academic.registrationNo!.isNotEmpty)
+                      DbInfoRow(
+                          label: l10n.registrationNumber,
+                          value: academic.registrationNo!),
                     if (academic.semesterNumber != null)
                       DbInfoRow(
                           label: l10n.semester,

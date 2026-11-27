@@ -79,8 +79,13 @@ class AuthController extends AsyncNotifier<User?> {
     state = const AsyncData(null);
   }
 
-  Future<void> updateProfile({String? name, String? phone}) async {
-    final user = await _repo().updateProfile(name: name, phone: phone);
+  Future<void> updateProfile({String? name, String? phone, String? roll, String? registrationNo}) async {
+    final user = await _repo().updateProfile(
+      name: name,
+      phone: phone,
+      roll: roll,
+      registrationNo: registrationNo,
+    );
     state = AsyncData(user);
   }
 }

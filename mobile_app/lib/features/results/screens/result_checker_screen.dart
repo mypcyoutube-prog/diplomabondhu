@@ -143,7 +143,7 @@ class _ResultCheckerScreenState extends ConsumerState<ResultCheckerScreen> {
           else if (_timeline != null)
             _FadeInUp(
               key: ValueKey('timeline-${_timeline!.roll}'),
-              child: _TimelineCard(timeline: _timeline!),
+              child: ResultTimelineCard(timeline: _timeline!),
             ),
         ],
       ),
@@ -252,10 +252,10 @@ String? _letterFromGpa(double? gpa) {
   return null;
 }
 
-class _TimelineCard extends StatelessWidget {
+class ResultTimelineCard extends StatelessWidget {
   final ResultTimeline timeline;
 
-  const _TimelineCard({required this.timeline});
+  const ResultTimelineCard({required this.timeline});
 
   @override
   Widget build(BuildContext context) {

@@ -392,6 +392,13 @@ abstract class AppLocalizations {
   /// **'Roll number'**
   String get rollNumber;
 
+  /// No description provided for @registrationNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Registration number'**
+  String get registrationNumber;
+
+
   /// No description provided for @checkResult.
   ///
   /// In en, this message translates to:
@@ -1431,6 +1438,103 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Other'**
   String get reportOther;
+
+  /// No description provided for @notices.
+  ///
+  /// In en, this message translates to:
+  /// **'Notices'**
+  String get notices;
+
+  /// No description provided for @noticeTickerLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'NOTICE'**
+  String get noticeTickerLabel;
+
+  /// No description provided for @allNotices.
+  ///
+  /// In en, this message translates to:
+  /// **'All notices'**
+  String get allNotices;
+
+  /// No description provided for @viewDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'View details'**
+  String get viewDetails;
+
+  /// No description provided for @syllabus.
+  ///
+  /// In en, this message translates to:
+  /// **'Syllabus'**
+  String get syllabus;
+
+  /// No description provided for @services.
+  ///
+  /// In en, this message translates to:
+  /// **'Services'**
+  String get services;
+
+  /// No description provided for @resources.
+  ///
+  /// In en, this message translates to:
+  /// **'Resources'**
+  String get resources;
+
+  /// No description provided for @cgpaCalculator.
+  ///
+  /// In en, this message translates to:
+  /// **'CGPA Calculator'**
+  String get cgpaCalculator;
+
+  /// No description provided for @addRollHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Save your roll in your profile to see your result here automatically.'**
+  String get addRollHint;
+
+  /// No description provided for @noticeEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No notices yet.'**
+  String get noticeEmpty;
+
+  /// No description provided for @publishedOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Published'**
+  String get publishedOn;
+
+  /// No description provided for @viewPdf.
+  ///
+  /// In en, this message translates to:
+  /// **'View PDF'**
+  String get viewPdf;
+
+  /// No description provided for @studyTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Study'**
+  String get studyTab;
+
+  /// No description provided for @resultTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Result'**
+  String get resultTab;
+
+  /// No description provided for @noResultSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'No result found for your roll in this examination.'**
+  String get noResultSaved;
+
+  /// No description provided for @openProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Open profile'**
+  String get openProfile;
+
 }
 
 

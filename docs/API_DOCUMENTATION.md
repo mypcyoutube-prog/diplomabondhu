@@ -40,7 +40,7 @@
 | Method | Path | Auth | Notes |
 |---|---|---|---|
 | GET | `/users/me` | ✅ | full profile |
-| PATCH | `/users/me` | ✅ | editable fields only (name, phone, picture, prefs) |
+| PATCH | `/users/me` | ✅ | editable fields only (name, phone, picture, roll, registrationNo, prefs) |
 | PATCH | `/users/me/academic-info` | ✅ | instituteId, programId, regulationId, sessionId, technologyId, currentSemesterId — validated against collections |
 | PATCH | `/users/me/preferences` | ✅ | language, theme, notification prefs |
 | POST | `/users/me/deletion-request` | ✅ | creates deletion request |
@@ -133,13 +133,15 @@ Moderation: `/admin/community/*`.
 | POST | `/notifications/:id/read` | |
 | POST | `/notifications/read-all` | |
 | GET/PUT | `/notifications/preferences` | per-category |
+| GET | `/notifications/announcements/published` | published notices for the home ticker + All Notices page, `?source=admin\|bteb` filter |
+| GET | `/notifications/announcements/published/:id` | notice detail (title, body, source, pdfUrl, publishedAt) |
 
-Admin: `/admin/announcements` CRUD + targeting + scheduling + publish.
+Admin: `/admin/announcements` CRUD + targeting + scheduling + publish (notices carry `source: admin\|bteb` and an optional `pdfUrl`).
 
 ### 2.10 Settings (`/settings`) — public read
 | Method | Path | Notes |
 |---|---|---|
-| GET | `/settings/app` | branding, homepage sections, feature flags, maintenanceMode, supportInfo, legal pages, versionInfo |
+| GET | `/settings/app` | branding, homepage sections, `resultDisplay` (enabled/examId/startsAt/endsAt window), `homeNotice` (text/link/visible/window), feature flags, maintenanceMode, supportInfo, legal pages, versionInfo |
 | GET | `/settings/features` | feature visibility incl. `result_checker: coming_soon` |
 
 Admin: `/admin/settings` PUT (full audit-logged).

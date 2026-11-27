@@ -4,6 +4,8 @@ export interface IAnnouncement extends mongoose.Document {
   title: string;
   body: string;
   category: 'announcement' | 'academic' | 'exam' | 'material' | 'system';
+  source: 'admin' | 'bteb';
+  pdfUrl?: string;
   targeting: {
     all: boolean;
     programIds: mongoose.Types.ObjectId[];
@@ -22,6 +24,8 @@ const schema = new Schema<IAnnouncement>({
   title: { type: String, required: true, trim: true, minlength: 3, maxlength: 300 },
   body: { type: String, required: true, maxlength: 5000 },
   category: { type: String, enum: ['announcement', 'academic', 'exam', 'material', 'system'], default: 'announcement' },
+  source: { type: String, enum: ['admin', 'bteb'], default: 'admin', index: true },
+  pdfUrl: { type: String, maxlength: 1000 },
   targeting: {
     all: { type: Boolean, default: true },
     programIds: [{ type: Schema.Types.ObjectId, ref: 'EducationProgram' }],

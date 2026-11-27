@@ -3,6 +3,8 @@ import mongoose, { Schema } from 'mongoose';
 export interface IAppSettings extends mongoose.Document {
   branding: { appName: string; logoUrl?: string };
   homepageSections: { key: string; visible: boolean; order: number; customizable?: boolean }[];
+  resultDisplay: { enabled: boolean; examId: string; startsAt?: Date | null; endsAt?: Date | null };
+  homeNotice: { text: string; link: string; visible: boolean; startsAt?: Date | null; endsAt?: Date | null };
   searchSynonyms: string[][];
   featureFlags: Record<string, unknown>;
   integrations: { googleDriveApiKey?: string };
@@ -23,6 +25,19 @@ const appSettingsSchema = new Schema<IAppSettings>({
     order: { type: Number, default: 0 },
     customizable: { type: Boolean, default: true }
   }],
+  resultDisplay: {
+    enabled: { type: Boolean, default: false },
+    examId: { type: String, default: '', maxlength: 120 },
+    startsAt: { type: Date, default: null },
+    endsAt: { type: Date, default: null }
+  },
+  homeNotice: {
+    text: { type: String, default: '', maxlength: 300 },
+    link: { type: String, default: '', maxlength: 1000 },
+    visible: { type: Boolean, default: true },
+    startsAt: { type: Date, default: null },
+    endsAt: { type: Date, default: null }
+  },
   searchSynonyms: { type: [[String]], default: [] },
   featureFlags: { type: Schema.Types.Mixed, default: {} },
   integrations: {

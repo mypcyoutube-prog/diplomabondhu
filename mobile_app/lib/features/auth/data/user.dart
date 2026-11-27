@@ -17,6 +17,8 @@ class UserAcademicInfo {
   final String? technologyId;
   final String? sessionId;
   final int? semesterNumber;
+  final String? roll;
+  final String? registrationNo;
 
   const UserAcademicInfo({
     this.instituteId,
@@ -25,6 +27,8 @@ class UserAcademicInfo {
     this.technologyId,
     this.sessionId,
     this.semesterNumber,
+    this.roll,
+    this.registrationNo,
   });
 
   factory UserAcademicInfo.fromJson(Map<String, dynamic> json) => UserAcademicInfo(
@@ -34,6 +38,8 @@ class UserAcademicInfo {
         technologyId: json['technologyId'] as String?,
         sessionId: json['sessionId'] as String?,
         semesterNumber: json['semesterNumber'] as int?,
+        roll: json['roll'] as String?,
+        registrationNo: json['registrationNo'] as String?,
       );
 }
 
@@ -70,9 +76,11 @@ class User {
         role: json['role'] as String? ?? 'student',
         status: json['status'] as String? ?? 'active',
         prefs: UserPrefs.fromJson(json['prefs'] as Map<String, dynamic>? ?? {}),
-        academic: json['academic'] is Map<String, dynamic>
-            ? UserAcademicInfo.fromJson(json['academic'] as Map<String, dynamic>)
-            : null,
+        academic: json['profile'] is Map<String, dynamic>
+            ? UserAcademicInfo.fromJson(json['profile'] as Map<String, dynamic>)
+            : json['academic'] is Map<String, dynamic>
+                ? UserAcademicInfo.fromJson(json['academic'] as Map<String, dynamic>)
+                : null,
         createdAt: json['createdAt'] is String
             ? DateTime.tryParse(json['createdAt'] as String)
             : null,

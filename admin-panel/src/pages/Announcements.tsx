@@ -8,6 +8,8 @@ interface Announcement {
   title: string;
   body: string;
   category: string;
+  source?: 'admin' | 'bteb';
+  pdfUrl?: string;
   targeting: { all: boolean; programIds: string[]; technologyIds: string[]; semesterIds: string[] };
   status: string;
   scheduledAt?: string;
@@ -23,7 +25,7 @@ export function AnnouncementsPage() {
   const [showForm, setShowForm] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
-  const [form, setForm] = useState({ title: '', body: '', category: 'announcement', all: true, scheduledAt: '', programIds: [] as string[], technologyIds: [] as string[], semesterIds: [] as string[] });
+  const [form, setForm] = useState({ title: '', body: '', category: 'announcement', source: 'admin', pdfUrl: '', all: true, scheduledAt: '', programIds: [] as string[], technologyIds: [] as string[], semesterIds: [] as string[] });
 
   const list = useApiQuery<{ items: Announcement[] }>(['announcements', page], `/notifications/admin/announcements${buildQuery({ page, limit: 20 })}`);
   const programs = useApiQuery<{ items: Doc[] }>(['academic', 'programs'], '/academic/programs?limit=100');
@@ -55,6 +57,7 @@ export function AnnouncementsPage() {
       title: form.title.trim(),
       body: form.body.trim(),
       category: form.category,
+      source: form.source,
       targeting: {
         all: form.all,
         programIds: form.all ? [] : form.programIds,
@@ -63,6 +66,7 @@ export function AnnouncementsPage() {
       }
     };
     if (form.scheduledAt) body.scheduledAt = form.scheduledAt;
+    if (form.pdfUrl.trim()) body.pdfUrl = form.pdfUrl.trim();
     createMut.mutate(body, { onSuccess: () => setShowForm(false), onError: (e) => setFormError(e.message) });
   };
 
@@ -99,7 +103,7 @@ export function AnnouncementsPage() {
       {list.isLoading ? <Spinner /> : list.isError ? <ErrorState message={list.error.message} onRetry={() => void list.refetch()} /> :
       !list.data?.data.items.length ? <EmptyState message="No announcements yet." /> : (
         <Card>
-          <Table head={['Title', 'Category', 'Audience', 'Status', 'Created', 'Actions']}>
+          <Table head={['Title', 'Category', 'Source', 'Audience', 'Status', 'Created', 'Actions']}>
             {list.data.data.items.map((a) => (
               <tr key={a._id} className="hover:bg-slate-50 dark:hover:bg-navy-700">
                 <td className="px-4 py-3 font-medium text-navy dark:text-white">
@@ -107,6 +111,7 @@ export function AnnouncementsPage() {
                   <p className="max-w-md truncate text-xs font-normal text-slate-400">{a.body}</p>
                 </td>
                 <td className="px-4 py-3 text-slate-600 dark:text-slate-300">{a.category}</td>
+                <td className="px-4 py-3"><Badge tone={a.source === 'bteb' ? 'blue' : 'slate'}>{a.source ?? 'admin'}</Badge></td>
                 <td className="px-4 py-3 text-slate-500">
                   {a.targeting.all ? 'All students' : `${a.targeting.programIds.length}P / ${a.targeting.technologyIds.length}T / ${a.targeting.semesterIds.length}S`}
                 </td>
@@ -143,6 +148,13 @@ export function AnnouncementsPage() {
             </label>
             <div className="grid grid-cols-2 gap-3">
               <Select label="Category" value={form.category} onChange={(v) => setForm({ ...form, category: v })} options={CATEGORIES} />
+              <Select
+                label="Source"
+                value={form.source}
+                onChange={(v) => setForm({ ...form, source: v })}
+                options={[{ value: 'admin', label: 'DiplomaBondhu admin' }, { value: 'bteb', label: 'BTEB official' }]}
+              />
+              <Input label="Official PDF / source link (optional)" value={form.pdfUrl} onChange={(v) => setForm({ ...form, pdfUrl: v })} />
               <Input label="Schedule for later (optional)" type="datetime-local" value={form.scheduledAt} onChange={(v) => setForm({ ...form, scheduledAt: v })} />
             </div>
             <label className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">

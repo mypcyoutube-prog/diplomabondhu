@@ -9,11 +9,13 @@ async function getOwnedUser(userId: string): Promise<IUser> {
   return user;
 }
 
-export async function updateProfile(userId: string, patch: { name?: string; phone?: string; pictureUrl?: string }): Promise<IUser> {
+export async function updateProfile(userId: string, patch: { name?: string; phone?: string; pictureUrl?: string; roll?: string; registrationNo?: string }): Promise<IUser> {
   const user = await getOwnedUser(userId);
   if (patch.name !== undefined) user.name = patch.name;
   if (patch.phone !== undefined) user.phone = patch.phone;
   if (patch.pictureUrl !== undefined) user.profile.pictureUrl = patch.pictureUrl;
+  if (patch.roll !== undefined) user.profile.roll = patch.roll;
+  if (patch.registrationNo !== undefined) user.profile.registrationNo = patch.registrationNo;
   await user.save();
   return user;
 }

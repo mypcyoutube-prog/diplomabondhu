@@ -124,6 +124,12 @@ export function adminRoutes(env: Env) {
       const b = req.body as Record<string, unknown>;
       if (b.branding) settings.branding = { ...settings.branding, ...(b.branding as object) };
       if (b.homepageSections) settings.homepageSections = b.homepageSections as typeof settings.homepageSections;
+      if (b.resultDisplay) {
+        settings.resultDisplay = { ...settings.resultDisplay, ...b.resultDisplay } as typeof settings.resultDisplay;
+      }
+      if (b.homeNotice) {
+        settings.homeNotice = { ...settings.homeNotice, ...b.homeNotice } as typeof settings.homeNotice;
+      }
       if (b.featureFlags) settings.featureFlags = { ...settings.featureFlags, ...(b.featureFlags as object) };
       if (typeof b.maintenanceMode === 'boolean') settings.maintenanceMode = b.maintenanceMode;
       if (b.supportInfo) settings.supportInfo = { ...settings.supportInfo, ...(b.supportInfo as object) };

@@ -8,6 +8,9 @@ import { PERMISSIONS } from '../../core/permissions';
 import * as svc from './notifications.service';
 import { announcementBodySchema, idParam, preferencesSchema, updateAnnouncementSchema } from './notifications.schemas';
 
+const publishedFilter = (raw: unknown): 'bteb' | 'admin' | undefined =>
+  raw === 'bteb' || raw === 'admin' ? raw : undefined;
+
 type V<T> = { validatedQuery?: T; validatedParams?: T };
 
 export function notificationsRoutes(env: Env) {
@@ -36,6 +39,23 @@ export function notificationsRoutes(env: Env) {
   router.put('/preferences', validate({ body: preferencesSchema }), async (req, res, next) => {
     try { return ok(res, await svc.updatePreferences(req.auth!.id, req.body.categories, req.body.quietHours)); }
     catch (err) { next(err); }
+  });
+
+  router.get('/announcements/published', async (req, res, next) => {
+    try {
+      const page = Math.max(1, Number(req.query.page) || 1);
+      const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 50));
+      const source = publishedFilter(req.query.source);
+      const { items, meta } = await svc.listPublishedAnnouncements({ source, page, limit });
+      return ok(res, { items }, 200, meta);
+    } catch (err) { next(err); }
+  });
+
+  router.get('/announcements/published/:id', validate({ params: idParam }), async (req, res, next) => {
+    try {
+      const params = (req as unknown as V<{ id: string }>).validatedParams!;
+      return ok(res, { item: await svc.getPublishedAnnouncement(params.id) });
+    } catch (err) { next(err); }
   });
 
   router.post('/:id/read', validate({ params: idParam }), async (req, res, next) => {

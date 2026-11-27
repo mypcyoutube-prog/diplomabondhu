@@ -258,5 +258,22 @@
   "cgpaCreditsHint": "ক্রেডিট",
   "profileLabel": "প্রোফাইল",
   "todayProgress": "আজকের অগ্রগতি",
-  "tasksDone": "সম্পন্ন"
+  "tasksDone": "সম্পন্ন",
+  "notices": "নোটিশ",
+  "noticeTickerLabel": "নোটিশ",
+  "allNotices": "সব নোটিশ",
+  "viewDetails": "বিস্তারিত দেখুন",
+  "syllabus": "সিলেবাস",
+  "services": "সেবা",
+  "resources": "রিসোর্স",
+  "cgpaCalculator": "সিজিপিএ ক্যালকুলেটর",
+  "addRollHint": "প্রোফাইলে নিজের রোল সেভ করলে রেজাল্ট এখানে অটোমেটিক দেখা যাবে।",
+  "noticeEmpty": "এখনো কোনো নোটিশ নেই।",
+  "publishedOn": "প্রকাশিত",
+  "viewPdf": "পিডিএফ দেখুন",
+  "studyTab": "পড়াশোনা",
+  "resultTab": "রেজাল্ট",
+  "noResultSaved": "এই পরীক্ষায় আপনার রোলে কোনো রেজাল্ট পাওয়া যায়নি।",
+  "openProfile": "প্রোফাইল খুলুন",
+  "registrationNumber": "রেজিস্ট্রেশন নম্বর"
 }

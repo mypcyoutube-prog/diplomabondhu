@@ -82,6 +82,23 @@ async function resolveRecipients(announcement: IAnnouncement): Promise<Types.Obj
   return users.map((u) => u._id as Types.ObjectId);
 }
 
+export async function listPublishedAnnouncements(query: { source?: string; page: number; limit: number }) {
+  const filter: Record<string, unknown> = { status: 'published', deletedAt: null };
+  if (query.source === 'bteb' || query.source === 'admin') filter.source = query.source;
+  const [items, total] = await Promise.all([
+    Announcement.find(filter).sort({ publishedAt: -1, createdAt: -1 }).skip((query.page - 1) * query.limit).limit(query.limit).lean(),
+    Announcement.countDocuments(filter)
+  ]);
+  return { items, meta: { page: query.page, limit: query.limit, total } };
+}
+
+export async function getPublishedAnnouncement(id: string) {
+  if (!Types.ObjectId.isValid(id)) throw notFound('Notice not found');
+  const announcement = await Announcement.findOne({ _id: new Types.ObjectId(id), status: 'published', deletedAt: null }).lean();
+  if (!announcement) throw notFound('Notice not found');
+  return announcement;
+}
+
 export async function createAnnouncement(body: Record<string, unknown>, actorId: string) {
   return Announcement.create({ ...(body as object), createdBy: new Types.ObjectId(actorId) });
 }

@@ -26,6 +26,19 @@ export const settingsUpdateSchema = z.object({
     order: z.number().int().min(0).max(100),
     customizable: z.boolean().optional()
   })).optional(),
+  resultDisplay: z.object({
+    enabled: z.boolean(),
+    examId: z.string().trim().max(120).default(''),
+    startsAt: z.coerce.date().nullable().optional(),
+    endsAt: z.coerce.date().nullable().optional()
+  }).optional(),
+  homeNotice: z.object({
+    text: z.string().trim().max(300).default(''),
+    link: z.string().trim().max(1000).default(''),
+    visible: z.boolean(),
+    startsAt: z.coerce.date().nullable().optional(),
+    endsAt: z.coerce.date().nullable().optional()
+  }).optional(),
   featureFlags: z.record(z.string(), z.unknown()).optional(),
   maintenanceMode: z.boolean().optional(),
   supportInfo: z.object({

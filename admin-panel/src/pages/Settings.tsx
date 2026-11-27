@@ -67,9 +67,19 @@ function DriveKeyCard() {
   );
 }
 
+function toDatetimeLocal(value: string | null): string {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
 interface AppSettingsData {
   branding: { appName: string; logoUrl?: string };
   homepageSections: Array<{ key: string; visible: boolean; order: number; customizable?: boolean }>;
+  resultDisplay: { enabled: boolean; examId: string; startsAt: string | null; endsAt: string | null };
+  homeNotice: { text: string; link: string; visible: boolean; startsAt: string | null; endsAt: string | null };
   featureFlags: Record<string, unknown>;
   maintenanceMode: boolean;
   supportInfo: { email?: string; phone?: string; url?: string };
@@ -97,6 +107,19 @@ export function SettingsPage() {
       {
         branding: { appName: form.branding.appName, ...(form.branding.logoUrl ? { logoUrl: form.branding.logoUrl } : {}) },
         homepageSections: form.homepageSections,
+        resultDisplay: {
+          enabled: form.resultDisplay.enabled,
+          examId: form.resultDisplay.examId.trim(),
+          startsAt: form.resultDisplay.startsAt || null,
+          endsAt: form.resultDisplay.endsAt || null
+        },
+        homeNotice: {
+          text: form.homeNotice.text.trim(),
+          link: form.homeNotice.link.trim(),
+          visible: form.homeNotice.visible,
+          startsAt: form.homeNotice.startsAt || null,
+          endsAt: form.homeNotice.endsAt || null
+        },
         featureFlags: form.featureFlags,
         maintenanceMode: form.maintenanceMode,
         supportInfo: form.supportInfo,
@@ -208,6 +231,87 @@ export function SettingsPage() {
                 )}
               </label>
             ))}
+          </div>
+        </Card>
+
+        <Card className="p-5">
+          <h2 className="mb-1 font-semibold text-navy dark:text-white">Home notice bar</h2>
+          <p className="mb-3 text-sm text-slate-600 dark:text-slate-300">
+            Shows as a one-line bar under the homepage banner. When result display is active the
+            result takes this slot instead (unless the window ends).
+          </p>
+          <label className="mb-3 flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
+            <input
+              type="checkbox"
+              checked={form.homeNotice.visible}
+              onChange={(e) => setForm({ ...form, homeNotice: { ...form.homeNotice, visible: e.target.checked } })}
+              className="h-4 w-4"
+            />
+            Visible
+          </label>
+          <div className="space-y-3">
+            <Input label="Notice text (max 300 chars)" value={form.homeNotice.text} onChange={(v) => setForm({ ...form, homeNotice: { ...form.homeNotice, text: v } })} />
+            <Input label="Optional link (https:// or /route)" value={form.homeNotice.link} onChange={(v) => setForm({ ...form, homeNotice: { ...form.homeNotice, link: v } })} />
+            <div className="grid grid-cols-2 gap-3">
+              <label className="block">
+                <span className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">Show from</span>
+                <input
+                  type="datetime-local"
+                  value={toDatetimeLocal(form.homeNotice.startsAt)}
+                  onChange={(e) => setForm({ ...form, homeNotice: { ...form.homeNotice, startsAt: e.target.value || null } })}
+                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-teal dark:border-navy-700 dark:bg-navy-700 dark:text-white"
+                />
+              </label>
+              <label className="block">
+                <span className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">Show until</span>
+                <input
+                  type="datetime-local"
+                  value={toDatetimeLocal(form.homeNotice.endsAt)}
+                  onChange={(e) => setForm({ ...form, homeNotice: { ...form.homeNotice, endsAt: e.target.value || null } })}
+                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-teal dark:border-navy-700 dark:bg-navy-700 dark:text-white"
+                />
+              </label>
+            </div>
+          </div>
+        </Card>
+
+        <Card className="p-5">
+          <h2 className="mb-1 font-semibold text-navy dark:text-white">Result display (home bar)</h2>
+          <p className="mb-3 text-sm text-slate-600 dark:text-slate-300">
+            During the window each student sees their own result matched by the roll saved in their
+            profile. Students without a roll in their profile see nothing.
+          </p>
+          <label className="mb-3 flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
+            <input
+              type="checkbox"
+              checked={form.resultDisplay.enabled}
+              onChange={(e) => setForm({ ...form, resultDisplay: { ...form.resultDisplay, enabled: e.target.checked } })}
+              className="h-4 w-4"
+            />
+            Enabled
+          </label>
+          <div className="space-y-3">
+            <Input label="Result exam id (from Results page)" value={form.resultDisplay.examId} onChange={(v) => setForm({ ...form, resultDisplay: { ...form.resultDisplay, examId: v } })} />
+            <div className="grid grid-cols-2 gap-3">
+              <label className="block">
+                <span className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">Display from</span>
+                <input
+                  type="datetime-local"
+                  value={toDatetimeLocal(form.resultDisplay.startsAt)}
+                  onChange={(e) => setForm({ ...form, resultDisplay: { ...form.resultDisplay, startsAt: e.target.value || null } })}
+                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-teal dark:border-navy-700 dark:bg-navy-700 dark:text-white"
+                />
+              </label>
+              <label className="block">
+                <span className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">Display until</span>
+                <input
+                  type="datetime-local"
+                  value={toDatetimeLocal(form.resultDisplay.endsAt)}
+                  onChange={(e) => setForm({ ...form, resultDisplay: { ...form.resultDisplay, endsAt: e.target.value || null } })}
+                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-teal dark:border-navy-700 dark:bg-navy-700 dark:text-white"
+                />
+              </label>
+            </div>
           </div>
         </Card>
 

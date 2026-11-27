@@ -21,6 +21,9 @@ import '../../features/gpa/screens/gpa_hub_screen.dart';
 import '../../features/home/screens/home_screen.dart';
 import '../../features/library/screens/library_screen.dart';
 import '../../features/results/screens/result_checker_screen.dart';
+import '../../features/results/screens/result_tab_screen.dart';
+import '../../features/notices/screens/notices_screen.dart';
+import '../../features/notices/screens/notice_detail_screen.dart';
 import '../../features/library/screens/material_detail_screen.dart';
 import '../../features/notifications/screens/notifications_screen.dart';
 import '../../features/search/screens/search_screen.dart';
@@ -100,6 +103,22 @@ final rootRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const ForgotPasswordScreen(),
       ),
       GoRoute(
+        path: '/exams',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const ExamCenterScreen(),
+      ),
+      GoRoute(
+        path: '/exams/:id',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) =>
+            ExamDetailScreen(examId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/gpa',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const GpaHubScreen(),
+      ),
+      GoRoute(
         path: '/exams/:id/run',
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) =>
@@ -141,8 +160,15 @@ final rootRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const PlannerScreen(),
       ),
       GoRoute(
-        path: '/community',
-        builder: (context, state) => const CommunityScreen(),
+        path: '/notices',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const NoticesScreen(),
+      ),
+      GoRoute(
+        path: '/notices/:id',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) =>
+            NoticeDetailScreen(noticeId: state.pathParameters['id']!),
       ),
       GoRoute(
         path: '/community/new',
@@ -227,21 +253,14 @@ final rootRouterProvider = Provider<GoRouter>((ref) {
           ]),
           StatefulShellBranch(routes: [
             GoRoute(
-              path: '/exams',
-              builder: (context, state) => const ExamCenterScreen(),
-              routes: [
-                GoRoute(
-                  path: ':id',
-                  builder: (context, state) =>
-                      ExamDetailScreen(examId: state.pathParameters['id']!),
-                ),
-              ],
+              path: '/results',
+              builder: (context, state) => const ResultTabScreen(),
             ),
           ]),
           StatefulShellBranch(routes: [
             GoRoute(
-              path: '/gpa',
-              builder: (context, state) => const GpaHubScreen(),
+              path: '/community',
+              builder: (context, state) => const CommunityScreen(),
             ),
           ]),
           StatefulShellBranch(routes: [
@@ -280,17 +299,17 @@ class _ShellScaffold extends StatelessWidget {
           NavigationDestination(
             icon: const Icon(Icons.menu_book_outlined),
             selectedIcon: const Icon(Icons.menu_book_rounded),
-            label: AppLocalizations.of(context)!.library,
+            label: AppLocalizations.of(context)!.studyTab,
           ),
           NavigationDestination(
-            icon: const Icon(Icons.quiz_outlined),
-            selectedIcon: const Icon(Icons.quiz_rounded),
-            label: AppLocalizations.of(context)!.exams,
+            icon: const Icon(Icons.verified_outlined),
+            selectedIcon: const Icon(Icons.verified_rounded),
+            label: AppLocalizations.of(context)!.resultTab,
           ),
           NavigationDestination(
-            icon: const Icon(Icons.calculate_outlined),
-            selectedIcon: const Icon(Icons.calculate_rounded),
-            label: AppLocalizations.of(context)!.cgpa,
+            icon: const Icon(Icons.groups_outlined),
+            selectedIcon: const Icon(Icons.groups_rounded),
+            label: AppLocalizations.of(context)!.community,
           ),
           NavigationDestination(
             icon: const Icon(Icons.person_outlined),

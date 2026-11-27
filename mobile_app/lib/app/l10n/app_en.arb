@@ -258,5 +258,22 @@
   "cgpaCreditsHint": "Credits",
   "profileLabel": "Profile",
   "todayProgress": "Today's progress",
-  "tasksDone": "done"
+  "tasksDone": "done",
+  "notices": "Notices",
+  "noticeTickerLabel": "NOTICE",
+  "allNotices": "All notices",
+  "viewDetails": "View details",
+  "syllabus": "Syllabus",
+  "services": "Services",
+  "resources": "Resources",
+  "cgpaCalculator": "CGPA Calculator",
+  "addRollHint": "Save your roll in your profile to see your result here automatically.",
+  "noticeEmpty": "No notices yet.",
+  "publishedOn": "Published",
+  "viewPdf": "View PDF",
+  "studyTab": "Study",
+  "resultTab": "Result",
+  "noResultSaved": "No result found for your roll in this examination.",
+  "openProfile": "Open profile",
+  "registrationNumber": "Registration number"
 }
