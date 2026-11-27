@@ -338,6 +338,30 @@ abstract class AppLocalizations {
   /// **'Type at least 2 characters to search'**
   String get searchStartTyping;
 
+  /// No description provided for @examCenter.
+  ///
+  /// In en, this message translates to:
+  /// **'Exam Center'**
+  String get examCenter;
+
+  /// No description provided for @studyResources.
+  ///
+  /// In en, this message translates to:
+  /// **'Study Resources'**
+  String get studyResources;
+
+  /// No description provided for @communityUpdates.
+  ///
+  /// In en, this message translates to:
+  /// **'Community Updates'**
+  String get communityUpdates;
+
+  /// No description provided for @questionsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'questions'**
+  String get questionsLabel;
+
   /// No description provided for @quickAccess.
   ///
   /// In en, this message translates to:

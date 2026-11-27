@@ -130,6 +130,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get searchStartTyping => 'Type at least 2 characters to search';
 
   @override
+  String get examCenter => 'Exam Center';
+
+  @override
+  String get studyResources => 'Study Resources';
+
+  @override
+  String get communityUpdates => 'Community Updates';
+
+  @override
+  String get questionsLabel => 'questions';
+
+  @override
   String get quickAccess => 'Quick Access';
 
   @override

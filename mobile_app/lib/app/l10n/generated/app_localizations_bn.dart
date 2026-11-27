@@ -130,6 +130,18 @@ class AppLocalizationsBn extends AppLocalizations {
   String get searchStartTyping => 'খুঁজতে অন্তত ২ অক্ষর লিখুন';
 
   @override
+  String get examCenter => 'পরীক্ষা কেন্দ্র';
+
+  @override
+  String get studyResources => 'স্টাডি রিসোর্স';
+
+  @override
+  String get communityUpdates => 'কমিউনিটি আপডেট';
+
+  @override
+  String get questionsLabel => 'প্রশ্ন';
+
+  @override
   String get quickAccess => 'দ্রুত অ্যাক্সেস';
 
   @override

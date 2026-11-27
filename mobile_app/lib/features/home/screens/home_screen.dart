@@ -8,8 +8,11 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../app/l10n/generated/app_localizations.dart';
 import '../../../app/theme/theme.dart';
 import '../../auth/providers/auth_controller.dart';
+import '../../community/data/community_models.dart';
+import '../../community/providers/community_providers.dart';
 import '../../dashboard_customize/data/dashboard_prefs_repository.dart';
 import '../../dashboard_customize/providers/dashboard_prefs_providers.dart';
+import '../../exams/providers/exam_providers.dart';
 import '../../library/providers/library_providers.dart';
 import '../../notices/data/notice.dart';
 import '../../notices/providers/notice_providers.dart';
@@ -22,14 +25,14 @@ class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
   static const List<String> _sectionOrder = [
-    'services',
+    'quick_access',
+    'exams',
     'resources',
     'materials',
     'community',
-    'quick_access',
-    'exams',
-    'gpa_calculator',
     'planner',
+    'services',
+    'gpa_calculator',
     'result_checker',
     'announcements',
   ];
@@ -313,6 +316,133 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
+  Widget _resourceCountTile(
+      BuildContext context, String title, IconData icon, int count) {
+    return PressableScale(
+      onTap: () => context.push('/library'),
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+            horizontal: DbSpacing.md, vertical: DbSpacing.sm),
+        decoration: BoxDecoration(
+          color: Theme.of(context).cardColor,
+          borderRadius: BorderRadius.circular(DbRadius.card),
+          boxShadow: DbShadows.card,
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                    colors: [DbColors.teal, DbColors.emerald]),
+                borderRadius: BorderRadius.circular(DbRadius.input),
+              ),
+              child: Icon(icon, color: Colors.white, size: 20),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style:
+                          const TextStyle(fontWeight: FontWeight.w700)),
+                  if (count > 0)
+                    Text(
+                      '$count',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: DbColors.teal,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _communityUpdateCard(BuildContext context, Post post) {
+    return PressableScale(
+      onTap: () => context.push('/community/${post.id}'),
+      child: Container(
+        padding: const EdgeInsets.all(DbSpacing.md),
+        decoration: BoxDecoration(
+          color: Theme.of(context).cardColor,
+          borderRadius: BorderRadius.circular(DbRadius.card),
+          boxShadow: DbShadows.card,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                        colors: [DbColors.teal, DbColors.emerald]),
+                    shape: BoxShape.circle,
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    post.authorName.isNotEmpty
+                        ? post.authorName[0].toUpperCase()
+                        : '?',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 13,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    post.authorName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w700, fontSize: 13),
+                  ),
+                ),
+                Icon(
+                  Icons.thumb_up_alt_rounded,
+                  size: 14,
+                  color: DbColors.textSecondaryLight,
+                ),
+                const SizedBox(width: 4),
+                Text('${post.likeCount}',
+                    style: const TextStyle(fontSize: 12)),
+                const SizedBox(width: 8),
+                Icon(Icons.chat_bubble_rounded,
+                    size: 14, color: DbColors.textSecondaryLight),
+                const SizedBox(width: 4),
+                Text('${post.commentCount}',
+                    style: const TextStyle(fontSize: 12)),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              post.title,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _sectionHeader(BuildContext context, String title, String route,
       void Function(String route) openLink) {
     return DbSectionHeader(
@@ -346,6 +476,9 @@ class HomeScreen extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
     final settings = ref.watch(appSettingsProvider);
     final recent = ref.watch(recentMaterialsProvider);
+    final resourceCounts = ref.watch(resourceCountsProvider);
+    final examList = ref.watch(examListControllerProvider);
+    final communityFeed = ref.watch(communityFeedProvider);
     final dashPrefs = ref.watch(dashboardPrefsProvider);
     final notices = ref.watch(publishedNoticesProvider('all'));
     final user = ref.watch(authControllerProvider).value;
@@ -355,15 +488,6 @@ class HomeScreen extends ConsumerWidget {
         : hour < 17
             ? l10n.goodAfternoon
             : l10n.goodEvening;
-
-    final services = <(String, IconData, String)>[
-      (l10n.cgpaCalculator, Icons.calculate_rounded, '/gpa/cgpa'),
-    ];
-
-    final resources = <(String, IconData, String)>[
-      (l10n.syllabus, Icons.menu_book_rounded, '/subjects'),
-      (l10n.previousQuestions, Icons.history_edu_rounded, '/library'),
-    ];
 
     Widget gridFor(
         String title, List<(String, IconData, String)> items, String seeAllRoute) {
@@ -392,16 +516,51 @@ class HomeScreen extends ConsumerWidget {
     Widget sectionWidget(String key) {
       switch (key) {
         case 'services':
-          return gridFor(l10n.services, services, '/gpa/cgpa');
+          return const SizedBox.shrink();
         case 'resources':
-          return gridFor(l10n.resources, resources, '/subjects');
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _sectionHeader(
+                  context, l10n.studyResources, '/library',
+                  (link) => _openLink(context, link)),
+              resourceCounts.maybeWhen(
+                data: (counts) {
+                  final cards = <(String, IconData, int)>[
+                    (l10n.books, Icons.auto_stories_rounded,
+                        counts['book'] ?? 0),
+                    (l10n.notes, Icons.edit_note_rounded,
+                        counts['note'] ?? 0),
+                    (l10n.videos, Icons.play_circle_rounded,
+                        counts['video'] ?? 0),
+                    (l10n.subjectMaterials, Icons.folder_special_rounded,
+                        counts['subject_material'] ?? 0),
+                  ];
+                  return GridView.count(
+                    crossAxisCount: 2,
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    mainAxisSpacing: 10,
+                    crossAxisSpacing: 10,
+                    childAspectRatio: 2.1,
+                    children: cards
+                        .map((c) => _resourceCountTile(
+                            context, c.$1, c.$2, c.$3))
+                        .toList(),
+                  );
+                },
+                orElse: () => const SizedBox.shrink(),
+              ),
+            ],
+          );
         case 'quick_access':
           return gridFor(
             l10n.quickAccess,
             <(String, IconData, String)>[
-              (l10n.library, Icons.menu_book_rounded, '/library'),
-              (l10n.exams, Icons.quiz_rounded, '/exams'),
-              (l10n.planner, Icons.event_note_rounded, '/planner'),
+              (l10n.studyTab, Icons.menu_book_rounded, '/library'),
+              (l10n.examCenter, Icons.quiz_rounded, '/exams'),
+              (l10n.cgpa, Icons.functions_rounded, '/gpa/cgpa'),
+              (l10n.community, Icons.groups_rounded, '/community'),
               (l10n.notices, Icons.campaign_rounded, '/notices'),
             ],
             '/library',
@@ -446,25 +605,81 @@ class HomeScreen extends ConsumerWidget {
             ],
           );
         case 'community':
-          return PressableScale(
-            onTap: () => context.push('/community'),
-            child: Card(
-              child: ListTile(
-                onTap: () => context.push('/community'),
-                leading: const Icon(Icons.groups_rounded, color: DbColors.teal),
-                title: Text(l10n.community),
-                trailing: const Icon(Icons.chevron_right_rounded),
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _sectionHeader(
+                  context, l10n.communityUpdates, '/community',
+                  (link) => _openLink(context, link)),
+              communityFeed.maybeWhen(
+                data: (posts) {
+                  if (posts.isEmpty) return const SizedBox.shrink();
+                  final post = posts.first;
+                  return _communityUpdateCard(context, post);
+                },
+                orElse: () => const SizedBox.shrink(),
               ),
-            ),
+            ],
           );
         case 'exams':
-          return Card(
-            child: ListTile(
-              onTap: () => context.push('/exams'),
-              leading: const Icon(Icons.quiz_rounded, color: DbColors.teal),
-              title: Text(l10n.exams),
-              trailing: const Icon(Icons.chevron_right_rounded),
-            ),
+          return examList.maybeWhen(
+            data: (page) {
+              if (page.items.isEmpty) return const SizedBox.shrink();
+              final exam = page.items.first;
+              return PressableScale(
+                onTap: () => context.push('/exams'),
+                child: Container(
+                  padding: const EdgeInsets.all(DbSpacing.md),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).cardColor,
+                    borderRadius: BorderRadius.circular(DbRadius.card),
+                    boxShadow: DbShadows.card,
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                              colors: [DbColors.teal, DbColors.emerald]),
+                          borderRadius:
+                              BorderRadius.circular(DbRadius.input),
+                        ),
+                        child: const Icon(Icons.quiz_rounded,
+                            color: Colors.white, size: 22),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              exam.title,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.w700),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              '${exam.questionCount} ${l10n.questionsLabel}',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: DbColors.textSecondaryLight,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Icon(Icons.chevron_right_rounded,
+                          color: DbColors.textSecondaryLight),
+                    ],
+                  ),
+                ),
+              );
+            },
+            orElse: () => const SizedBox.shrink(),
           );
         case 'gpa_calculator':
         case 'result_checker':

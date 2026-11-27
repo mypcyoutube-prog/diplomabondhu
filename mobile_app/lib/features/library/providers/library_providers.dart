@@ -208,6 +208,13 @@ final recentMaterialsProvider = FutureProvider<List<Material>>((ref) {
   return ref.watch(materialRepositoryProvider).recent();
 });
 
+final resourceCountsProvider =
+    FutureProvider.autoDispose<Map<String, int>>((ref) async {
+  final page =
+      await ref.watch(materialRepositoryProvider).list(type: 'book', limit: 1);
+  return page.counts;
+});
+
 final bookmarksProvider = FutureProvider<List<Material>>((ref) {
   return ref.watch(materialRepositoryProvider).bookmarks();
 });
