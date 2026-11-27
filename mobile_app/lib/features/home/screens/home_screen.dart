@@ -21,14 +21,37 @@ import '../providers/home_providers.dart';
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
+  static const List<String> _sectionOrder = [
+    'services',
+    'resources',
+    'materials',
+    'community',
+    'quick_access',
+    'exams',
+    'gpa_calculator',
+    'planner',
+    'result_checker',
+    'announcements',
+  ];
+
   List<DashboardSectionPref> _orderedSections(
       AsyncValue<DashboardPrefsBundle> prefs) {
     const fallback = ['services', 'resources', 'materials', 'community'];
+    int rank(String key) {
+      final i = _sectionOrder.indexOf(key);
+      return i == -1 ? 100 : i;
+    }
+
     return prefs.maybeWhen(
       data: (bundle) {
         final visible =
             bundle.sections.where((s) => s.visible).toList()
-              ..sort((a, b) => a.order.compareTo(b.order));
+              ..sort((a, b) {
+                final ka = rank(a.key);
+                final kb = rank(b.key);
+                if (ka != kb) return ka.compareTo(kb);
+                return a.order.compareTo(b.order);
+              });
         return visible;
       },
       orElse: () => fallback
@@ -415,12 +438,12 @@ class HomeScreen extends ConsumerWidget {
           return gridFor(l10n.resources, resources, '/subjects');
         case 'quick_access':
           return gridFor(
-            l10n.services,
+            l10n.quickAccess,
             <(String, IconData, String)>[
               (l10n.library, Icons.menu_book_rounded, '/library'),
               (l10n.exams, Icons.quiz_rounded, '/exams'),
-              (l10n.cgpa, Icons.functions_rounded, '/gpa/cgpa'),
               (l10n.planner, Icons.event_note_rounded, '/planner'),
+              (l10n.notices, Icons.campaign_rounded, '/notices'),
             ],
             '/library',
           );
@@ -486,14 +509,7 @@ class HomeScreen extends ConsumerWidget {
           );
         case 'gpa_calculator':
         case 'result_checker':
-          return _serviceTile(
-            context,
-            l10n.checkResult,
-            '',
-            Icons.verified_rounded,
-            '/results/checker',
-            (link) => _openLink(context, link),
-          );
+          return const SizedBox.shrink();
         case 'planner':
           return Card(
             child: ListTile(

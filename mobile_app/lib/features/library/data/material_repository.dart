@@ -47,13 +47,19 @@ class MaterialRepository {
   }
 
   Future<List<Material>> recent() async {
-    final res = await _client.getList('/materials/recent');
-    return res.data.map((e) => Material.fromJson(e as Map<String, dynamic>)).toList();
+    final res = await _client.getMap('/materials/recent');
+    final items = res.data['items'] as List<dynamic>? ?? const [];
+    return items
+        .map((e) => Material.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
   Future<List<Material>> bookmarks() async {
-    final res = await _client.getList('/materials/bookmarks');
-    return res.data.map((e) => Material.fromJson(e as Map<String, dynamic>)).toList();
+    final res = await _client.getMap('/materials/bookmarks');
+    final items = res.data['items'] as List<dynamic>? ?? const [];
+    return items
+        .map((e) => Material.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
   Future<void> addBookmark(String id) => _client.postMap('/materials/$id/bookmark');
