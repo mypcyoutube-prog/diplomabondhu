@@ -375,7 +375,6 @@ class HomeScreen extends ConsumerWidget {
             : l10n.goodEvening;
 
     final services = <(String, IconData, String)>[
-      (l10n.checkResult, Icons.verified_rounded, '/results/checker'),
       (l10n.cgpaCalculator, Icons.calculate_rounded, '/gpa/cgpa'),
     ];
 
