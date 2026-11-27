@@ -130,6 +130,9 @@ export function adminRoutes(env: Env) {
       if (b.homeNotice) {
         settings.homeNotice = { ...settings.homeNotice, ...b.homeNotice } as typeof settings.homeNotice;
       }
+      if (b.libraryCategories) {
+        settings.libraryCategories = { ...settings.libraryCategories, ...b.libraryCategories } as typeof settings.libraryCategories;
+      }
       if (b.featureFlags) settings.featureFlags = { ...settings.featureFlags, ...(b.featureFlags as object) };
       if (typeof b.maintenanceMode === 'boolean') settings.maintenanceMode = b.maintenanceMode;
       if (b.supportInfo) settings.supportInfo = { ...settings.supportInfo, ...(b.supportInfo as object) };

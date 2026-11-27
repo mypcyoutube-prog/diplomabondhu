@@ -16,7 +16,7 @@ export const listMaterialsQuerySchema = z.object({
   chapterId: objectId.optional(),
   examYear: z.coerce.number().int().min(1990).max(2100).optional(),
   q: z.string().trim().min(1).max(200).optional(),
-  sort: z.enum(['recent', 'popular', 'title']).default('recent'),
+  sort: z.enum(['recent', 'oldest', 'popular', 'title']).default('recent'),
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(20)
 }).strict();
@@ -35,7 +35,11 @@ export const materialPayloadSchema = z.object({
   externalUrl: z.string().url().optional(),
   examYear: z.number().int().min(1990).max(2100).optional(),
   sizeBytes: z.number().int().min(0).optional(),
-  pageCount: z.number().int().min(1).optional()
+  pageCount: z.number().int().min(1).optional(),
+  thumbnailUrl: z.string().url().max(1000).optional(),
+  author: z.string().trim().max(200).optional(),
+  edition: z.string().trim().max(60).optional(),
+  durationSec: z.number().int().min(0).optional()
 }).strict();
 
 const materialBodyBase = z.object({
@@ -45,7 +49,8 @@ const materialBodyBase = z.object({
   description: z.string().max(5000).optional(),
   hierarchyRefs: hierarchyRefsSchema.default({}),
   payload: materialPayloadSchema.default({}),
-  downloadAllowed: z.boolean().default(false)
+  downloadAllowed: z.boolean().default(false),
+  previewAllowed: z.boolean().default(true)
 }).strict();
 
 export const materialBodySchema = materialBodyBase.refine(
@@ -62,9 +67,16 @@ export const updateMaterialSchema = materialBodyBase.partial().refine(
   { message: 'Nothing to update or payload would lose its URL' }
 );
 
+export const reportReasonCodeSchema = z.enum(['broken_link', 'wrong_info', 'wrong_file', 'duplicate', 'other']);
+
 export const reportSchema = z.object({
-  reason: z.string().trim().min(5).max(1000)
-}).strict();
+  reasonCode: reportReasonCodeSchema.optional(),
+  details: z.string().trim().max(1000).optional(),
+  reason: z.string().trim().min(5).max(1000).optional()
+}).strict().refine(
+  (v) => Boolean(v.reasonCode || v.reason),
+  { message: 'reasonCode or reason is required' }
+);
 
 export const resolveReportSchema = z.object({
   status: z.enum(['resolved', 'dismissed']),

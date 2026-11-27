@@ -13,9 +13,13 @@ export interface IStudyMaterial extends mongoose.Document {
     subjectId?: mongoose.Types.ObjectId;
     chapterId?: mongoose.Types.ObjectId;
   };
-  payload: { fileUrl?: string; externalUrl?: string; examYear?: number; sizeBytes?: number; pageCount?: number };
+  payload: {
+    fileUrl?: string; externalUrl?: string; examYear?: number; sizeBytes?: number; pageCount?: number;
+    thumbnailUrl?: string; author?: string; edition?: string; durationSec?: number;
+  };
   status: 'draft' | 'published' | 'unpublished';
   downloadAllowed: boolean;
+  previewAllowed: boolean;
   uploadedBy?: mongoose.Types.ObjectId;
   viewCount: number;
   deletedAt?: Date;
@@ -39,10 +43,15 @@ const schema = new Schema<IStudyMaterial>({
     externalUrl: String,
     examYear: Number,
     sizeBytes: Number,
-    pageCount: Number
+    pageCount: Number,
+    thumbnailUrl: { type: String, maxlength: 1000 },
+    author: { type: String, maxlength: 200 },
+    edition: { type: String, maxlength: 60 },
+    durationSec: { type: Number, min: 0 }
   },
   status: { type: String, enum: ['draft', 'published', 'unpublished'], default: 'draft', index: true },
   downloadAllowed: { type: Boolean, default: false },
+  previewAllowed: { type: Boolean, default: true },
   uploadedBy: { type: Schema.Types.ObjectId, ref: 'User' },
   viewCount: { type: Number, default: 0 },
   deletedAt: { type: Date, default: null }

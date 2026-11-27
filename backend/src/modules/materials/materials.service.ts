@@ -16,7 +16,7 @@ export type ListMaterialsOptions = {
   chapterId?: string;
   examYear?: number;
   q?: string;
-  sort: 'recent' | 'popular' | 'title';
+  sort: 'recent' | 'oldest' | 'popular' | 'title';
   page: number;
   limit: number;
 };
@@ -42,18 +42,26 @@ function buildMaterialFilter(query: Partial<ListMaterialsOptions>): Record<strin
 
 const SORTS: Record<string, Record<string, 1 | -1>> = {
   recent: { createdAt: -1 },
+  oldest: { createdAt: 1 },
   popular: { viewCount: -1 },
   title: { title: 1 }
 };
 
 export async function listMaterials(query: ListMaterialsOptions) {
   const filter = { ...buildMaterialFilter(query), status: 'published' };
-  const [items, total] = await Promise.all([
+  const typeOnlyFilter: Record<string, unknown> = { ...filter };
+  delete typeOnlyFilter.type;
+  const [items, total, countRows] = await Promise.all([
     StudyMaterial.find(filter).sort(SORTS[query.sort] ?? SORTS.recent)
       .skip((query.page - 1) * query.limit).limit(query.limit).lean(),
-    StudyMaterial.countDocuments(filter)
+    StudyMaterial.countDocuments(filter),
+    StudyMaterial.aggregate<{ _id: string; count: number }>([
+      { $match: typeOnlyFilter },
+      { $group: { _id: '$type', count: { $sum: 1 } } }
+    ])
   ]);
-  return { items, meta: { page: query.page, limit: query.limit, total } };
+  const counts = Object.fromEntries(countRows.map((r) => [r._id, r.count]));
+  return { items, meta: { page: query.page, limit: query.limit, total, counts } };
 }
 
 export async function getPublishedMaterial(id: string): Promise<IStudyMaterial> {
@@ -121,12 +129,27 @@ export async function listBookmarks(userId: string, page: number, limit: number)
   return { items, meta: { page, limit, total } };
 }
 
-export async function reportMaterial(userId: string, materialId: string, reason: string) {
+export async function reportMaterial(
+  userId: string,
+  materialId: string,
+  body: { reasonCode?: string; details?: string; reason?: string }
+) {
   const material = await getPublishedMaterial(materialId);
+  const existingOpen = await ContentReport.findOne({
+    materialId: material._id,
+    reporterId: new Types.ObjectId(userId),
+    status: 'open',
+    deletedAt: null
+  }).lean();
+  if (existingOpen) throw conflict('You already have an open report for this material');
+  const reasonCode = (body.reasonCode ?? 'other') as IContentReport['reasonCode'];
+  const reason = body.reason ?? body.details ?? reasonCode;
   const report = await ContentReport.create({
     materialId: material._id,
     reporterId: new Types.ObjectId(userId),
-    reason
+    reason,
+    reasonCode,
+    details: body.details
   });
   return report;
 }

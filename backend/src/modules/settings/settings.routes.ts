@@ -48,6 +48,13 @@ export function settingsRoutes() {
           startsAt: s.homeNotice?.startsAt ?? null,
           endsAt: s.homeNotice?.endsAt ?? null
         },
+        libraryCategories: {
+          book: s.libraryCategories?.book ?? true,
+          note: s.libraryCategories?.note ?? true,
+          video: s.libraryCategories?.video ?? true,
+          subject_material: s.libraryCategories?.subject_material ?? true,
+          past_question: s.libraryCategories?.past_question ?? true
+        },
         featureFlags: s.featureFlags,
         maintenanceMode: s.maintenanceMode,
         supportInfo: s.supportInfo,

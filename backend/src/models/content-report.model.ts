@@ -4,6 +4,8 @@ export interface IContentReport extends mongoose.Document {
   materialId: mongoose.Types.ObjectId;
   reporterId: mongoose.Types.ObjectId;
   reason: string;
+  reasonCode: 'broken_link' | 'wrong_info' | 'wrong_file' | 'duplicate' | 'other';
+  details?: string;
   status: 'open' | 'resolved' | 'dismissed';
   resolutionNote?: string;
   resolvedBy?: mongoose.Types.ObjectId;
@@ -15,6 +17,8 @@ const schema = new Schema<IContentReport>({
   materialId: { type: Schema.Types.ObjectId, ref: 'StudyMaterial', required: true, index: true },
   reporterId: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
   reason: { type: String, required: true, trim: true, minlength: 5, maxlength: 1000 },
+  reasonCode: { type: String, enum: ['broken_link', 'wrong_info', 'wrong_file', 'duplicate', 'other'], default: 'other', index: true },
+  details: { type: String, trim: true, maxlength: 1000 },
   status: { type: String, enum: ['open', 'resolved', 'dismissed'], default: 'open', index: true },
   resolutionNote: { type: String, maxlength: 1000 },
   resolvedBy: { type: Schema.Types.ObjectId, ref: 'User' },

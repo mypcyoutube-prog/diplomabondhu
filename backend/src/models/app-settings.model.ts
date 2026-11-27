@@ -5,6 +5,7 @@ export interface IAppSettings extends mongoose.Document {
   homepageSections: { key: string; visible: boolean; order: number; customizable?: boolean }[];
   resultDisplay: { enabled: boolean; examId: string; startsAt?: Date | null; endsAt?: Date | null };
   homeNotice: { text: string; link: string; visible: boolean; startsAt?: Date | null; endsAt?: Date | null };
+  libraryCategories: { book: boolean; note: boolean; video: boolean; subject_material: boolean; past_question: boolean };
   searchSynonyms: string[][];
   featureFlags: Record<string, unknown>;
   integrations: { googleDriveApiKey?: string };
@@ -37,6 +38,13 @@ const appSettingsSchema = new Schema<IAppSettings>({
     visible: { type: Boolean, default: true },
     startsAt: { type: Date, default: null },
     endsAt: { type: Date, default: null }
+  },
+  libraryCategories: {
+    book: { type: Boolean, default: true },
+    note: { type: Boolean, default: true },
+    video: { type: Boolean, default: true },
+    subject_material: { type: Boolean, default: true },
+    past_question: { type: Boolean, default: true }
   },
   searchSynonyms: { type: [[String]], default: [] },
   featureFlags: { type: Schema.Types.Mixed, default: {} },

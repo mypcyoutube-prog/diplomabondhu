@@ -39,6 +39,13 @@ export const settingsUpdateSchema = z.object({
     startsAt: z.coerce.date().nullable().optional(),
     endsAt: z.coerce.date().nullable().optional()
   }).optional(),
+  libraryCategories: z.object({
+    book: z.boolean().optional(),
+    note: z.boolean().optional(),
+    video: z.boolean().optional(),
+    subject_material: z.boolean().optional(),
+    past_question: z.boolean().optional()
+  }).optional(),
   featureFlags: z.record(z.string(), z.unknown()).optional(),
   maintenanceMode: z.boolean().optional(),
   supportInfo: z.object({

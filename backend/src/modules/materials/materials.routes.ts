@@ -74,7 +74,7 @@ export function materialsRoutes(env: Env) {
   router.post('/:id/report', requireAuth(env.JWT_ACCESS_SECRET), validate({ params: idParam, body: reportSchema }), async (req, res, next) => {
     try {
       const params = (req as unknown as Validated<{ id: string }>).validatedParams!;
-      const report = await svc.reportMaterial(req.auth!.id, params.id, req.body.reason);
+      const report = await svc.reportMaterial(req.auth!.id, params.id, req.body);
       return ok(res, { id: String(report._id), status: report.status }, 201);
     } catch (err) { next(err); }
   });
