@@ -433,7 +433,7 @@ class HomeScreen extends ConsumerWidget {
     Widget sectionWidget(String key) {
       switch (key) {
         case 'services':
-          return gridFor(l10n.services, services, '/results/checker');
+          return gridFor(l10n.services, services, '/gpa/cgpa');
         case 'resources':
           return gridFor(l10n.resources, resources, '/subjects');
         case 'quick_access':
