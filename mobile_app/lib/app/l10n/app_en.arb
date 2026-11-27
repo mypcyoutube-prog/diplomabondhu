@@ -275,5 +275,6 @@
   "resultTab": "Result",
   "noResultSaved": "No result found for your roll in this examination.",
   "openProfile": "Open profile",
-  "registrationNumber": "Registration number"
+  "registrationNumber": "Registration number",
+  "seeAll": "See all"
 }

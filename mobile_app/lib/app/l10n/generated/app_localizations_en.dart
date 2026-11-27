@@ -845,6 +845,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get searchRecent => 'Recent searches';
   @override
   String get notices => 'Notices';
+
+  @override
+  String get seeAll => 'See all';
   @override
   String get noticeTickerLabel => 'NOTICE';
   @override

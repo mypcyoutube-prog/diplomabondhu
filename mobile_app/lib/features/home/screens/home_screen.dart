@@ -7,6 +7,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../app/l10n/generated/app_localizations.dart';
 import '../../../app/theme/theme.dart';
+import '../../auth/providers/auth_controller.dart';
 import '../../dashboard_customize/data/dashboard_prefs_repository.dart';
 import '../../dashboard_customize/providers/dashboard_prefs_providers.dart';
 import '../../library/providers/library_providers.dart';
@@ -53,19 +54,23 @@ class HomeScreen extends ConsumerWidget {
       data: (items) {
         if (items.isEmpty) return const SizedBox.shrink();
         return SizedBox(
-          height: 130,
+          height: 132,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             itemCount: items.length,
-            separatorBuilder: (_, _) => const SizedBox(width: 8),
+            separatorBuilder: (_, _) => const SizedBox(width: 10),
             itemBuilder: (context, i) {
               final banner = items[i];
-              return GestureDetector(
+              return PressableScale(
                 onTap: () => openLink(banner.linkUrl),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(DbRadius.card),
-                  child: SizedBox(
-                    width: 300,
+                child: Container(
+                  width: 300,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(DbRadius.card),
+                    boxShadow: DbShadows.card,
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(DbRadius.card),
                     child: Stack(
                       fit: StackFit.expand,
                       children: [
@@ -85,6 +90,7 @@ class HomeScreen extends ConsumerWidget {
                               gradient: LinearGradient(
                                 begin: Alignment.bottomCenter,
                                 end: Alignment.topCenter,
+                                stops: [0.0, 0.55],
                                 colors: [DbColors.overlay, Colors.transparent],
                               ),
                             ),
@@ -148,59 +154,78 @@ class HomeScreen extends ConsumerWidget {
         data: (record) {
           if (record == null) return const SizedBox.shrink();
           final value = record.cgpa ?? record.gpa;
-          final metric = record.cgpa != null
-              ? 'CGPA ${value?.toStringAsFixed(2)}'
-              : 'GPA ${value?.toStringAsFixed(2)}';
-          return Card(
-            color: DbColors.navy,
-            margin: EdgeInsets.zero,
-            child: InkWell(
-              borderRadius: BorderRadius.circular(DbRadius.card),
-              onTap: () => context.push('/results/checker'),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: DbSpacing.md, vertical: DbSpacing.sm + 2),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 3),
-                      decoration: BoxDecoration(
-                        color: DbColors.emeraldDark,
-                        borderRadius: BorderRadius.circular(DbRadius.badge),
-                      ),
-                      child: const Text(
-                        'RESULT',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 0.8,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        metric,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w800,
-                          fontSize: 15,
-                        ),
-                      ),
-                    ),
-                    Text(
-                      l10n.viewDetails,
-                      style: const TextStyle(
-                          color: Colors.white70,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600),
-                    ),
-                    const Icon(Icons.chevron_right_rounded,
-                        color: Colors.white70, size: 20),
-                  ],
+          final metricLabel = record.cgpa != null ? 'CGPA' : 'GPA';
+          return PressableScale(
+            onTap: () => context.push('/results/checker'),
+            child: Container(
+              padding: const EdgeInsets.symmetric(
+                  horizontal: DbSpacing.md, vertical: DbSpacing.sm + 4),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [DbColors.navy, DbColors.navyDark],
                 ),
+                borderRadius: BorderRadius.circular(DbRadius.card),
+                boxShadow: DbShadows.card,
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 9, vertical: 4),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                          colors: [DbColors.emerald, DbColors.emeraldDark]),
+                      borderRadius: BorderRadius.circular(DbRadius.badge),
+                    ),
+                    child: const Text(
+                      'RESULT',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 1,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.baseline,
+                      textBaseline: TextBaseline.alphabetic,
+                      children: [
+                        Text(
+                          metricLabel,
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.75),
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 0.6,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          value?.toStringAsFixed(2) ?? '--',
+                          style: const TextStyle(
+                            color: DbColors.emeraldDark,
+                            fontWeight: FontWeight.w800,
+                            fontSize: 19,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.12),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.arrow_forward_rounded,
+                        color: Colors.white, size: 16),
+                  ),
+                ],
               ),
             ),
           );
@@ -211,65 +236,123 @@ class HomeScreen extends ConsumerWidget {
 
     if (!settings.homeNoticeActive) return const SizedBox.shrink();
     final notice = settings.homeNotice;
-    return Card(
-      margin: EdgeInsets.zero,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(DbRadius.card),
-        onTap: () => _openLink(context, notice.link),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-              horizontal: DbSpacing.md, vertical: DbSpacing.sm + 2),
-          child: Row(
-            children: [
-              const Icon(Icons.campaign_rounded, color: DbColors.teal, size: 20),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  notice.text,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                      fontWeight: FontWeight.w600, fontSize: 13),
-                ),
+    return PressableScale(
+      onTap: () => _openLink(context, notice.link),
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+            horizontal: DbSpacing.md, vertical: DbSpacing.sm + 4),
+        decoration: BoxDecoration(
+          color: DbColors.teal.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(DbRadius.card),
+          border: Border.all(color: DbColors.teal.withValues(alpha: 0.25)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(7),
+              decoration: BoxDecoration(
+                color: DbColors.teal.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(DbRadius.input),
               ),
-              const Icon(Icons.chevron_right_rounded,
-                  color: DbColors.textSecondaryLight, size: 20),
-            ],
-          ),
+              child: const Icon(Icons.campaign_rounded,
+                  color: DbColors.teal, size: 18),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                notice.text,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                    fontWeight: FontWeight.w600, fontSize: 13),
+              ),
+            ),
+            const Icon(Icons.chevron_right_rounded,
+                color: DbColors.textSecondaryLight, size: 20),
+          ],
         ),
       ),
     );
   }
 
-  Widget _serviceTile(String title, String subtitle, IconData icon,
-      String route, void Function(String) openLink) {
-    return Card(
-      child: InkWell(
-        borderRadius: BorderRadius.circular(DbRadius.card),
-        onTap: () => openLink(route),
-        child: Padding(
-          padding: const EdgeInsets.all(DbSpacing.md),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, color: DbColors.teal, size: 30),
-              const SizedBox(height: 6),
-              Text(title,
+  Widget _serviceTile(BuildContext context, String title, String subtitle,
+      IconData icon, String route, void Function(String) openLink) {
+    return PressableScale(
+      onTap: () => openLink(route),
+      child: Container(
+        padding: const EdgeInsets.all(DbSpacing.md),
+        decoration: BoxDecoration(
+          color: Theme.of(context).cardColor,
+          borderRadius: BorderRadius.circular(DbRadius.card),
+          boxShadow: DbShadows.card,
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [DbColors.teal, DbColors.emerald],
+                ),
+                borderRadius: BorderRadius.circular(DbRadius.input),
+                boxShadow: [
+                  BoxShadow(
+                    color: DbColors.teal.withValues(alpha: 0.3),
+                    blurRadius: 10,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+              ),
+              child: Icon(icon, color: Colors.white, size: 22),
+            ),
+            const SizedBox(height: 8),
+            Text(title,
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontWeight: FontWeight.w700)),
+            if (subtitle.isNotEmpty) ...[
+              const SizedBox(height: 2),
+              Text(subtitle,
                   textAlign: TextAlign.center,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontWeight: FontWeight.w700)),
-              if (subtitle.isNotEmpty) ...[
-                const SizedBox(height: 2),
-                Text(subtitle,
-                    textAlign: TextAlign.center,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                        fontSize: 11, color: DbColors.textSecondaryLight)),
-              ],
+                  style: const TextStyle(
+                      fontSize: 11, color: DbColors.textSecondaryLight)),
             ],
-          ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _sectionHeader(BuildContext context, String title, String route,
+      VoidCallback openLink) {
+    return DbSectionHeader(
+      title: title,
+      trailing: TextButton(
+        onPressed: () => openLink(route),
+        style: TextButton.styleFrom(
+          visualDensity: VisualDensity.compact,
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              AppLocalizations.of(context)!.seeAll,
+              style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: DbColors.teal),
+            ),
+            const Icon(Icons.chevron_right_rounded,
+                size: 18, color: DbColors.teal),
+          ],
         ),
       ),
     );
@@ -282,6 +365,13 @@ class HomeScreen extends ConsumerWidget {
     final recent = ref.watch(recentMaterialsProvider);
     final dashPrefs = ref.watch(dashboardPrefsProvider);
     final notices = ref.watch(publishedNoticesProvider('all'));
+    final user = ref.watch(authControllerProvider).value;
+    final hour = DateTime.now().hour;
+    final greeting = hour < 12
+        ? l10n.goodMorning
+        : hour < 17
+            ? l10n.goodAfternoon
+            : l10n.goodEvening;
 
     final services = <(String, IconData, String)>[
       (l10n.checkResult, Icons.verified_rounded, '/results/checker'),
@@ -293,75 +383,54 @@ class HomeScreen extends ConsumerWidget {
       (l10n.previousQuestions, Icons.history_edu_rounded, '/library'),
     ];
 
+    Widget gridFor(
+        String title, List<(String, IconData, String)> items, String seeAllRoute) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _sectionHeader(
+              context, title, seeAllRoute, (link) => _openLink(context, link)),
+          GridView.count(
+            crossAxisCount: 2,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            mainAxisSpacing: 10,
+            crossAxisSpacing: 10,
+            childAspectRatio: 1.55,
+            children: items
+                .map((item) => _serviceTile(
+                    context, item.$1, '', item.$2, item.$3,
+                    (link) => _openLink(context, link)))
+                .toList(),
+          ),
+        ],
+      );
+    }
+
     Widget sectionWidget(String key) {
       switch (key) {
         case 'services':
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              DbSectionHeader(title: l10n.services),
-              GridView.count(
-                crossAxisCount: 2,
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                mainAxisSpacing: 8,
-                crossAxisSpacing: 8,
-                childAspectRatio: 1.7,
-                children: services
-                    .map((item) => _serviceTile(item.$1, '', item.$2, item.$3,
-                        (link) => _openLink(context, link)))
-                    .toList(),
-              ),
-            ],
-          );
+          return gridFor(l10n.services, services, '/results/checker');
         case 'resources':
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              DbSectionHeader(title: l10n.resources),
-              GridView.count(
-                crossAxisCount: 2,
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                mainAxisSpacing: 8,
-                crossAxisSpacing: 8,
-                childAspectRatio: 1.7,
-                children: resources
-                    .map((item) => _serviceTile(item.$1, '', item.$2, item.$3,
-                        (link) => _openLink(context, link)))
-                    .toList(),
-              ),
-            ],
-          );
+          return gridFor(l10n.resources, resources, '/subjects');
         case 'quick_access':
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              DbSectionHeader(title: l10n.services),
-              GridView.count(
-                crossAxisCount: 2,
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                mainAxisSpacing: 8,
-                crossAxisSpacing: 8,
-                childAspectRatio: 1.7,
-                children: <(String, IconData, String)>[
-                  (l10n.library, Icons.menu_book_rounded, '/library'),
-                  (l10n.exams, Icons.quiz_rounded, '/exams'),
-                  (l10n.cgpa, Icons.functions_rounded, '/gpa/cgpa'),
-                  (l10n.planner, Icons.event_note_rounded, '/planner'),
-                ]
-                    .map((item) => _serviceTile(item.$1, '', item.$2, item.$3,
-                        (link) => _openLink(context, link)))
-                    .toList(),
-              ),
+          return gridFor(
+            l10n.services,
+            <(String, IconData, String)>[
+              (l10n.library, Icons.menu_book_rounded, '/library'),
+              (l10n.exams, Icons.quiz_rounded, '/exams'),
+              (l10n.cgpa, Icons.functions_rounded, '/gpa/cgpa'),
+              (l10n.planner, Icons.event_note_rounded, '/planner'),
             ],
+            '/library',
           );
         case 'materials':
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              DbSectionHeader(title: l10n.recentMaterials),
+              _sectionHeader(
+                  context, l10n.recentMaterials, '/library',
+                  (link) => _openLink(context, link)),
               AsyncValueView(
                 value: recent,
                 onRetry: () => ref.invalidate(recentMaterialsProvider),
@@ -395,12 +464,15 @@ class HomeScreen extends ConsumerWidget {
             ],
           );
         case 'community':
-          return Card(
-            child: ListTile(
-              onTap: () => context.push('/community'),
-              leading: const Icon(Icons.groups_rounded, color: DbColors.teal),
-              title: Text(l10n.community),
-              trailing: const Icon(Icons.chevron_right_rounded),
+          return PressableScale(
+            onTap: () => context.push('/community'),
+            child: Card(
+              child: ListTile(
+                onTap: () => context.push('/community'),
+                leading: const Icon(Icons.groups_rounded, color: DbColors.teal),
+                title: Text(l10n.community),
+                trailing: const Icon(Icons.chevron_right_rounded),
+              ),
             ),
           );
         case 'exams':
@@ -415,6 +487,7 @@ class HomeScreen extends ConsumerWidget {
         case 'gpa_calculator':
         case 'result_checker':
           return _serviceTile(
+            context,
             l10n.checkResult,
             '',
             Icons.verified_rounded,
@@ -449,7 +522,7 @@ class HomeScreen extends ConsumerWidget {
       if (widget is! SizedBox) {
         sectionChildren
           ..add(widget)
-          ..add(const SizedBox(height: 16));
+          ..add(const SizedBox(height: 18));
       }
     }
 
@@ -458,7 +531,16 @@ class HomeScreen extends ConsumerWidget {
         title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.school_rounded, color: DbColors.teal, size: 22),
+            Container(
+              padding: const EdgeInsets.all(5),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                    colors: [DbColors.teal, DbColors.emerald]),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(Icons.school_rounded,
+                  color: Colors.white, size: 16),
+            ),
             const SizedBox(width: 8),
             Flexible(
               child: Text(
@@ -501,6 +583,15 @@ class HomeScreen extends ConsumerWidget {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
+            Text(
+              '$greeting, ${user?.name ?? ''} \ud83d\udc4b',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+            ),
+            const SizedBox(height: 12),
             settings.maybeWhen(
               data: (s) => s.maintenanceMode
                   ? Container(
@@ -518,7 +609,7 @@ class HomeScreen extends ConsumerWidget {
             _resultOrNoticeBar(context, ref),
             const SizedBox(height: 12),
             _NoticeTicker(notices: notices),
-            const SizedBox(height: 16),
+            const SizedBox(height: 18),
             ...sectionChildren,
           ],
         ),
@@ -527,9 +618,42 @@ class HomeScreen extends ConsumerWidget {
   }
 }
 
-/// Compact horizontal ticker: fixed NOTICE label on the left, notice titles
-/// scrolling right-to-left. Tapping a title opens its detail page; the label
-/// opens the All Notices page.
+/// Wraps a tappable child with a subtle press-down scale animation.
+class PressableScale extends StatefulWidget {
+  final Widget child;
+  final VoidCallback? onTap;
+
+  const PressableScale({super.key, required this.child, this.onTap});
+
+  @override
+  State<PressableScale> createState() => _PressableScaleState();
+}
+
+class _PressableScaleState extends State<PressableScale> {
+  bool _pressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: widget.onTap == null
+          ? null
+          : (_) => setState(() => _pressed = true),
+      onTapUp: (_) => setState(() => _pressed = false),
+      onTapCancel: () => setState(() => _pressed = false),
+      onTap: widget.onTap,
+      child: AnimatedScale(
+        scale: _pressed ? 0.97 : 1.0,
+        duration: DbDurations.fast,
+        curve: DbCurves.emphasized,
+        child: widget.child,
+      ),
+    );
+  }
+}
+
+/// Compact horizontal ticker: fixed NOTICE chip on the left, notice titles
+/// scrolling right-to-left with fade edges. Tapping a title opens its detail
+/// page; the chip opens the All Notices page.
 class _NoticeTicker extends ConsumerStatefulWidget {
   final AsyncValue<List<Notice>> notices;
 
@@ -569,90 +693,109 @@ class _NoticeTickerState extends ConsumerState<_NoticeTicker> {
     final items = widget.notices.valueOrNull ?? const <Notice>[];
     if (items.isEmpty) return const SizedBox.shrink();
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
       decoration: BoxDecoration(
-        color: DbColors.fillLight,
-        borderRadius: BorderRadius.circular(DbRadius.badge),
+        color: isDark ? DbColors.fillDark : DbColors.fillLight,
+        borderRadius: BorderRadius.circular(DbRadius.chip),
+        border: Border.all(
+          color: isDark ? DbColors.borderDark : DbColors.borderLight,
+        ),
       ),
       padding: const EdgeInsets.symmetric(horizontal: DbSpacing.sm),
-      height: 36,
+      height: 38,
       child: Row(
         children: [
           GestureDetector(
             onTap: () => context.push('/notices'),
             child: Container(
               padding:
-                  const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
               decoration: BoxDecoration(
-                color: DbColors.teal,
+                gradient: const LinearGradient(
+                    colors: [DbColors.teal, DbColors.emerald]),
                 borderRadius: BorderRadius.circular(DbRadius.badge),
               ),
               child: Text(
                 l10n.noticeTickerLabel,
                 style: const TextStyle(
                   color: Colors.white,
-                  fontSize: 11,
+                  fontSize: 10,
                   fontWeight: FontWeight.w800,
-                  letterSpacing: 0.6,
+                  letterSpacing: 0.8,
                 ),
               ),
             ),
           ),
           const SizedBox(width: 8),
           Expanded(
-            child: NotificationListener<ScrollMetricsNotification>(
-              onNotification: (n) {
-                final overflow = n.metrics.maxScrollExtent > 0;
-                if (overflow != _overflow) {
-                  _overflow = overflow;
-                  _startScroll();
-                }
-                return false;
-              },
-              child: SingleChildScrollView(
-                controller: _controller,
-                scrollDirection: Axis.horizontal,
-                physics: const NeverScrollableScrollPhysics(),
-                child: Row(
-                  children: [
-                    for (final notice in items.take(20))
-                      Padding(
-                        padding:
-                            const EdgeInsets.symmetric(horizontal: 6),
-                        child: GestureDetector(
-                          onTap: () => context.push('/notices/${notice.id}'),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                notice.isBteb
-                                    ? Icons.verified_rounded
-                                    : Icons.campaign_rounded,
-                                size: 13,
-                                color: notice.isBteb
-                                    ? DbColors.emeraldDark
-                                    : DbColors.teal,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                notice.title,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600),
-                              ),
-                              const SizedBox(width: 6),
-                              Text('•',
-                                  style: TextStyle(
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .onSurfaceVariant)),
-                            ],
+            child: ShaderMask(
+              shaderCallback: (bounds) => const LinearGradient(
+                colors: [
+                  Colors.transparent,
+                  Colors.white,
+                  Colors.white,
+                  Colors.transparent
+                ],
+                stops: [0, 8 / 200, 0.92, 1],
+              ).createShader(bounds),
+              blendMode: BlendMode.dstIn,
+              child: NotificationListener<ScrollMetricsNotification>(
+                onNotification: (n) {
+                  final overflow = n.metrics.maxScrollExtent > 0;
+                  if (overflow != _overflow) {
+                    _overflow = overflow;
+                    _startScroll();
+                  }
+                  return false;
+                },
+                child: SingleChildScrollView(
+                  controller: _controller,
+                  scrollDirection: Axis.horizontal,
+                  physics: const NeverScrollableScrollPhysics(),
+                  child: Row(
+                    children: [
+                      for (final notice in items.take(20))
+                        Padding(
+                          padding:
+                              const EdgeInsets.symmetric(horizontal: 6),
+                          child: GestureDetector(
+                            onTap: () =>
+                                context.push('/notices/${notice.id}'),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  notice.isBteb
+                                      ? Icons.verified_rounded
+                                      : Icons.campaign_rounded,
+                                  size: 13,
+                                  color: notice.isBteb
+                                      ? DbColors.emeraldDark
+                                      : DbColors.teal,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  notice.title,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600),
+                                ),
+                                const SizedBox(width: 6),
+                                Text('•',
+                                    style: TextStyle(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurfaceVariant)),
+                              ],
+                            ),
                           ),
                         ),
-                      ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),

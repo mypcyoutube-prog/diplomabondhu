@@ -847,6 +847,9 @@ class AppLocalizationsBn extends AppLocalizations {
   String get searchRecent => 'সাম্প্রতিক সর্চ';
   @override
   String get notices => 'নোটিশ';
+
+  @override
+  String get seeAll => 'সব দেখুন';
   @override
   String get noticeTickerLabel => 'নোটিশ';
   @override

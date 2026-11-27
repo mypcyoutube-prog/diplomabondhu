@@ -1445,6 +1445,13 @@ abstract class AppLocalizations {
   /// **'Notices'**
   String get notices;
 
+  /// No description provided for @seeAll.
+  ///
+  /// In en, this message translates to:
+  /// **'See all'**
+  String get seeAll;
+
+
   /// No description provided for @noticeTickerLabel.
   ///
   /// In en, this message translates to:
