@@ -15,6 +15,7 @@ class AppSettingsData {
       resultDisplay;
   final ({String text, String link, bool visible, DateTime? startsAt, DateTime? endsAt})
       homeNotice;
+  final bool homeNoticeShowInTicker;
   final ({bool book, bool note, bool video, bool subjectMaterial, bool pastQuestion})
       libraryCategories;
 
@@ -26,6 +27,7 @@ class AppSettingsData {
     required this.supportInfo,
     required this.resultDisplay,
     required this.homeNotice,
+    required this.homeNoticeShowInTicker,
     required this.libraryCategories,
   });
 
@@ -80,6 +82,7 @@ class AppSettingsData {
         startsAt: _date(hn['startsAt']),
         endsAt: _date(hn['endsAt']),
       ),
+      homeNoticeShowInTicker: json['homeNoticeShowInTicker'] as bool? ?? true,
       libraryCategories: (() {
         final lc = json['libraryCategories'] as Map<String, dynamic>? ?? {};
         return (
@@ -148,10 +151,17 @@ final homeResultProvider = FutureProvider.autoDispose<ResultRecord?>((ref) async
   final user = ref.watch(authControllerProvider).value;
   final roll = user?.academic?.roll;
   if (roll == null || roll.isEmpty) return null;
+  final registrationNo = user?.academic?.registrationNo;
   try {
     final client = ref.watch(apiClientProvider);
     final repo = ResultRepository(client);
-    return await repo.check(examId: settings.resultDisplay.examId, roll: roll);
+    return await repo.check(
+      examId: settings.resultDisplay.examId,
+      roll: roll,
+      registrationNo: (registrationNo != null && registrationNo.isNotEmpty)
+          ? registrationNo
+          : null,
+    );
   } catch (_) {
     return null;
   }

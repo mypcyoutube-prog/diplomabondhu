@@ -48,6 +48,7 @@ export function settingsRoutes() {
           startsAt: s.homeNotice?.startsAt ?? null,
           endsAt: s.homeNotice?.endsAt ?? null
         },
+        homeNoticeShowInTicker: s.homeNoticeShowInTicker ?? true,
         libraryCategories: {
           book: s.libraryCategories?.book ?? true,
           note: s.libraryCategories?.note ?? true,

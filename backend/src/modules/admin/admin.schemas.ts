@@ -32,6 +32,7 @@ export const settingsUpdateSchema = z.object({
     startsAt: z.coerce.date().nullable().optional(),
     endsAt: z.coerce.date().nullable().optional()
   }).optional(),
+  homeNoticeShowInTicker: z.boolean().optional(),
   homeNotice: z.object({
     text: z.string().trim().max(300).default(''),
     link: z.string().trim().max(1000).default(''),

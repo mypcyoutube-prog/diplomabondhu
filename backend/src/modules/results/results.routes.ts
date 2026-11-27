@@ -40,7 +40,7 @@ export function resultsRoutes(env: Env) {
   router.get('/check', requireAuth(env.JWT_ACCESS_SECRET), checkRateLimit, validate({ query: checkQuerySchema }), async (req, res, next) => {
     try {
       const query = (req as unknown as Validated<CheckQuery>).validatedQuery!;
-      return ok(res, await svc.checkResult(env, query.examId, query.roll));
+      return ok(res, await svc.checkResult(env, query.examId, query.roll, query.registrationNo));
     } catch (err) { next(err); }
   });
 

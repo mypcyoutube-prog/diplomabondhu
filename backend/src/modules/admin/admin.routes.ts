@@ -130,6 +130,7 @@ export function adminRoutes(env: Env) {
       if (b.homeNotice) {
         settings.homeNotice = { ...settings.homeNotice, ...b.homeNotice } as typeof settings.homeNotice;
       }
+      if (typeof b.homeNoticeShowInTicker === 'boolean') settings.homeNoticeShowInTicker = b.homeNoticeShowInTicker;
       if (b.libraryCategories) {
         settings.libraryCategories = { ...settings.libraryCategories, ...b.libraryCategories } as typeof settings.libraryCategories;
       }

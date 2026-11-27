@@ -362,6 +362,12 @@ abstract class AppLocalizations {
   /// **'questions'**
   String get questionsLabel;
 
+  /// No description provided for @welcomeSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Here is your diploma life at a glance'**
+  String get welcomeSubtitle;
+
   /// No description provided for @quickAccess.
   ///
   /// In en, this message translates to:

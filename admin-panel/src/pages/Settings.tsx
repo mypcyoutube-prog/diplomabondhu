@@ -80,6 +80,7 @@ interface AppSettingsData {
   homepageSections: Array<{ key: string; visible: boolean; order: number; customizable?: boolean }>;
   resultDisplay: { enabled: boolean; examId: string; startsAt: string | null; endsAt: string | null };
   homeNotice: { text: string; link: string; visible: boolean; startsAt: string | null; endsAt: string | null };
+  homeNoticeShowInTicker?: boolean;
   libraryCategories: { book: boolean; note: boolean; video: boolean; subject_material: boolean; past_question: boolean };
   featureFlags: Record<string, unknown>;
   maintenanceMode: boolean;
@@ -121,6 +122,7 @@ export function SettingsPage() {
           startsAt: form.homeNotice.startsAt || null,
           endsAt: form.homeNotice.endsAt || null
         },
+        homeNoticeShowInTicker: form.homeNoticeShowInTicker ?? true,
         libraryCategories: form.libraryCategories,
         featureFlags: form.featureFlags,
         maintenanceMode: form.maintenanceMode,
@@ -250,6 +252,15 @@ export function SettingsPage() {
               className="h-4 w-4"
             />
             Visible
+          </label>
+          <label className="mb-3 flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
+            <input
+              type="checkbox"
+              checked={form.homeNoticeShowInTicker ?? true}
+              onChange={(e) => setForm({ ...form, homeNoticeShowInTicker: e.target.checked })}
+              className="h-4 w-4"
+            />
+            Also show this notice in the notice ticker
           </label>
           <div className="space-y-3">
             <Input label="Notice text (max 300 chars)" value={form.homeNotice.text} onChange={(v) => setForm({ ...form, homeNotice: { ...form.homeNotice, text: v } })} />

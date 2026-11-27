@@ -7,6 +7,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../app/l10n/generated/app_localizations.dart';
 import '../../../app/theme/theme.dart';
+import '../../auth/data/user.dart';
 import '../../auth/providers/auth_controller.dart';
 import '../../community/data/community_models.dart';
 import '../../community/providers/community_providers.dart';
@@ -167,18 +168,17 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
-  /// Result bar during an admin-configured display window: the student's own
-  /// roll (saved in profile) is matched automatically. Outside a window the
-  /// admin notice lives inside the notice ticker, so nothing renders here.
+  /// One-line bar under the welcome card: during an admin-configured result
+  /// window the student's own roll + registration are verified automatically;
+  /// otherwise the admin notice takes the same slot.
   Widget _resultOrNoticeBar(BuildContext context, WidgetRef ref) {
     final settings = ref.watch(appSettingsProvider).value;
-    if (settings == null || !settings.resultDisplayActive) {
-      return const SizedBox.shrink();
-    }
+    if (settings == null) return const SizedBox.shrink();
 
-    final result = ref.watch(homeResultProvider);
-    return result.maybeWhen(
-      data: (record) {
+    if (settings.resultDisplayActive) {
+      final result = ref.watch(homeResultProvider);
+      return result.maybeWhen(
+        data: (record) {
           if (record == null) return const SizedBox.shrink();
           final value = record.cgpa ?? record.gpa;
           final metricLabel = record.cgpa != null ? 'CGPA' : 'GPA';
@@ -257,16 +257,108 @@ class HomeScreen extends ConsumerWidget {
             ),
           );
         },
-      orElse: () => const SizedBox.shrink(),
+        orElse: () => const SizedBox.shrink(),
+      );
+    }
+
+    if (!settings.homeNoticeActive) return const SizedBox.shrink();
+    final notice = settings.homeNotice;
+    return PressableScale(
+      onTap: () => _openLink(context, notice.link),
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+            horizontal: DbSpacing.md, vertical: DbSpacing.sm + 4),
+        decoration: BoxDecoration(
+          color: DbColors.teal.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(DbRadius.card),
+          border: Border.all(color: DbColors.teal.withValues(alpha: 0.25)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(7),
+              decoration: BoxDecoration(
+                color: DbColors.teal.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(DbRadius.input),
+              ),
+              child: const Icon(Icons.campaign_rounded,
+                  color: DbColors.teal, size: 18),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                notice.text,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                    fontWeight: FontWeight.w600, fontSize: 13),
+              ),
+            ),
+            const Icon(Icons.chevron_right_rounded,
+                color: DbColors.textSecondaryLight, size: 20),
+          ],
+        ),
+      ),
     );
   }
 
-  Widget _serviceTile(BuildContext context, String title, String subtitle,
-      IconData icon, String route, void Function(String) openLink) {
+  Widget _welcomeCard(BuildContext context, User? user) {
+    final l10n = AppLocalizations.of(context)!;
+    return Container(
+      padding: const EdgeInsets.all(DbSpacing.md),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(DbRadius.card),
+        boxShadow: DbShadows.card,
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                  colors: [DbColors.teal, DbColors.emerald]),
+              borderRadius: BorderRadius.circular(DbRadius.input),
+            ),
+            child: const Icon(Icons.school_rounded,
+                color: Colors.white, size: 22),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  user?.name ?? '',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                      fontSize: 18, fontWeight: FontWeight.w800),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  l10n.welcomeSubtitle,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                      fontSize: 12, color: DbColors.textSecondaryLight),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _quickAccessTile(
+      BuildContext context, String title, IconData icon, String route) {
     return PressableScale(
-      onTap: () => openLink(route),
+      onTap: () => _openLink(context, route),
       child: Container(
-        padding: const EdgeInsets.all(DbSpacing.md),
+        width: 88,
+        padding: const EdgeInsets.all(DbSpacing.sm),
         decoration: BoxDecoration(
           color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(DbRadius.card),
@@ -280,36 +372,20 @@ class HomeScreen extends ConsumerWidget {
               height: 44,
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [DbColors.teal, DbColors.emerald],
-                ),
+                    colors: [DbColors.teal, DbColors.emerald]),
                 borderRadius: BorderRadius.circular(DbRadius.input),
-                boxShadow: [
-                  BoxShadow(
-                    color: DbColors.teal.withValues(alpha: 0.3),
-                    blurRadius: 10,
-                    offset: const Offset(0, 3),
-                  ),
-                ],
               ),
               child: Icon(icon, color: Colors.white, size: 22),
             ),
-            const SizedBox(height: 8),
-            Text(title,
-                textAlign: TextAlign.center,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontWeight: FontWeight.w700)),
-            if (subtitle.isNotEmpty) ...[
-              const SizedBox(height: 2),
-              Text(subtitle,
-                  textAlign: TextAlign.center,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                      fontSize: 11, color: DbColors.textSecondaryLight)),
-            ],
+            const SizedBox(height: 6),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                  fontSize: 11, fontWeight: FontWeight.w600),
+            ),
           ],
         ),
       ),
@@ -321,14 +397,15 @@ class HomeScreen extends ConsumerWidget {
     return PressableScale(
       onTap: () => context.push('/library'),
       child: Container(
-        padding: const EdgeInsets.symmetric(
-            horizontal: DbSpacing.md, vertical: DbSpacing.sm),
+        padding: const EdgeInsets.all(DbSpacing.md),
         decoration: BoxDecoration(
           color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(DbRadius.card),
           boxShadow: DbShadows.card,
         ),
-        child: Row(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
               width: 40,
@@ -340,29 +417,20 @@ class HomeScreen extends ConsumerWidget {
               ),
               child: Icon(icon, color: Colors.white, size: 20),
             ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style:
-                          const TextStyle(fontWeight: FontWeight.w700)),
-                  if (count > 0)
-                    Text(
-                      '$count',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: DbColors.teal,
-                      ),
-                    ),
-                ],
+            const SizedBox(height: 8),
+            Text(title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontWeight: FontWeight.w700)),
+            if (count > 0)
+              Text(
+                '$count',
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: DbColors.teal,
+                ),
               ),
-            ),
           ],
         ),
       ),
@@ -482,36 +550,6 @@ class HomeScreen extends ConsumerWidget {
     final dashPrefs = ref.watch(dashboardPrefsProvider);
     final notices = ref.watch(publishedNoticesProvider('all'));
     final user = ref.watch(authControllerProvider).value;
-    final hour = DateTime.now().hour;
-    final greeting = hour < 12
-        ? l10n.goodMorning
-        : hour < 17
-            ? l10n.goodAfternoon
-            : l10n.goodEvening;
-
-    Widget gridFor(
-        String title, List<(String, IconData, String)> items, String seeAllRoute) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _sectionHeader(
-              context, title, seeAllRoute, (link) => _openLink(context, link)),
-          GridView.count(
-            crossAxisCount: 2,
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            mainAxisSpacing: 10,
-            crossAxisSpacing: 10,
-            childAspectRatio: 1.55,
-            children: items
-                .map((item) => _serviceTile(
-                    context, item.$1, '', item.$2, item.$3,
-                    (link) => _openLink(context, link)))
-                .toList(),
-          ),
-        ],
-      );
-    }
 
     Widget sectionWidget(String key) {
       switch (key) {
@@ -526,7 +564,7 @@ class HomeScreen extends ConsumerWidget {
                   (link) => _openLink(context, link)),
               resourceCounts.maybeWhen(
                 data: (counts) {
-                  final cards = <(String, IconData, int)>[
+                  final cards = <(String, IconData, int)>([
                     (l10n.books, Icons.auto_stories_rounded,
                         counts['book'] ?? 0),
                     (l10n.notes, Icons.edit_note_rounded,
@@ -535,18 +573,19 @@ class HomeScreen extends ConsumerWidget {
                         counts['video'] ?? 0),
                     (l10n.subjectMaterials, Icons.folder_special_rounded,
                         counts['subject_material'] ?? 0),
-                  ];
-                  return GridView.count(
-                    crossAxisCount: 2,
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    mainAxisSpacing: 10,
-                    crossAxisSpacing: 10,
-                    childAspectRatio: 2.1,
-                    children: cards
-                        .map((c) => _resourceCountTile(
-                            context, c.$1, c.$2, c.$3))
-                        .toList(),
+                  ]);
+                  return SizedBox(
+                    height: 96,
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: cards.length,
+                      separatorBuilder: (_, _) => const SizedBox(width: 10),
+                      itemBuilder: (context, i) => SizedBox(
+                        width: 150,
+                        child: _resourceCountTile(
+                            context, cards[i].$1, cards[i].$2, cards[i].$3),
+                      ),
+                    ),
                   );
                 },
                 orElse: () => const SizedBox.shrink(),
@@ -554,16 +593,31 @@ class HomeScreen extends ConsumerWidget {
             ],
           );
         case 'quick_access':
-          return gridFor(
-            l10n.quickAccess,
-            <(String, IconData, String)>[
-              (l10n.studyTab, Icons.menu_book_rounded, '/library'),
-              (l10n.examCenter, Icons.quiz_rounded, '/exams'),
-              (l10n.cgpa, Icons.functions_rounded, '/gpa/cgpa'),
-              (l10n.community, Icons.groups_rounded, '/community'),
-              (l10n.notices, Icons.campaign_rounded, '/notices'),
+          final quickItems = <(String, IconData, String)>([
+            (l10n.studyTab, Icons.menu_book_rounded, '/library'),
+            (l10n.examCenter, Icons.quiz_rounded, '/exams'),
+            (l10n.cgpa, Icons.functions_rounded, '/gpa/cgpa'),
+            (l10n.community, Icons.groups_rounded, '/community'),
+            (l10n.notices, Icons.campaign_rounded, '/notices'),
+          ]);
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _sectionHeader(
+                  context, l10n.quickAccess, '/library',
+                  (link) => _openLink(context, link)),
+              SizedBox(
+                height: 108,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: quickItems.length,
+                  separatorBuilder: (_, _) => const SizedBox(width: 10),
+                  itemBuilder: (context, i) => _quickAccessTile(
+                      context, quickItems[i].$1, quickItems[i].$2,
+                      quickItems[i].$3),
+                ),
+              ),
             ],
-            '/library',
           );
         case 'materials':
           return Column(
@@ -772,15 +826,6 @@ class HomeScreen extends ConsumerWidget {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            Text(
-              '$greeting, ${user?.name ?? ''} \ud83d\udc4b',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-            ),
-            const SizedBox(height: 12),
             settings.maybeWhen(
               data: (s) => s.maintenanceMode
                   ? Container(
@@ -799,9 +844,11 @@ class HomeScreen extends ConsumerWidget {
               _bannersStrip(ref, (link) => _openLink(context, link)),
               const SizedBox(height: 12),
             ],
-            _NoticeTicker(notices: notices),
+            _welcomeCard(context, user),
             const SizedBox(height: 12),
             _resultOrNoticeBar(context, ref),
+            const SizedBox(height: 12),
+            _NoticeTicker(notices: notices),
             const SizedBox(height: 18),
             ...sectionChildren,
           ],
@@ -866,7 +913,8 @@ class _NoticeTickerState extends ConsumerState<_NoticeTicker> {
     final settings = ref.watch(appSettingsProvider).value;
     final adminNotice = (settings != null &&
             settings.homeNoticeActive &&
-            settings.homeNotice.text.isNotEmpty)
+            settings.homeNotice.text.isNotEmpty &&
+            settings.homeNoticeShowInTicker)
         ? settings.homeNotice
         : null;
     final items = widget.notices.value ?? const <Notice>[];

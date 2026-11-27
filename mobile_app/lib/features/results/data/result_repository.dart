@@ -13,10 +13,16 @@ class ResultRepository {
         .toList();
   }
 
-  Future<ResultRecord> check({required String examId, required String roll}) async {
+  Future<ResultRecord> check({
+    required String examId,
+    required String roll,
+    String? registrationNo,
+  }) async {
     final res = await _client.getMap('/results/check', query: {
       'examId': examId,
       'roll': roll,
+      if (registrationNo != null && registrationNo.isNotEmpty)
+        'registrationNo': registrationNo,
     });
     return ResultRecord.fromJson(res.data);
   }

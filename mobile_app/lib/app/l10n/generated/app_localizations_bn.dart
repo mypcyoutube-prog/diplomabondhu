@@ -142,6 +142,9 @@ class AppLocalizationsBn extends AppLocalizations {
   String get questionsLabel => 'প্রশ্ন';
 
   @override
+  String get welcomeSubtitle => 'তোমার ডিপ্লোমা জীবনের সারসংক্ষেপ এখানে';
+
+  @override
   String get quickAccess => 'দ্রুত অ্যাক্সেস';
 
   @override

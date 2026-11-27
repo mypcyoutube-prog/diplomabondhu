@@ -5,6 +5,7 @@ export interface IAppSettings extends mongoose.Document {
   homepageSections: { key: string; visible: boolean; order: number; customizable?: boolean }[];
   resultDisplay: { enabled: boolean; examId: string; startsAt?: Date | null; endsAt?: Date | null };
   homeNotice: { text: string; link: string; visible: boolean; startsAt?: Date | null; endsAt?: Date | null };
+  homeNoticeShowInTicker: boolean;
   libraryCategories: { book: boolean; note: boolean; video: boolean; subject_material: boolean; past_question: boolean };
   searchSynonyms: string[][];
   featureFlags: Record<string, unknown>;
@@ -39,6 +40,7 @@ const appSettingsSchema = new Schema<IAppSettings>({
     startsAt: { type: Date, default: null },
     endsAt: { type: Date, default: null }
   },
+  homeNoticeShowInTicker: { type: Boolean, default: true },
   libraryCategories: {
     book: { type: Boolean, default: true },
     note: { type: Boolean, default: true },

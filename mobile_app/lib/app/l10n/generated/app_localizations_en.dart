@@ -142,6 +142,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get questionsLabel => 'questions';
 
   @override
+  String get welcomeSubtitle => 'Here is your diploma life at a glance';
+
+  @override
   String get quickAccess => 'Quick Access';
 
   @override

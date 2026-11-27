@@ -97,10 +97,13 @@ function isoDate(value: unknown): string | null {
   return null;
 }
 
-export async function checkResult(env: Env, examId: string, roll: string): Promise<ResultRecord> {
+export async function checkResult(env: Env, examId: string, roll: string, registrationNo?: string): Promise<ResultRecord> {
   const db = resultsDb(env);
   const doc = await db.collection('records').findOne({ examId, roll: String(roll) });
   if (!doc) throw notFound('No result found for this roll in the selected examination');
+  if (registrationNo && typeof doc.registrationNo === 'string' && doc.registrationNo && doc.registrationNo !== registrationNo) {
+    throw notFound('Roll and registration do not match in this examination');
+  }
   await db
     .collection('exams')
     .updateOne({ examId }, { $inc: { checkCount: 1 }, $setOnInsert: { examId } }, { upsert: true });
