@@ -564,7 +564,7 @@ class HomeScreen extends ConsumerWidget {
                   (link) => _openLink(context, link)),
               resourceCounts.maybeWhen(
                 data: (counts) {
-                  final cards = <_ResourceCardItem>([
+                  final cards = <_ResourceCardItem>[
                     _ResourceCardItem(l10n.books, Icons.auto_stories_rounded,
                         counts['book'] ?? 0),
                     _ResourceCardItem(l10n.notes, Icons.edit_note_rounded,
@@ -594,7 +594,7 @@ class HomeScreen extends ConsumerWidget {
             ],
           );
         case 'quick_access':
-          final quickItems = <_QuickItem>([
+          final quickItems = <_QuickItem>[
             _QuickItem(l10n.studyTab, Icons.menu_book_rounded, '/library'),
             _QuickItem(l10n.examCenter, Icons.quiz_rounded, '/exams'),
             _QuickItem(l10n.cgpa, Icons.functions_rounded, '/gpa/cgpa'),
