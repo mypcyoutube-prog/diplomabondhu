@@ -23,7 +23,8 @@ const QUICK_ACCESS_DEFAULTS = [
   { slug: 'quick-syllabus', titleEn: 'Syllabus', titleBn: 'সিলেবাস', icon: 'description_rounded', route: '/subjects', bgColor: '#DBEAFE', fgColor: '#1D4ED8', displayOrder: 2 },
   { slug: 'quick-past-questions', titleEn: 'Previous Questions', titleBn: 'পূর্ববর্তী প্রশ্ন', icon: 'quiz_rounded', route: '/exams', bgColor: '#EDE9FE', fgColor: '#6D28D9', displayOrder: 3 },
   { slug: 'quick-cgpa-calculator', titleEn: 'CGPA Calculator', titleBn: 'সিজিপিএ ক্যালকুলেটর', icon: 'functions_rounded', route: '/gpa/cgpa', bgColor: '#FEF3C7', fgColor: '#B45309', displayOrder: 4 },
-  { slug: 'quick-community', titleEn: 'Community', titleBn: 'কমিউনিটি', icon: 'groups_rounded', route: '/community', bgColor: '#FCE7F3', fgColor: '#BE185D', displayOrder: 5 }
+  { slug: 'quick-community', titleEn: 'Community', titleBn: 'কমিউনিটি', icon: 'groups_rounded', route: '/community', bgColor: '#FCE7F3', fgColor: '#BE185D', displayOrder: 5 },
+  { slug: 'quick-planner', titleEn: 'Planner', titleBn: 'প্ল্যানার', icon: 'event_note_rounded', route: '/planner', bgColor: '#E0F2FE', fgColor: '#0369A1', displayOrder: 6 }
 ];
 
 const STUDY_RESOURCE_DEFAULTS = [

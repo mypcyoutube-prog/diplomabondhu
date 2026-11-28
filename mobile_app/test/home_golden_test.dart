@@ -14,6 +14,8 @@ import 'package:diplomabondhu/features/library/data/material.dart' as model;
 import 'package:diplomabondhu/features/library/providers/library_providers.dart';
 import 'package:diplomabondhu/features/notices/data/notice.dart';
 import 'package:diplomabondhu/features/notices/providers/notice_providers.dart';
+import 'package:diplomabondhu/features/notifications/data/notification_models.dart';
+import 'package:diplomabondhu/features/notifications/providers/notification_providers.dart';
 import 'package:diplomabondhu/features/results/data/result.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -92,7 +94,7 @@ final _content = HomeContent(
       subtitleEn: '',
       subtitleBn: '',
       icon: 'description_rounded',
-      route: '/syllabus',
+      route: '/subjects',
       bgColor: '#DBEAFE',
       fgColor: '#1D4ED8',
       displayOrder: 2,
@@ -132,6 +134,18 @@ final _content = HomeContent(
       bgColor: '#FCE7F3',
       fgColor: '#BE185D',
       displayOrder: 5,
+    ),
+    HomeQuickItem(
+      slug: 'quick-planner',
+      titleEn: 'Planner',
+      titleBn: 'প্ল্যানার',
+      subtitleEn: '',
+      subtitleBn: '',
+      icon: 'event_note_rounded',
+      route: '/planner',
+      bgColor: '#E0F2FE',
+      fgColor: '#0369A1',
+      displayOrder: 6,
     ),
   ],
   studyResources: [
@@ -298,6 +312,8 @@ void main() {
           ))),
           publishedNoticesProvider
               .overrideWith((ref, source) async => _notices()),
+          notificationsProvider.overrideWithValue(
+              AsyncValue.data((items: <NotificationItem>[], unread: 0))),
           authControllerProvider.overrideWith(_FakeAuthController.new),
         ],
         child: MaterialApp(
@@ -324,35 +340,46 @@ void main() {
               ],
             ),
             body: const HomeScreen(),
-            bottomNavigationBar: NavigationBar(
-              selectedIndex: 0,
-              destinations: const [
-                NavigationDestination(
-                  icon: Icon(Icons.home_outlined),
-                  selectedIcon: Icon(Icons.home_rounded),
-                  label: 'Home',
-                ),
-                NavigationDestination(
-                  icon: Icon(Icons.menu_book_outlined),
-                  selectedIcon: Icon(Icons.menu_book_rounded),
-                  label: 'Study',
-                ),
-                NavigationDestination(
-                  icon: Icon(Icons.verified_outlined),
-                  selectedIcon: Icon(Icons.verified_rounded),
-                  label: 'Result',
-                ),
-                NavigationDestination(
-                  icon: Icon(Icons.groups_outlined),
-                  selectedIcon: Icon(Icons.groups_rounded),
-                  label: 'Community',
-                ),
-                NavigationDestination(
-                  icon: Icon(Icons.person_outlined),
-                  selectedIcon: Icon(Icons.person_rounded),
-                  label: 'Profile',
-                ),
-              ],
+            bottomNavigationBar: Container(
+              margin: const EdgeInsets.fromLTRB(12, 4, 12, 8),
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(DbRadius.card + 6),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.08),
+                    blurRadius: 18,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  _GoldenTab(
+                      icon: Icons.home_rounded,
+                      label: 'Home',
+                      selected: true),
+                  const _GoldenTab(
+                      icon: Icons.menu_book_outlined, label: 'Study'),
+                  Container(
+                    width: 54,
+                    height: 44,
+                    margin: const EdgeInsets.symmetric(horizontal: 4),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                          colors: [DbColors.emerald, DbColors.emeraldDark]),
+                      borderRadius: BorderRadius.circular(DbRadius.input + 2),
+                    ),
+                    child: const Icon(Icons.add_rounded,
+                        color: Colors.white, size: 26),
+                  ),
+                  const _GoldenTab(
+                      icon: Icons.groups_outlined, label: 'Community'),
+                  const _GoldenTab(
+                      icon: Icons.person_outlined, label: 'Profile'),
+                ],
+              ),
             ),
           ),
         ),
@@ -373,4 +400,48 @@ void main() {
       matchesGoldenFile('goldens/home_reference_scrolled.png'),
     );
   }, skip: !_fontCacheAvailable());
+}
+
+class _GoldenTab extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool selected;
+
+  const _GoldenTab({required this.icon, required this.label, this.selected = false});
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 6),
+        decoration: BoxDecoration(
+          color: selected
+              ? DbColors.emerald.withValues(alpha: 0.12)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(DbRadius.full),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon,
+                color: selected
+                    ? DbColors.emerald
+                    : DbColors.textSecondaryLight,
+                size: 22),
+            const SizedBox(height: 2),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w600,
+                color: selected
+                    ? DbColors.emerald
+                    : DbColors.textSecondaryLight,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }

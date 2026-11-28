@@ -16,6 +16,7 @@ import '../../dashboard_customize/providers/dashboard_prefs_providers.dart';
 import '../../library/providers/library_providers.dart';
 import '../../notices/data/notice.dart';
 import '../../notices/providers/notice_providers.dart';
+import '../../notifications/providers/notification_providers.dart';
 import '../../../shared/widgets/async_value_view.dart';
 import '../../../shared/widgets/pressable_scale.dart';
 import '../../../shared/widgets/states.dart';
@@ -86,6 +87,62 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
+  Widget _unreadBell(BuildContext context, WidgetRef ref) {
+    final unread = ref.watch(notificationsProvider).value?.unread ?? 0;
+    return IconButton(
+      icon: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          const Icon(Icons.notifications_rounded),
+          if (unread > 0)
+            Positioned(
+              top: 0,
+              right: 0,
+              child: Container(
+                width: 8,
+                height: 8,
+                decoration: BoxDecoration(
+                  color: DbColors.emerald,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white, width: 1.5),
+                ),
+              ),
+            ),
+        ],
+      ),
+      onPressed: () => context.push('/notifications'),
+    );
+  }
+
+  Widget _headerAvatar(BuildContext context, User? user) {
+    final name = user?.name ?? '';
+    final initial = name.isNotEmpty ? name[0].toUpperCase() : '?';
+    return Padding(
+      padding: const EdgeInsets.only(left: 4),
+      child: GestureDetector(
+        onTap: () => context.push('/profile'),
+        child: Container(
+          width: 34,
+          height: 34,
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+                colors: [DbColors.navy, DbColors.navyDark]),
+            shape: BoxShape.circle,
+          ),
+          alignment: Alignment.center,
+          child: Text(
+            initial,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 13,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _resultOrNoticeBar(BuildContext context, WidgetRef ref) {
     final settings = ref.watch(appSettingsProvider).value;
     if (settings == null) return const SizedBox.shrink();
@@ -113,6 +170,12 @@ class HomeScreen extends ConsumerWidget {
               ),
               child: Row(
                 children: [
+                  const Icon(
+                    Icons.emoji_events_rounded,
+                    color: DbColors.emerald,
+                    size: 24,
+                  ),
+                  const SizedBox(width: 10),
                   Container(
                     padding: const EdgeInsets.symmetric(
                         horizontal: 9, vertical: 4),
@@ -242,9 +305,12 @@ class HomeScreen extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.all(DbSpacing.md),
       decoration: BoxDecoration(
-        color: Colors.white,
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFFECFDF5), Color(0xFFD1FAE5)],
+        ),
         borderRadius: BorderRadius.circular(DbRadius.card),
-        border: Border.all(color: DbColors.borderLight),
         boxShadow: DbShadows.card,
       ),
       child: Row(
@@ -296,7 +362,7 @@ class HomeScreen extends ConsumerWidget {
     return PressableScale(
       onTap: () => _openLink(context, item.route),
       child: Container(
-        width: 88,
+        width: 96,
         padding: const EdgeInsets.all(DbSpacing.sm),
         decoration: BoxDecoration(
           color: Theme.of(context).cardColor,
@@ -476,38 +542,27 @@ class HomeScreen extends ConsumerWidget {
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(fontWeight: FontWeight.w600),
             ),
+            if (post.body.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Text(
+                  post.body,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: DbColors.textSecondaryLight,
+                  ),
+                ),
+              ),
           ],
         ),
       ),
     );
   }
 
-  Widget _sectionHeader(BuildContext context, String title, String route,
-      void Function(String route) openLink) {
-    return DbSectionHeader(
-      title: title,
-      trailing: TextButton(
-        onPressed: () => openLink(route),
-        style: TextButton.styleFrom(
-          visualDensity: VisualDensity.compact,
-          padding: const EdgeInsets.symmetric(horizontal: 8),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              AppLocalizations.of(context)!.seeAll,
-              style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: DbColors.teal),
-            ),
-            const Icon(Icons.chevron_right_rounded,
-                size: 18, color: DbColors.teal),
-          ],
-        ),
-      ),
-    );
+  Widget _sectionHeader(BuildContext context, String title) {
+    return DbSectionHeader(title: title);
   }
 
   String _pickTitle(bool isBn, String en, String bn) {
@@ -572,9 +627,7 @@ class HomeScreen extends ConsumerWidget {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _sectionHeader(
-                  context, l10n.studyResources, '/library',
-                  (link) => _openLink(context, link)),
+              _sectionHeader(context, l10n.studyResources),
               SizedBox(
                 height: 96,
                 child: ListView.separated(
@@ -607,9 +660,7 @@ class HomeScreen extends ConsumerWidget {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _sectionHeader(
-                  context, l10n.quickAccess, '/library',
-                  (link) => _openLink(context, link)),
+              _sectionHeader(context, l10n.quickAccess),
               SizedBox(
                 height: 108,
                 child: ListView.separated(
@@ -626,9 +677,7 @@ class HomeScreen extends ConsumerWidget {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _sectionHeader(
-                  context, l10n.recentMaterials, '/library',
-                  (link) => _openLink(context, link)),
+              _sectionHeader(context, l10n.recentMaterials),
               AsyncValueView(
                 value: recent,
                 onRetry: () => ref.invalidate(recentMaterialsProvider),
@@ -666,9 +715,7 @@ class HomeScreen extends ConsumerWidget {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _sectionHeader(
-                  context, l10n.communityUpdates, '/community',
-                  (link) => _openLink(context, link)),
+              _sectionHeader(context, l10n.communityUpdates),
               if (featured.isNotEmpty)
                 _communityUpdateCard(context, featured.first),
             ],
@@ -810,14 +857,9 @@ class HomeScreen extends ConsumerWidget {
           ],
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications_rounded),
-            onPressed: () => context.push('/notifications'),
-          ),
-          IconButton(
-            icon: const Icon(Icons.person_rounded),
-            onPressed: () => context.push('/profile'),
-          ),
+          _unreadBell(context, ref),
+          _headerAvatar(context, user),
+          const SizedBox(width: 8),
         ],
       ),
       body: RefreshIndicator(

@@ -315,41 +315,130 @@ class _ShellScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final currentIndex = shell.currentIndex;
+
+    Widget tab({
+      required int branchIndex,
+      required IconData icon,
+      required IconData activeIcon,
+      required String label,
+    }) {
+      final selected = currentIndex == branchIndex;
+      return Expanded(
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () => shell.goBranch(
+            branchIndex,
+            initialLocation: branchIndex == currentIndex,
+          ),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 180),
+            padding: const EdgeInsets.symmetric(vertical: 6),
+            decoration: BoxDecoration(
+              color: selected
+                  ? DbColors.emerald.withValues(alpha: 0.12)
+                  : Colors.transparent,
+              borderRadius: BorderRadius.circular(DbRadius.full),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  selected ? activeIcon : icon,
+                  color: selected ? DbColors.emerald : DbColors.textSecondaryLight,
+                  size: 22,
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    color: selected
+                        ? DbColors.emerald
+                        : DbColors.textSecondaryLight,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       body: shell,
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: shell.currentIndex,
-        onDestinationSelected: (i) => shell.goBranch(
-          i,
-          initialLocation: i == shell.currentIndex,
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: Container(
+          margin: const EdgeInsets.fromLTRB(12, 4, 12, 8),
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(DbRadius.card + 6),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.08),
+                blurRadius: 18,
+                offset: const Offset(0, 6),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              tab(
+                branchIndex: 0,
+                icon: Icons.home_outlined,
+                activeIcon: Icons.home_rounded,
+                label: l10n.home,
+              ),
+              tab(
+                branchIndex: 1,
+                icon: Icons.menu_book_outlined,
+                activeIcon: Icons.menu_book_rounded,
+                label: l10n.studyTab,
+              ),
+              GestureDetector(
+                onTap: () => context.push('/community/new'),
+                child: Container(
+                  width: 54,
+                  height: 44,
+                  margin: const EdgeInsets.symmetric(horizontal: 4),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                        colors: [DbColors.emerald, DbColors.emeraldDark]),
+                    borderRadius: BorderRadius.circular(DbRadius.input + 2),
+                    boxShadow: [
+                      BoxShadow(
+                        color: DbColors.emerald.withValues(alpha: 0.35),
+                        blurRadius: 10,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: const Icon(Icons.add_rounded,
+                      color: Colors.white, size: 26),
+                ),
+              ),
+              tab(
+                branchIndex: 3,
+                icon: Icons.groups_outlined,
+                activeIcon: Icons.groups_rounded,
+                label: l10n.community,
+              ),
+              tab(
+                branchIndex: 4,
+                icon: Icons.person_outlined,
+                activeIcon: Icons.person_rounded,
+                label: l10n.profile,
+              ),
+            ],
+          ),
         ),
-        destinations: [
-          NavigationDestination(
-            icon: const Icon(Icons.home_outlined),
-            selectedIcon: const Icon(Icons.home_rounded),
-            label: AppLocalizations.of(context)!.home,
-          ),
-          NavigationDestination(
-            icon: const Icon(Icons.menu_book_outlined),
-            selectedIcon: const Icon(Icons.menu_book_rounded),
-            label: AppLocalizations.of(context)!.studyTab,
-          ),
-          NavigationDestination(
-            icon: const Icon(Icons.verified_outlined),
-            selectedIcon: const Icon(Icons.verified_rounded),
-            label: AppLocalizations.of(context)!.resultTab,
-          ),
-          NavigationDestination(
-            icon: const Icon(Icons.groups_outlined),
-            selectedIcon: const Icon(Icons.groups_rounded),
-            label: AppLocalizations.of(context)!.community,
-          ),
-          NavigationDestination(
-            icon: const Icon(Icons.person_outlined),
-            selectedIcon: const Icon(Icons.person_rounded),
-            label: AppLocalizations.of(context)!.profile,
-          ),
-        ],
       ),
     );
   }

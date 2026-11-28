@@ -42,6 +42,7 @@ const Map<String, IconData> homeIconMap = {
   'star_rounded': Icons.star_rounded,
   'info_rounded': Icons.info_rounded,
   'description_rounded': Icons.description_rounded,
+  'event_note_rounded': Icons.event_note_rounded,
 };
 
 /// Mirrors the backend ROUTE_WHITELIST sourced from the real GoRouter scan.

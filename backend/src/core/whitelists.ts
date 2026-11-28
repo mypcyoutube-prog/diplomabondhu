@@ -51,7 +51,8 @@ export const ICON_FALLBACK_WHITELIST: readonly string[] = Object.freeze([
   'download_rounded', 'category_rounded', 'forum_rounded', 'favorite_rounded',
   'check_circle_rounded', 'schedule_rounded', 'school_rounded', 'workspace_premium_rounded',
   'dashboard_rounded', 'list_alt_rounded', 'push_pin_rounded', 'visibility_rounded',
-  'visibility_off_rounded', 'star_rounded', 'info_rounded', 'description_rounded'
+  'visibility_off_rounded', 'star_rounded', 'info_rounded', 'description_rounded',
+  'event_note_rounded'
 ]);
 
 let generatedIcons: Set<string> | null = null;
