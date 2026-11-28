@@ -82,7 +82,7 @@ class HomeScreen extends ConsumerWidget {
       data: (items) {
         if (items.isEmpty) return const SizedBox.shrink();
         return SizedBox(
-          height: 132,
+          height: 120,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             itemCount: items.length,
@@ -304,25 +304,35 @@ class HomeScreen extends ConsumerWidget {
 
   Widget _welcomeCard(BuildContext context, User? user) {
     final l10n = AppLocalizations.of(context)!;
+    final hour = DateTime.now().hour;
+    final greeting = hour < 12
+        ? l10n.goodMorning
+        : hour < 17
+            ? l10n.goodAfternoon
+            : l10n.goodEvening;
     return Container(
       padding: const EdgeInsets.all(DbSpacing.md),
       decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFFF0FFF4), Color(0xFFBBF7D0)],
+        ),
         borderRadius: BorderRadius.circular(DbRadius.card),
         boxShadow: DbShadows.card,
       ),
       child: Row(
         children: [
           Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
+            width: 40,
+            height: 40,
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
                   colors: [DbColors.teal, DbColors.emerald]),
-              borderRadius: BorderRadius.circular(DbRadius.input),
+              shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.school_rounded,
-                color: Colors.white, size: 22),
+            child: const Icon(Icons.person_rounded,
+                color: Colors.white, size: 20),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -330,11 +340,15 @@ class HomeScreen extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  user?.name ?? '',
+                  user?.name?.isNotEmpty == true
+                      ? '$greeting, ${user!.name}'
+                      : greeting,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
-                      fontSize: 18, fontWeight: FontWeight.w800),
+                      fontSize: 15,
+                      fontWeight: FontWeight.w800,
+                      color: DbColors.navy),
                 ),
                 const SizedBox(height: 2),
                 Text(
@@ -352,10 +366,9 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
-  Widget _quickAccessTile(
-      BuildContext context, String title, IconData icon, String route) {
+  Widget _quickAccessTile(BuildContext context, _QuickItem item) {
     return PressableScale(
-      onTap: () => _openLink(context, route),
+      onTap: () => _openLink(context, item.route),
       child: Container(
         width: 88,
         padding: const EdgeInsets.all(DbSpacing.sm),
@@ -371,11 +384,10 @@ class HomeScreen extends ConsumerWidget {
               width: 44,
               height: 44,
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                    colors: [DbColors.teal, DbColors.emerald]),
+                color: item.bg,
                 borderRadius: BorderRadius.circular(DbRadius.input),
               ),
-              child: Icon(icon, color: Colors.white, size: 22),
+              child: Icon(item.icon, color: item.fg, size: 22),
             ),
             const SizedBox(height: 6),
             Text(
@@ -392,14 +404,13 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
-  Widget _resourceCountTile(
-      BuildContext context, String title, IconData icon, int count) {
+  Widget _resourceCountTile(BuildContext context, _ResourceCardItem item) {
     return PressableScale(
       onTap: () => context.push('/library'),
       child: Container(
         padding: const EdgeInsets.all(DbSpacing.md),
         decoration: BoxDecoration(
-          color: Theme.of(context).cardColor,
+          color: item.bg,
           borderRadius: BorderRadius.circular(DbRadius.card),
           boxShadow: DbShadows.card,
         ),
@@ -411,24 +422,23 @@ class HomeScreen extends ConsumerWidget {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                    colors: [DbColors.teal, DbColors.emerald]),
+                color: Colors.white.withValues(alpha: 0.65),
                 borderRadius: BorderRadius.circular(DbRadius.input),
               ),
-              child: Icon(icon, color: Colors.white, size: 20),
+              child: Icon(item.icon, color: item.fg, size: 20),
             ),
             const SizedBox(height: 8),
-            Text(title,
+            Text(item.title,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(fontWeight: FontWeight.w700)),
-            if (count > 0)
+            if (item.count > 0)
               Text(
-                '$count',
-                style: const TextStyle(
+                '${item.count}',
+                style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: DbColors.teal,
+                  color: item.fg,
                 ),
               ),
           ],
@@ -565,15 +575,30 @@ class HomeScreen extends ConsumerWidget {
               resourceCounts.maybeWhen(
                 data: (counts) {
                   final cards = <_ResourceCardItem>[
-                    _ResourceCardItem(l10n.books, Icons.auto_stories_rounded,
-                        counts['book'] ?? 0),
-                    _ResourceCardItem(l10n.notes, Icons.edit_note_rounded,
-                        counts['note'] ?? 0),
-                    _ResourceCardItem(l10n.videos, Icons.play_circle_rounded,
-                        counts['video'] ?? 0),
-                    _ResourceCardItem(l10n.subjectMaterials,
+                    _ResourceCardItem(
+                        l10n.books,
+                        Icons.auto_stories_rounded,
+                        counts['book'] ?? 0,
+                        const Color(0xFFE0F2F1),
+                        const Color(0xFF00897B)),
+                    _ResourceCardItem(
+                        l10n.notes,
+                        Icons.edit_note_rounded,
+                        counts['note'] ?? 0,
+                        const Color(0xFFE3F2FD),
+                        const Color(0xFF1565C0)),
+                    _ResourceCardItem(
+                        l10n.videos,
+                        Icons.play_circle_rounded,
+                        counts['video'] ?? 0,
+                        const Color(0xFFF3E5F5),
+                        const Color(0xFF6A1B9A)),
+                    _ResourceCardItem(
+                        l10n.subjectMaterials,
                         Icons.folder_special_rounded,
-                        counts['subject_material'] ?? 0),
+                        counts['subject_material'] ?? 0,
+                        const Color(0xFFFFF3E0),
+                        const Color(0xFFE65100)),
                   ];
                   return SizedBox(
                     height: 96,
@@ -583,8 +608,7 @@ class HomeScreen extends ConsumerWidget {
                       separatorBuilder: (_, _) => const SizedBox(width: 10),
                       itemBuilder: (context, i) => SizedBox(
                         width: 150,
-                        child: _resourceCountTile(context, cards[i].title,
-                            cards[i].icon, cards[i].count),
+                        child: _resourceCountTile(context, cards[i]),
                       ),
                     ),
                   );
@@ -595,11 +619,36 @@ class HomeScreen extends ConsumerWidget {
           );
         case 'quick_access':
           final quickItems = <_QuickItem>[
-            _QuickItem(l10n.studyTab, Icons.menu_book_rounded, '/library'),
-            _QuickItem(l10n.examCenter, Icons.quiz_rounded, '/exams'),
-            _QuickItem(l10n.cgpa, Icons.functions_rounded, '/gpa/cgpa'),
-            _QuickItem(l10n.community, Icons.groups_rounded, '/community'),
-            _QuickItem(l10n.notices, Icons.campaign_rounded, '/notices'),
+            _QuickItem(
+                l10n.studyTab,
+                Icons.menu_book_rounded,
+                '/library',
+                const Color(0xFFE0F2F1),
+                const Color(0xFF00897B)),
+            _QuickItem(
+                l10n.examCenter,
+                Icons.quiz_rounded,
+                '/exams',
+                const Color(0xFFE3F2FD),
+                const Color(0xFF1565C0)),
+            _QuickItem(
+                l10n.cgpa,
+                Icons.functions_rounded,
+                '/gpa/cgpa',
+                const Color(0xFFF3E5F5),
+                const Color(0xFF6A1B9A)),
+            _QuickItem(
+                l10n.community,
+                Icons.groups_rounded,
+                '/community',
+                const Color(0xFFFFF3E0),
+                const Color(0xFFE65100)),
+            _QuickItem(
+                l10n.notices,
+                Icons.campaign_rounded,
+                '/notices',
+                const Color(0xFFFCE4EC),
+                const Color(0xFFAD1457)),
           ];
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -613,9 +662,8 @@ class HomeScreen extends ConsumerWidget {
                   scrollDirection: Axis.horizontal,
                   itemCount: quickItems.length,
                   separatorBuilder: (_, _) => const SizedBox(width: 10),
-                  itemBuilder: (context, i) => _quickAccessTile(
-                      context, quickItems[i].title, quickItems[i].icon,
-                      quickItems[i].route),
+                  itemBuilder: (context, i) =>
+                      _quickAccessTile(context, quickItems[i]),
                 ),
               ),
             ],
@@ -797,15 +845,6 @@ class HomeScreen extends ConsumerWidget {
         ),
         actions: [
           IconButton(
-            tooltip: l10n.commandCenterTitle,
-            icon: const Icon(Icons.grid_view_rounded),
-            onPressed: () => context.push('/commands'),
-          ),
-          IconButton(
-            icon: const Icon(Icons.search_rounded),
-            onPressed: () => context.push('/search'),
-          ),
-          IconButton(
             icon: const Icon(Icons.notifications_rounded),
             onPressed: () => context.push('/notifications'),
           ),
@@ -860,17 +899,21 @@ class HomeScreen extends ConsumerWidget {
 }
 
 class _ResourceCardItem {
-  const _ResourceCardItem(this.title, this.icon, this.count);
+  const _ResourceCardItem(this.title, this.icon, this.count, this.bg, this.fg);
   final String title;
   final IconData icon;
   final int count;
+  final Color bg;
+  final Color fg;
 }
 
 class _QuickItem {
-  const _QuickItem(this.title, this.icon, this.route);
+  const _QuickItem(this.title, this.icon, this.route, this.bg, this.fg);
   final String title;
   final IconData icon;
   final String route;
+  final Color bg;
+  final Color fg;
 }
 
 /// Wraps a tappable child with a subtle press-down scale animation.
@@ -937,18 +980,15 @@ class _NoticeTickerState extends ConsumerState<_NoticeTicker> {
       return const SizedBox.shrink();
     }
 
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
     return Container(
       decoration: BoxDecoration(
-        color: isDark ? DbColors.fillDark : DbColors.fillLight,
+        gradient: const LinearGradient(
+            colors: [DbColors.emerald, DbColors.emeraldDark]),
         borderRadius: BorderRadius.circular(DbRadius.chip),
-        border: Border.all(
-          color: isDark ? DbColors.borderDark : DbColors.borderLight,
-        ),
+        boxShadow: DbShadows.card,
       ),
       padding: const EdgeInsets.symmetric(horizontal: DbSpacing.sm),
-      height: 38,
+      height: 40,
       child: Row(
         children: [
           GestureDetector(
@@ -957,8 +997,7 @@ class _NoticeTickerState extends ConsumerState<_NoticeTicker> {
               padding:
                   const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                    colors: [DbColors.teal, DbColors.emerald]),
+                color: Colors.white.withValues(alpha: 0.18),
                 borderRadius: BorderRadius.circular(DbRadius.badge),
               ),
               child: Text(
@@ -1011,7 +1050,7 @@ class _NoticeTickerState extends ConsumerState<_NoticeTicker> {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 const Icon(Icons.campaign_rounded,
-                                    size: 13, color: DbColors.teal),
+                                    size: 13, color: Colors.white),
                                 const SizedBox(width: 4),
                                 Text(
                                   adminNotice.text,
@@ -1019,14 +1058,12 @@ class _NoticeTickerState extends ConsumerState<_NoticeTicker> {
                                   overflow: TextOverflow.ellipsis,
                                   style: const TextStyle(
                                       fontSize: 12,
-                                      fontWeight: FontWeight.w600),
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.white),
                                 ),
                                 const SizedBox(width: 6),
-                                Text('\u2022',
-                                    style: TextStyle(
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .onSurfaceVariant)),
+                                const Text('\u2022',
+                                    style: TextStyle(color: Colors.white70)),
                               ],
                             ),
                           ),
@@ -1046,9 +1083,7 @@ class _NoticeTickerState extends ConsumerState<_NoticeTicker> {
                                       ? Icons.verified_rounded
                                       : Icons.campaign_rounded,
                                   size: 13,
-                                  color: notice.isBteb
-                                      ? DbColors.emeraldDark
-                                      : DbColors.teal,
+                                  color: Colors.white,
                                 ),
                                 const SizedBox(width: 4),
                                 Text(
@@ -1057,14 +1092,12 @@ class _NoticeTickerState extends ConsumerState<_NoticeTicker> {
                                   overflow: TextOverflow.ellipsis,
                                   style: const TextStyle(
                                       fontSize: 12,
-                                      fontWeight: FontWeight.w600),
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.white),
                                 ),
                                 const SizedBox(width: 6),
-                                Text('•',
-                                    style: TextStyle(
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .onSurfaceVariant)),
+                                const Text('•',
+                                    style: TextStyle(color: Colors.white70)),
                               ],
                             ),
                           ),
