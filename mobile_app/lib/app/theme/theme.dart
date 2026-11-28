@@ -28,9 +28,9 @@ class DbColors {
   // Status
   static const errorLight = Color(0xFFDC2626);
   static const errorDark = Color(0xFFF87171);
-  static const warningLight = Color(0xFFD97706);
+  static const warningLight = Color(0xFFF59E0B);
   static const warningDark = Color(0xFFFBBF24);
-  static const successLight = Color(0xFF059669);
+  static const successLight = Color(0xFF10B981);
   static const successDark = Color(0xFF34D399);
   static const infoLight = Color(0xFF0284C7);
   static const infoDark = Color(0xFF38BDF8);

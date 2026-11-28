@@ -80,96 +80,12 @@ class HomeScreen extends ConsumerWidget {
     return banners.maybeWhen(
       data: (items) {
         if (items.isEmpty) return const SizedBox.shrink();
-        return SizedBox(
-          height: 120,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            itemCount: items.length,
-            separatorBuilder: (_, _) => const SizedBox(width: 10),
-            itemBuilder: (context, i) {
-              final banner = items[i];
-              return PressableScale(
-                onTap: () => openLink(banner.linkUrl),
-                child: Container(
-                  width: 300,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(DbRadius.card),
-                    boxShadow: DbShadows.card,
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(DbRadius.card),
-                    child: Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        Image.network(
-                          banner.imageUrl,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, _, _) => Container(
-                            color: DbColors.fillLight,
-                            child: const Icon(Icons.image_rounded,
-                                color: DbColors.textSecondaryLight, size: 32),
-                          ),
-                        ),
-                        if (banner.title.isNotEmpty ||
-                            banner.ctaLabel.isNotEmpty)
-                          Container(
-                            decoration: const BoxDecoration(
-                              gradient: LinearGradient(
-                                begin: Alignment.bottomCenter,
-                                end: Alignment.topCenter,
-                                stops: [0.0, 0.55],
-                                colors: [DbColors.overlay, Colors.transparent],
-                              ),
-                            ),
-                            padding: const EdgeInsets.all(12),
-                            alignment: Alignment.bottomLeft,
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                if (banner.title.isNotEmpty)
-                                  Text(
-                                    banner.title,
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.w700,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                if (banner.ctaLabel.isNotEmpty)
-                                  Padding(
-                                    padding:
-                                        const EdgeInsets.only(top: 4),
-                                    child: Text(
-                                      banner.ctaLabel,
-                                      style: const TextStyle(
-                                        color: Colors.white70,
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ),
-                              ],
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                ),
-              );
-            },
-          ),
-        );
+        return _BannerPager(items: items, openLink: openLink);
       },
       orElse: () => const SizedBox.shrink(),
     );
   }
 
-  /// One-line bar under the welcome card: during an admin-configured result
-  /// window the student's own roll + registration are verified automatically;
-  /// otherwise the admin notice takes the same slot.
   Widget _resultOrNoticeBar(BuildContext context, WidgetRef ref) {
     final settings = ref.watch(appSettingsProvider).value;
     if (settings == null) return const SizedBox.shrink();
@@ -243,13 +159,21 @@ class HomeScreen extends ConsumerWidget {
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.all(6),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 6),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.12),
-                      shape: BoxShape.circle,
+                      gradient: const LinearGradient(
+                          colors: [DbColors.emerald, DbColors.emeraldDark]),
+                      borderRadius: BorderRadius.circular(DbRadius.full),
                     ),
-                    child: const Icon(Icons.arrow_forward_rounded,
-                        color: Colors.white, size: 16),
+                    child: Text(
+                      AppLocalizations.of(context)!.viewDetails,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -492,12 +416,24 @@ class HomeScreen extends ConsumerWidget {
                 ),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: Text(
-                    post.authorName,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                        fontWeight: FontWeight.w700, fontSize: 13),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        post.authorName,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                            fontWeight: FontWeight.w700, fontSize: 13),
+                      ),
+                      if (post.createdAt != null)
+                        Text(
+                          _formatDate(post.createdAt!),
+                          style: const TextStyle(
+                              fontSize: 11,
+                              color: DbColors.textSecondaryLight),
+                        ),
+                    ],
                   ),
                 ),
                 Icon(
@@ -516,6 +452,26 @@ class HomeScreen extends ConsumerWidget {
                     style: const TextStyle(fontSize: 12)),
               ],
             ),
+            if (post.tags.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: DbColors.emerald.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(DbRadius.badge),
+                  ),
+                  child: Text(
+                    post.tags.first,
+                    style: const TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      color: DbColors.emerald,
+                    ),
+                  ),
+                ),
+              ),
             const SizedBox(height: 8),
             Text(
               post.title,
@@ -772,8 +728,22 @@ class HomeScreen extends ConsumerWidget {
                           ],
                         ),
                       ),
-                      const Icon(Icons.chevron_right_rounded,
-                          color: DbColors.textSecondaryLight),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: DbColors.infoLight,
+                          borderRadius: BorderRadius.circular(DbRadius.full),
+                        ),
+                        child: Text(
+                          AppLocalizations.of(context)!.viewDetails,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -814,6 +784,10 @@ class HomeScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: Colors.white,
+        foregroundColor: DbColors.navy,
+        elevation: 0,
+        scrolledUnderElevation: 0,
         title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -832,7 +806,8 @@ class HomeScreen extends ConsumerWidget {
               child: Text(
                 settings.value?.appName ?? 'DiplomaBondhu',
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontWeight: FontWeight.w800),
+                style: const TextStyle(
+                    fontWeight: FontWeight.w800, color: DbColors.navy),
               ),
             ),
           ],
@@ -891,6 +866,146 @@ class HomeScreen extends ConsumerWidget {
             ],
             ...sectionChildren,
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Reference-design admin banner slider: one banner per page with dot
+/// indicators underneath, driven entirely by real admin-managed banners.
+class _BannerPager extends StatefulWidget {
+  final List<HomeBanner> items;
+  final void Function(String) openLink;
+
+  const _BannerPager({required this.items, required this.openLink});
+
+  @override
+  State<_BannerPager> createState() => _BannerPagerState();
+}
+
+class _BannerPagerState extends State<_BannerPager> {
+  int _index = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    final items = widget.items;
+    return Column(
+      children: [
+        SizedBox(
+          height: 120,
+          child: PageView.builder(
+            itemCount: items.length,
+            onPageChanged: (i) => setState(() => _index = i),
+            itemBuilder: (context, i) => Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 1),
+              child: _BannerPage(
+                banner: items[i],
+                openLink: widget.openLink,
+              ),
+            ),
+          ),
+        ),
+        if (items.length > 1)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                for (var i = 0; i < items.length; i++)
+                  AnimatedContainer(
+                    duration: DbDurations.fast,
+                    margin: const EdgeInsets.symmetric(horizontal: 3),
+                    width: i == _index ? 18 : 6,
+                    height: 6,
+                    decoration: BoxDecoration(
+                      color: i == _index
+                          ? DbColors.emerald
+                          : DbColors.borderStrongLight,
+                      borderRadius: BorderRadius.circular(DbRadius.full),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _BannerPage extends StatelessWidget {
+  final HomeBanner banner;
+  final void Function(String) openLink;
+
+  const _BannerPage({required this.banner, required this.openLink});
+
+  @override
+  Widget build(BuildContext context) {
+    return PressableScale(
+      onTap: () => openLink(banner.linkUrl),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(DbRadius.card),
+          boxShadow: DbShadows.card,
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(DbRadius.card),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              Image.network(
+                banner.imageUrl,
+                fit: BoxFit.cover,
+                errorBuilder: (_, _, _) => Container(
+                  color: DbColors.fillLight,
+                  child: const Icon(Icons.image_rounded,
+                      color: DbColors.textSecondaryLight, size: 32),
+                ),
+              ),
+              if (banner.title.isNotEmpty || banner.ctaLabel.isNotEmpty)
+                Container(
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.bottomCenter,
+                      end: Alignment.topCenter,
+                      stops: [0.0, 0.55],
+                      colors: [DbColors.overlay, Colors.transparent],
+                    ),
+                  ),
+                  padding: const EdgeInsets.all(12),
+                  alignment: Alignment.bottomLeft,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (banner.title.isNotEmpty)
+                        Text(
+                          banner.title,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 14,
+                          ),
+                        ),
+                      if (banner.ctaLabel.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 4),
+                          child: Text(
+                            banner.ctaLabel,
+                            style: const TextStyle(
+                              color: Colors.white70,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );
@@ -982,9 +1097,9 @@ class _NoticeTickerState extends ConsumerState<_NoticeTicker> {
 
     return Container(
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-            colors: [DbColors.emerald, DbColors.emeraldDark]),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(DbRadius.chip),
+        border: Border.all(color: DbColors.borderLight),
         boxShadow: DbShadows.card,
       ),
       padding: const EdgeInsets.symmetric(horizontal: DbSpacing.sm),
@@ -997,7 +1112,7 @@ class _NoticeTickerState extends ConsumerState<_NoticeTicker> {
               padding:
                   const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.18),
+                color: DbColors.emerald,
                 borderRadius: BorderRadius.circular(DbRadius.badge),
               ),
               child: Text(
@@ -1050,7 +1165,7 @@ class _NoticeTickerState extends ConsumerState<_NoticeTicker> {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 const Icon(Icons.campaign_rounded,
-                                    size: 13, color: Colors.white),
+                                    size: 13, color: DbColors.emerald),
                                 const SizedBox(width: 4),
                                 Text(
                                   adminNotice.text,
@@ -1059,11 +1174,12 @@ class _NoticeTickerState extends ConsumerState<_NoticeTicker> {
                                   style: const TextStyle(
                                       fontSize: 12,
                                       fontWeight: FontWeight.w600,
-                                      color: Colors.white),
+                                      color: DbColors.textPrimaryLight),
                                 ),
                                 const SizedBox(width: 6),
                                 const Text('\u2022',
-                                    style: TextStyle(color: Colors.white70)),
+                                    style: TextStyle(
+                                        color: DbColors.textSecondaryLight)),
                               ],
                             ),
                           ),
@@ -1083,7 +1199,7 @@ class _NoticeTickerState extends ConsumerState<_NoticeTicker> {
                                       ? Icons.verified_rounded
                                       : Icons.campaign_rounded,
                                   size: 13,
-                                  color: Colors.white,
+                                  color: DbColors.emerald,
                                 ),
                                 const SizedBox(width: 4),
                                 Text(
@@ -1093,11 +1209,12 @@ class _NoticeTickerState extends ConsumerState<_NoticeTicker> {
                                   style: const TextStyle(
                                       fontSize: 12,
                                       fontWeight: FontWeight.w600,
-                                      color: Colors.white),
+                                      color: DbColors.textPrimaryLight),
                                 ),
                                 const SizedBox(width: 6),
                                 const Text('•',
-                                    style: TextStyle(color: Colors.white70)),
+                                    style: TextStyle(
+                                        color: DbColors.textSecondaryLight)),
                               ],
                             ),
                           ),
