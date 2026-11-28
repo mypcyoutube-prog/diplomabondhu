@@ -574,7 +574,7 @@ class HomeScreen extends ConsumerWidget {
                     _ResourceCardItem(l10n.subjectMaterials,
                         Icons.folder_special_rounded,
                         counts['subject_material'] ?? 0),
-                  ]);
+                  ];
                   return SizedBox(
                     height: 96,
                     child: ListView.separated(
@@ -600,7 +600,7 @@ class HomeScreen extends ConsumerWidget {
             _QuickItem(l10n.cgpa, Icons.functions_rounded, '/gpa/cgpa'),
             _QuickItem(l10n.community, Icons.groups_rounded, '/community'),
             _QuickItem(l10n.notices, Icons.campaign_rounded, '/notices'),
-          ]);
+          ];
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
