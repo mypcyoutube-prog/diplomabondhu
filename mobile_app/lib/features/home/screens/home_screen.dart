@@ -564,14 +564,15 @@ class HomeScreen extends ConsumerWidget {
                   (link) => _openLink(context, link)),
               resourceCounts.maybeWhen(
                 data: (counts) {
-                  final cards = <(String, IconData, int)>([
-                    (l10n.books, Icons.auto_stories_rounded,
+                  final cards = <_ResourceCardItem>([
+                    _ResourceCardItem(l10n.books, Icons.auto_stories_rounded,
                         counts['book'] ?? 0),
-                    (l10n.notes, Icons.edit_note_rounded,
+                    _ResourceCardItem(l10n.notes, Icons.edit_note_rounded,
                         counts['note'] ?? 0),
-                    (l10n.videos, Icons.play_circle_rounded,
+                    _ResourceCardItem(l10n.videos, Icons.play_circle_rounded,
                         counts['video'] ?? 0),
-                    (l10n.subjectMaterials, Icons.folder_special_rounded,
+                    _ResourceCardItem(l10n.subjectMaterials,
+                        Icons.folder_special_rounded,
                         counts['subject_material'] ?? 0),
                   ]);
                   return SizedBox(
@@ -582,8 +583,8 @@ class HomeScreen extends ConsumerWidget {
                       separatorBuilder: (_, _) => const SizedBox(width: 10),
                       itemBuilder: (context, i) => SizedBox(
                         width: 150,
-                        child: _resourceCountTile(
-                            context, cards[i].$1, cards[i].$2, cards[i].$3),
+                        child: _resourceCountTile(context, cards[i].title,
+                            cards[i].icon, cards[i].count),
                       ),
                     ),
                   );
@@ -593,12 +594,12 @@ class HomeScreen extends ConsumerWidget {
             ],
           );
         case 'quick_access':
-          final quickItems = <(String, IconData, String)>([
-            (l10n.studyTab, Icons.menu_book_rounded, '/library'),
-            (l10n.examCenter, Icons.quiz_rounded, '/exams'),
-            (l10n.cgpa, Icons.functions_rounded, '/gpa/cgpa'),
-            (l10n.community, Icons.groups_rounded, '/community'),
-            (l10n.notices, Icons.campaign_rounded, '/notices'),
+          final quickItems = <_QuickItem>([
+            _QuickItem(l10n.studyTab, Icons.menu_book_rounded, '/library'),
+            _QuickItem(l10n.examCenter, Icons.quiz_rounded, '/exams'),
+            _QuickItem(l10n.cgpa, Icons.functions_rounded, '/gpa/cgpa'),
+            _QuickItem(l10n.community, Icons.groups_rounded, '/community'),
+            _QuickItem(l10n.notices, Icons.campaign_rounded, '/notices'),
           ]);
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -613,8 +614,8 @@ class HomeScreen extends ConsumerWidget {
                   itemCount: quickItems.length,
                   separatorBuilder: (_, _) => const SizedBox(width: 10),
                   itemBuilder: (context, i) => _quickAccessTile(
-                      context, quickItems[i].$1, quickItems[i].$2,
-                      quickItems[i].$3),
+                      context, quickItems[i].title, quickItems[i].icon,
+                      quickItems[i].route),
                 ),
               ),
             ],
@@ -856,6 +857,20 @@ class HomeScreen extends ConsumerWidget {
       ),
     );
   }
+}
+
+class _ResourceCardItem {
+  const _ResourceCardItem(this.title, this.icon, this.count);
+  final String title;
+  final IconData icon;
+  final int count;
+}
+
+class _QuickItem {
+  const _QuickItem(this.title, this.icon, this.route);
+  final String title;
+  final IconData icon;
+  final String route;
 }
 
 /// Wraps a tappable child with a subtle press-down scale animation.
