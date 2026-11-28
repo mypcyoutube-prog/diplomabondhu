@@ -242,19 +242,16 @@ class HomeScreen extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.all(DbSpacing.md),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFFF0FFF4), Color(0xFFBBF7D0)],
-        ),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(DbRadius.card),
+        border: Border.all(color: DbColors.borderLight),
         boxShadow: DbShadows.card,
       ),
       child: Row(
         children: [
           Container(
-            width: 40,
-            height: 40,
+            width: 44,
+            height: 44,
             decoration: const BoxDecoration(
               gradient: LinearGradient(
                   colors: [DbColors.teal, DbColors.emerald]),
