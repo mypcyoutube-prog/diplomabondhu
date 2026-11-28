@@ -310,8 +310,9 @@ void main() {
               DashboardSectionPref(key: 'community', visible: true, order: 50),
             ],
           ))),
-          publishedNoticesProvider
-              .overrideWith((ref, source) async => _notices()),
+          publishedNoticesProvider.overrideWith(
+              (ref, source) async =>
+                  source == 'bteb' ? _notices() : const <Notice>[]),
           notificationsProvider.overrideWithValue(
               AsyncValue.data((items: <NotificationItem>[], unread: 0))),
           authControllerProvider.overrideWith(_FakeAuthController.new),

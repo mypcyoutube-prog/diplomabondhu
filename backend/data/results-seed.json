@@ -1,0 +1,16 @@
+{
+  "examId": "demo-result-2026",
+  "title": "Demo Result (ডেমো রেজাল্ট)",
+  "activateDisplayWindow": true,
+  "records": [
+    {
+      "roll": "123456",
+      "registrationNo": "",
+      "name": "Demo Student",
+      "cgpa": 3.75,
+      "gpa": null,
+      "examSemester": 1,
+      "status": "Passed"
+    }
+  ]
+}

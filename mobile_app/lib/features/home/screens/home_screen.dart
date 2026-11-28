@@ -143,13 +143,14 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
-  Widget _resultOrNoticeBar(BuildContext context, WidgetRef ref) {
+  Widget _resultBar(BuildContext context, WidgetRef ref) {
     final settings = ref.watch(appSettingsProvider).value;
-    if (settings == null) return const SizedBox.shrink();
+    if (settings == null || !settings.resultDisplayActive) {
+      return const SizedBox.shrink();
+    }
 
-    if (settings.resultDisplayActive) {
-      final result = ref.watch(homeResultProvider);
-      return result.maybeWhen(
+    final result = ref.watch(homeResultProvider);
+    return result.maybeWhen(
         data: (record) {
           if (record == null) return const SizedBox.shrink();
           final value = record.cgpa ?? record.gpa;
@@ -245,47 +246,6 @@ class HomeScreen extends ConsumerWidget {
         },
         orElse: () => const SizedBox.shrink(),
       );
-    }
-
-    if (!settings.homeNoticeActive) return const SizedBox.shrink();
-    final notice = settings.homeNotice;
-    return PressableScale(
-      onTap: () => _openLink(context, notice.link),
-      child: Container(
-        padding: const EdgeInsets.symmetric(
-            horizontal: DbSpacing.md, vertical: DbSpacing.sm + 4),
-        decoration: BoxDecoration(
-          color: DbColors.teal.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(DbRadius.card),
-          border: Border.all(color: DbColors.teal.withValues(alpha: 0.25)),
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(7),
-              decoration: BoxDecoration(
-                color: DbColors.teal.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(DbRadius.input),
-              ),
-              child: const Icon(Icons.campaign_rounded,
-                  color: DbColors.teal, size: 18),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                notice.text,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                    fontWeight: FontWeight.w600, fontSize: 13),
-              ),
-            ),
-            const Icon(Icons.chevron_right_rounded,
-                color: DbColors.textSecondaryLight, size: 20),
-          ],
-        ),
-      ),
-    );
   }
 
   Widget _welcomeCard(BuildContext context, User? user, HomeWelcome? welcome) {
@@ -362,7 +322,7 @@ class HomeScreen extends ConsumerWidget {
     return PressableScale(
       onTap: () => _openLink(context, item.route),
       child: Container(
-        width: 96,
+        height: 104,
         padding: const EdgeInsets.all(DbSpacing.sm),
         decoration: BoxDecoration(
           color: Theme.of(context).cardColor,
@@ -565,6 +525,50 @@ class HomeScreen extends ConsumerWidget {
     return DbSectionHeader(title: title);
   }
 
+  List<Widget> _noticeTickers(
+      BuildContext context,
+      AsyncValue<AppSettingsData> settings,
+      AsyncValue<List<Notice>> adminAnnouncements,
+      AsyncValue<List<Notice>> btebNotices) {
+    final s = settings.value;
+    final adminEntries = <_TickerEntry>[
+      if (s != null &&
+          s.homeNoticeActive &&
+          s.homeNotice.text.isNotEmpty &&
+          s.homeNoticeShowInTicker)
+        _TickerEntry(
+          text: s.homeNotice.text,
+          icon: Icons.campaign_rounded,
+          onTap: () => _openLink(context, s.homeNotice.link),
+        ),
+      for (final notice in (adminAnnouncements.value ?? const <Notice>[])
+          .take(20))
+        _TickerEntry(
+          text: notice.title,
+          icon: Icons.campaign_rounded,
+          onTap: () => context.push('/notices/${notice.id}'),
+        ),
+    ];
+    final btebEntries = <_TickerEntry>[
+      for (final notice in (btebNotices.value ?? const <Notice>[]).take(20))
+        _TickerEntry(
+          text: notice.title,
+          icon: Icons.verified_rounded,
+          onTap: () => context.push('/notices/${notice.id}'),
+        ),
+    ];
+
+    final tickers = <Widget>[];
+    if (adminEntries.isNotEmpty) {
+      tickers.add(_NoticeTicker(entries: adminEntries));
+    }
+    if (btebEntries.isNotEmpty) {
+      if (tickers.isNotEmpty) tickers.add(const SizedBox(height: 8));
+      tickers.add(_NoticeTicker(entries: btebEntries));
+    }
+    return tickers;
+  }
+
   String _pickTitle(bool isBn, String en, String bn) {
     if (isBn && bn.isNotEmpty) return bn;
     return en.isNotEmpty ? en : bn;
@@ -600,7 +604,8 @@ class HomeScreen extends ConsumerWidget {
     final homeContent = ref.watch(homeContentProvider);
     final content = homeContent.asData?.value;
     final dashPrefs = ref.watch(dashboardPrefsProvider);
-    final notices = ref.watch(publishedNoticesProvider('all'));
+    final adminAnnouncements = ref.watch(publishedNoticesProvider('admin'));
+    final btebNotices = ref.watch(publishedNoticesProvider('bteb'));
     final user = ref.watch(authControllerProvider).value;
     final isBn = Localizations.localeOf(context).languageCode == 'bn';
 
@@ -628,17 +633,12 @@ class HomeScreen extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _sectionHeader(context, l10n.studyResources),
-              SizedBox(
-                height: 96,
-                child: ListView.separated(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: resourceCards.length,
-                  separatorBuilder: (_, _) => const SizedBox(width: 10),
-                  itemBuilder: (context, i) => SizedBox(
-                    width: 150,
-                    child: _resourceCountTile(context, resourceCards[i]),
-                  ),
-                ),
+              _WrapGrid(
+                items: resourceCards,
+                columns: 2,
+                tileHeight: 96,
+                itemBuilder: (context, item) =>
+                    _resourceCountTile(context, item as _ResourceCardItem),
               ),
             ],
           );
@@ -661,15 +661,12 @@ class HomeScreen extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _sectionHeader(context, l10n.quickAccess),
-              SizedBox(
-                height: 108,
-                child: ListView.separated(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: quickItems.length,
-                  separatorBuilder: (_, _) => const SizedBox(width: 10),
-                  itemBuilder: (context, i) =>
-                      _quickAccessTile(context, quickItems[i]),
-                ),
+              _WrapGrid(
+                items: quickItems,
+                columns: 3,
+                tileHeight: 104,
+                itemBuilder: (context, item) =>
+                    _quickAccessTile(context, item as _QuickItem),
               ),
             ],
           );
@@ -895,9 +892,10 @@ class HomeScreen extends ConsumerWidget {
             ],
             _welcomeCard(context, user, content?.welcome),
             const SizedBox(height: 12),
-            _resultOrNoticeBar(context, ref),
+            ..._noticeTickers(context, settings, adminAnnouncements,
+                btebNotices),
             const SizedBox(height: 12),
-            _NoticeTicker(notices: notices),
+            _resultBar(context, ref),
             const SizedBox(height: 18),
             if (homeContent.hasError) ...[
               _homeContentErrorCard(context, ref),
@@ -1074,10 +1072,23 @@ class _QuickItem {
 /// Compact horizontal ticker: fixed NOTICE chip on the left, notice titles
 /// scrolling right-to-left with fade edges. Tapping a title opens its detail
 /// page; the chip opens the All Notices page.
-class _NoticeTicker extends ConsumerStatefulWidget {
-  final AsyncValue<List<Notice>> notices;
+/// One scrollable entry inside a notice ticker.
+class _TickerEntry {
+  final String text;
+  final IconData icon;
+  final VoidCallback onTap;
 
-  const _NoticeTicker({required this.notices});
+  const _TickerEntry({
+    required this.text,
+    required this.icon,
+    required this.onTap,
+  });
+}
+
+class _NoticeTicker extends ConsumerStatefulWidget {
+  final List<_TickerEntry> entries;
+
+  const _NoticeTicker({required this.entries});
 
   @override
   ConsumerState<_NoticeTicker> createState() => _NoticeTickerState();
@@ -1107,30 +1118,11 @@ class _NoticeTickerState extends ConsumerState<_NoticeTicker> {
     });
   }
 
-  void _openTickerLink(BuildContext context, String linkUrl) {
-    if (linkUrl.isEmpty) return;
-    if (linkUrl.startsWith('/')) {
-      context.push(linkUrl);
-      return;
-    }
-    final uri = Uri.tryParse(linkUrl);
-    if (uri != null && (uri.scheme == 'http' || uri.scheme == 'https')) {
-      launchUrl(uri, mode: LaunchMode.externalApplication);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final settings = ref.watch(appSettingsProvider).value;
-    final adminNotice = (settings != null &&
-            settings.homeNoticeActive &&
-            settings.homeNotice.text.isNotEmpty &&
-            settings.homeNoticeShowInTicker)
-        ? settings.homeNotice
-        : null;
-    final items = widget.notices.value ?? const <Notice>[];
-    if (adminNotice == null && items.isEmpty) {
+    final entries = widget.entries;
+    if (entries.isEmpty) {
       return const SizedBox.shrink();
     }
 
@@ -1193,21 +1185,20 @@ class _NoticeTickerState extends ConsumerState<_NoticeTicker> {
                   physics: const NeverScrollableScrollPhysics(),
                   child: Row(
                     children: [
-                      if (adminNotice != null)
+                      for (final entry in entries.take(20))
                         Padding(
                           padding:
                               const EdgeInsets.symmetric(horizontal: 6),
                           child: GestureDetector(
-                            onTap: () =>
-                                _openTickerLink(context, adminNotice.link),
+                            onTap: entry.onTap,
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                const Icon(Icons.campaign_rounded,
+                                Icon(entry.icon,
                                     size: 13, color: DbColors.emerald),
                                 const SizedBox(width: 4),
                                 Text(
-                                  adminNotice.text,
+                                  entry.text,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style: const TextStyle(
@@ -1223,41 +1214,6 @@ class _NoticeTickerState extends ConsumerState<_NoticeTicker> {
                             ),
                           ),
                         ),
-                      for (final notice in items.take(20))
-                        Padding(
-                          padding:
-                              const EdgeInsets.symmetric(horizontal: 6),
-                          child: GestureDetector(
-                            onTap: () =>
-                                context.push('/notices/${notice.id}'),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  notice.isBteb
-                                      ? Icons.verified_rounded
-                                      : Icons.campaign_rounded,
-                                  size: 13,
-                                  color: DbColors.emerald,
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  notice.title,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600,
-                                      color: DbColors.textPrimaryLight),
-                                ),
-                                const SizedBox(width: 6),
-                                const Text('•',
-                                    style: TextStyle(
-                                        color: DbColors.textSecondaryLight)),
-                              ],
-                            ),
-                          ),
-                        ),
                     ],
                   ),
                 ),
@@ -1267,5 +1223,59 @@ class _NoticeTickerState extends ConsumerState<_NoticeTicker> {
         ],
       ),
     );
+  }
+}
+
+/// Lays items out in fixed-column rows that wrap onto the next line instead
+/// of scrolling horizontally, so every tile is always fully visible.
+class _WrapGrid extends StatelessWidget {
+  final List<dynamic> items;
+  final int columns;
+  final double tileHeight;
+  final Widget Function(BuildContext, dynamic) itemBuilder;
+
+  const _WrapGrid({
+    required this.items,
+    required this.columns,
+    required this.tileHeight,
+    required this.itemBuilder,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    const gap = 10.0;
+    final rows = (items.length / columns).ceil();
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final tileWidth =
+            (constraints.maxWidth - gap * (columns - 1)) / columns;
+        return Column(
+          children: [
+            for (var r = 0; r < rows; r++)
+              Padding(
+                padding: EdgeInsets.only(top: r == 0 ? 0 : gap),
+                child: _gridRow(context, r, columns, tileWidth, gap),
+              ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _gridRow(BuildContext context, int row, int columns,
+      double tileWidth, double gap) {
+    final children = <Widget>[];
+    for (var c = 0; c < columns; c++) {
+      if (c > 0) children.add(SizedBox(width: gap));
+      final index = row * columns + c;
+      if (index < items.length) {
+        children.add(SizedBox(
+          width: tileWidth,
+          height: tileHeight,
+          child: itemBuilder(context, items[index]),
+        ));
+      }
+    }
+    return Row(children: children);
   }
 }
