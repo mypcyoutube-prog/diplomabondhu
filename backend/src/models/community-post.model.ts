@@ -11,6 +11,9 @@ export interface ICommunityPost extends mongoose.Document {
   commentCount: number;
   status: 'visible' | 'hidden' | 'removed';
   isAnswered: boolean;
+  featured: boolean;
+  featuredAt?: Date | null;
+  featuredBy?: mongoose.Types.ObjectId | null;
   reports: { reporterId: mongoose.Types.ObjectId; reason: string; status: 'open' | 'resolved' | 'dismissed'; at: Date }[];
   deletedAt?: Date;
 }
@@ -26,6 +29,9 @@ const schema = new Schema<ICommunityPost>({
   commentCount: { type: Number, default: 0 },
   status: { type: String, enum: ['visible', 'hidden', 'removed'], default: 'visible', index: true },
   isAnswered: { type: Boolean, default: false },
+  featured: { type: Boolean, default: false, index: true },
+  featuredAt: { type: Date, default: null },
+  featuredBy: { type: Schema.Types.ObjectId, ref: 'User', default: null },
   reports: [{
     reporterId: { type: Schema.Types.ObjectId, ref: 'User' },
     reason: { type: String, maxlength: 500 },
@@ -33,7 +39,7 @@ const schema = new Schema<ICommunityPost>({
     at: { type: Date, default: Date.now }
   }],
   deletedAt: { type: Date, default: null }
-}, { timestamps: true });
+}, { timestamps: true, optimisticConcurrency: true });
 
 schema.index({ status: 1, createdAt: -1 });
 schema.index({ 'reports.status': 1 });

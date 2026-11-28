@@ -42,3 +42,5 @@ export const moderationActionSchema = z.object({
 }).strict();
 
 export { objectId };
+
+export const featureActionSchema = z.object({ featured: z.boolean() }).strict();

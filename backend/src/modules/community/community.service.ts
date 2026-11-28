@@ -195,6 +195,21 @@ export async function adminListPosts(query: { status?: string; page: number; lim
   return { items, meta: { page: query.page, limit: query.limit, total } };
 }
 
+export async function setFeaturedPost(postId: string, featured: boolean, actorId: string) {
+  if (!Types.ObjectId.isValid(postId)) throw notFound('Post not found');
+  const post = await CommunityPost.findOne({ _id: new Types.ObjectId(postId), deletedAt: null });
+  if (!post) throw notFound('Post not found');
+  post.featured = featured;
+  post.featuredAt = featured ? new Date() : null;
+  post.featuredBy = featured ? new Types.ObjectId(actorId) : null;
+  await post.save();
+  await writeAudit({
+    actorId, action: featured ? 'community.post.feature' : 'community.post.unfeature',
+    targetType: 'CommunityPost', targetId: postId, after: { featured }
+  });
+  return post;
+}
+
 export async function moderatePost(postId: string, action: 'hide' | 'remove' | 'restore', actorId: string, reason?: string) {
   if (!Types.ObjectId.isValid(postId)) throw notFound('Post not found');
   const post = await CommunityPost.findOne({ _id: new Types.ObjectId(postId), deletedAt: null });

@@ -13,6 +13,7 @@ export interface IAnnouncement extends mongoose.Document {
     semesterIds: mongoose.Types.ObjectId[];
   };
   status: 'draft' | 'published';
+  visible: boolean;
   scheduledAt?: Date;
   publishedAt?: Date;
   recipientCount: number;
@@ -33,11 +34,12 @@ const schema = new Schema<IAnnouncement>({
     semesterIds: [{ type: Schema.Types.ObjectId, ref: 'Semester' }]
   },
   status: { type: String, enum: ['draft', 'published'], default: 'draft', index: true },
+  visible: { type: Boolean, default: true },
   scheduledAt: Date,
   publishedAt: Date,
   recipientCount: { type: Number, default: 0 },
   createdBy: { type: Schema.Types.ObjectId, ref: 'User' },
   deletedAt: { type: Date, default: null }
-}, { timestamps: true });
+}, { timestamps: true, optimisticConcurrency: true });
 
 export const Announcement = mongoose.model<IAnnouncement>('Announcement', schema);

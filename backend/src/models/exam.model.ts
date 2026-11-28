@@ -44,6 +44,6 @@ const schema = new Schema<IExam>({
   shuffle: { type: Boolean, default: true },
   createdBy: { type: Schema.Types.ObjectId, ref: 'User' },
   deletedAt: { type: Date, default: null }
-}, { timestamps: true });
+}, { timestamps: true, optimisticConcurrency: true });
 
 export const Exam = mongoose.model<IExam>('Exam', schema);

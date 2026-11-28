@@ -6,6 +6,7 @@ export interface IAppSettings extends mongoose.Document {
   resultDisplay: { enabled: boolean; examId: string; startsAt?: Date | null; endsAt?: Date | null };
   homeNotice: { text: string; link: string; visible: boolean; startsAt?: Date | null; endsAt?: Date | null };
   homeNoticeShowInTicker: boolean;
+  welcome: { messageEn: string; messageBn: string; visible: boolean };
   libraryCategories: { book: boolean; note: boolean; video: boolean; subject_material: boolean; past_question: boolean };
   searchSynonyms: string[][];
   featureFlags: Record<string, unknown>;
@@ -41,6 +42,11 @@ const appSettingsSchema = new Schema<IAppSettings>({
     endsAt: { type: Date, default: null }
   },
   homeNoticeShowInTicker: { type: Boolean, default: true },
+  welcome: {
+    messageEn: { type: String, default: '', maxlength: 300 },
+    messageBn: { type: String, default: '', maxlength: 300 },
+    visible: { type: Boolean, default: true }
+  },
   libraryCategories: {
     book: { type: Boolean, default: true },
     note: { type: Boolean, default: true },
@@ -67,6 +73,6 @@ const appSettingsSchema = new Schema<IAppSettings>({
     latestAppVersion: { type: String, default: '1.0.0' },
     notes: String
   }
-}, { timestamps: true });
+}, { timestamps: true, optimisticConcurrency: true });
 
 export const AppSettings = mongoose.model<IAppSettings>('AppSettings', appSettingsSchema);

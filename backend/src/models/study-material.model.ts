@@ -55,7 +55,7 @@ const schema = new Schema<IStudyMaterial>({
   uploadedBy: { type: Schema.Types.ObjectId, ref: 'User' },
   viewCount: { type: Number, default: 0 },
   deletedAt: { type: Date, default: null }
-}, { timestamps: true });
+}, { timestamps: true, optimisticConcurrency: true });
 
 schema.index({ type: 1, 'hierarchyRefs.subjectId': 1, status: 1 });
 schema.index({ title: 'text', titleBn: 'text', description: 'text' });

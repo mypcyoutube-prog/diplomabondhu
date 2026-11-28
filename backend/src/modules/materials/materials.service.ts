@@ -1,4 +1,5 @@
 import { Types } from 'mongoose';
+import { withVersionBump } from '../../core/with-version-bump';
 import { conflict, forbidden, notFound } from '../../core/errors';
 import { StudyMaterial, type IStudyMaterial } from '../../models/study-material.model';
 import { Bookmark } from '../../models/bookmark.model';
@@ -215,7 +216,7 @@ export async function adminSoftDeleteMaterial(id: string, actorId: string) {
   if (!Types.ObjectId.isValid(id)) throw notFound('Material not found');
   const result = await StudyMaterial.updateOne(
     { _id: new Types.ObjectId(id), deletedAt: null },
-    { $set: { deletedAt: new Date(), status: 'unpublished' } }
+    withVersionBump({ $set: { deletedAt: new Date(), status: 'unpublished' } })
   );
   if (result.matchedCount === 0) throw notFound('Material not found');
   await writeAudit({ actorId, action: 'material.delete', targetType: 'StudyMaterial', targetId: id });

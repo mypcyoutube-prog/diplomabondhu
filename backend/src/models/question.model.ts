@@ -31,7 +31,7 @@ const schema = new Schema<IQuestion>({
   status: { type: String, enum: ['draft', 'published'], default: 'draft', index: true },
   createdBy: { type: Schema.Types.ObjectId, ref: 'User' },
   deletedAt: { type: Date, default: null }
-}, { timestamps: true });
+}, { timestamps: true, optimisticConcurrency: true });
 
 schema.index({ subjectId: 1, status: 1 });
 

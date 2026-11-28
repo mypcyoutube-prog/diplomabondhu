@@ -79,13 +79,14 @@ export function Button({ children, onClick, variant = 'primary', type = 'button'
   );
 }
 
-export function Input({ label, value, onChange, type = 'text', placeholder, required }: {
+export function Input({ label, value, onChange, type = 'text', placeholder, required, list }: {
   label: string;
   value: string;
   onChange: (v: string) => void;
   type?: string;
   placeholder?: string;
   required?: boolean;
+  list?: string;
 }) {
   return (
     <label className="block">
@@ -98,6 +99,7 @@ export function Input({ label, value, onChange, type = 'text', placeholder, requ
         value={value}
         placeholder={placeholder}
         required={required}
+        list={list}
         onChange={(e) => onChange(e.target.value)}
         className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-teal focus:ring-2 focus:ring-teal/20 dark:border-navy-700 dark:bg-navy-700 dark:text-white"
       />

@@ -15,10 +15,16 @@ import { Exam } from '../../models/exam.model';
 import { CommunityPost } from '../../models/community-post.model';
 import { getAppSettings } from '../settings/settings.routes';
 import { idParamSchema, settingsUpdateSchema, studentListQuerySchema, suspendSchema } from './admin.schemas';
+import { homeAdminRoutes } from '../home/home.routes';
+import { homeImportAdminRoutes, homeRecoveryAdminRoutes } from '../home-import/home-import.routes';
 
 export function adminRoutes(env: Env) {
   const router = Router();
   router.use(requireAuth(env.JWT_ACCESS_SECRET), requireAdmin);
+
+  router.use('/home', homeAdminRoutes(env));
+  router.use('/home', homeImportAdminRoutes(env));
+  router.use('/home', homeRecoveryAdminRoutes(env));
 
   router.get('/dashboard', async (_req, res, next) => {
     try {

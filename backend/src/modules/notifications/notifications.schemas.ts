@@ -36,3 +36,5 @@ export const announcementBodySchema = z.object({
 }).strict();
 
 export const updateAnnouncementSchema = announcementBodySchema.partial();
+
+export const announcementVisibilitySchema = z.object({ visible: z.boolean() }).strict();

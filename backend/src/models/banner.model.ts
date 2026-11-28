@@ -24,7 +24,7 @@ const schema = new Schema<IBanner>({
   endsAt: { type: Date, default: null },
   createdBy: { type: Schema.Types.ObjectId, ref: 'User' },
   deletedAt: { type: Date, default: null }
-}, { timestamps: true });
+}, { timestamps: true, optimisticConcurrency: true });
 
 schema.index({ status: 1, priority: -1, createdAt: -1 });
 

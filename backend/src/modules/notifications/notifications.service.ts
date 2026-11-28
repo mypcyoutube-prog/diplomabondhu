@@ -1,5 +1,6 @@
 import { Types } from 'mongoose';
-import { conflict, notFound } from '../../core/errors';
+import { withVersionBump } from '../../core/with-version-bump';
+import { conflict, forbidden, notFound } from '../../core/errors';
 import { Notification, type NotificationCategory } from '../../models/notification.model';
 import { NotificationPreference, DEFAULT_QUIET_HOURS, DEFAULT_NOTIFICATION_PREFS } from '../../models/notification-preference.model';
 import { Announcement, type IAnnouncement } from '../../models/announcement.model';
@@ -83,7 +84,7 @@ async function resolveRecipients(announcement: IAnnouncement): Promise<Types.Obj
 }
 
 export async function listPublishedAnnouncements(query: { source?: string; page: number; limit: number }) {
-  const filter: Record<string, unknown> = { status: 'published', deletedAt: null };
+  const filter: Record<string, unknown> = { status: 'published', deletedAt: null, visible: { $ne: false } };
   if (query.source === 'bteb' || query.source === 'admin') filter.source = query.source;
   const [items, total] = await Promise.all([
     Announcement.find(filter).sort({ publishedAt: -1, createdAt: -1 }).skip((query.page - 1) * query.limit).limit(query.limit).lean(),
@@ -107,6 +108,7 @@ export async function updateAnnouncement(id: string, body: Record<string, unknow
   if (!Types.ObjectId.isValid(id)) throw notFound('Announcement not found');
   const announcement = await Announcement.findOne({ _id: new Types.ObjectId(id), status: 'draft', deletedAt: null });
   if (!announcement) throw notFound('Draft announcement not found');
+  assertNotBteb(announcement, 'update');
   Object.assign(announcement, body);
   await announcement.save();
   return announcement;
@@ -122,11 +124,40 @@ export async function listAnnouncements(query: { status?: string; page: number; 
   return { items, meta: { page: query.page, limit: query.limit, total } };
 }
 
+function assertNotBteb(announcement: IAnnouncement, operation: string) {
+  if (announcement.source === 'bteb') {
+    throw forbidden(`BTEB notices cannot be ${operation}d; only hide/show is allowed`);
+  }
+}
+
+async function assertNotBtebById(id: string, operation: string, actorId: string) {
+  const doc = await Announcement.findOne({ _id: new Types.ObjectId(id), deletedAt: null }).select('source').lean();
+  if (!doc) throw notFound('Announcement not found');
+  if (doc.source === 'bteb') {
+    await writeAudit({ actorId, action: `announcement.bteb.${operation}.blocked`, targetType: 'Announcement', targetId: id });
+    throw forbidden(`BTEB notices cannot be ${operation}d; only hide/show is allowed`);
+  }
+}
+
+export async function setAnnouncementVisibility(id: string, visible: boolean, actorId: string) {
+  if (!Types.ObjectId.isValid(id)) throw notFound('Announcement not found');
+  const announcement = await Announcement.findOne({ _id: new Types.ObjectId(id), deletedAt: null });
+  if (!announcement) throw notFound('Announcement not found');
+  announcement.visible = visible;
+  await announcement.save();
+  await writeAudit({
+    actorId, action: 'announcement.visibility', targetType: 'Announcement', targetId: id,
+    after: { visible, source: announcement.source }
+  });
+  return announcement;
+}
+
 export async function deleteAnnouncement(id: string, actorId: string) {
   if (!Types.ObjectId.isValid(id)) throw notFound('Announcement not found');
+  await assertNotBtebById(id, 'delete', actorId);
   const result = await Announcement.updateOne(
     { _id: new Types.ObjectId(id), deletedAt: null },
-    { $set: { deletedAt: new Date() } }
+    withVersionBump({ $set: { deletedAt: new Date() } })
   );
   if (result.matchedCount === 0) throw notFound('Announcement not found');
   await writeAudit({ actorId, action: 'announcement.delete', targetType: 'Announcement', targetId: id });

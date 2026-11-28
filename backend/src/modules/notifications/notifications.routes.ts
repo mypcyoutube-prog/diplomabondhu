@@ -6,7 +6,7 @@ import { validate } from '../../middlewares/validate';
 import { ok } from '../../core/response';
 import { PERMISSIONS } from '../../core/permissions';
 import * as svc from './notifications.service';
-import { announcementBodySchema, idParam, preferencesSchema, updateAnnouncementSchema } from './notifications.schemas';
+import { announcementBodySchema, announcementVisibilitySchema, idParam, preferencesSchema, updateAnnouncementSchema } from './notifications.schemas';
 
 const publishedFilter = (raw: unknown): 'bteb' | 'admin' | undefined =>
   raw === 'bteb' || raw === 'admin' ? raw : undefined;
@@ -98,6 +98,15 @@ export function notificationsRoutes(env: Env) {
       const params = (req as unknown as V<{ id: string }>).validatedParams!;
       const announcement = await svc.publishAnnouncement(params.id, req.auth!.id);
       return ok(res, { id: String(announcement._id), status: announcement.status, recipientCount: announcement.recipientCount });
+    } catch (err) { next(err); }
+  });
+
+  admin.post('/announcements/:id/visibility', validate({ params: idParam, body: announcementVisibilitySchema }), async (req, res, next) => {
+    try {
+      const { id } = (req as unknown as { validatedParams: { id: string } }).validatedParams;
+      const { visible } = (req as unknown as { body: { visible: boolean } }).body;
+      const announcement = await svc.setAnnouncementVisibility(id, visible, req.auth!.id);
+      return ok(res, { id: String(announcement._id), visible: announcement.visible, source: announcement.source });
     } catch (err) { next(err); }
   });
 

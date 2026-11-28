@@ -8,7 +8,7 @@ import { PERMISSIONS } from '../../core/permissions';
 import * as svc from './community.service';
 import {
   commentSchema, idParam, postBodySchema, postUpdateSchema, reportSchema,
-  listPostsQuerySchema, moderationActionSchema
+  listPostsQuerySchema, moderationActionSchema, featureActionSchema
 } from './community.schemas';
 
 type V<T> = { validatedQuery?: T; validatedParams?: T };
@@ -118,6 +118,14 @@ export function communityRoutes(env: Env) {
       const params = (req as unknown as V<{ id: string }>).validatedParams!;
       const post = await svc.moderatePost(params.id, req.body.action, req.auth!.id, req.body.reason);
       return ok(res, { id: String(post._id), status: post.status });
+    } catch (err) { next(err); }
+  });
+
+  admin.post('/posts/:id/feature', validate({ params: idParam, body: featureActionSchema }), async (req, res, next) => {
+    try {
+      const params = (req as unknown as V<{ id: string }>).validatedParams!;
+      const post = await svc.setFeaturedPost(params.id, req.body.featured, req.auth!.id);
+      return ok(res, { id: String(post._id), featured: post.featured });
     } catch (err) { next(err); }
   });
 

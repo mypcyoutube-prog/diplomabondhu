@@ -1,5 +1,6 @@
 import { Types } from 'mongoose';
 import { conflict, notFound, validationError } from '../../core/errors';
+import { withVersionBump } from '../../core/with-version-bump';
 import { Exam, type IExam } from '../../models/exam.model';
 import { Question, type IQuestion } from '../../models/question.model';
 import { ExamAttempt, type IExamAttempt } from '../../models/exam-attempt.model';
@@ -226,7 +227,7 @@ export async function adminDeleteQuestion(id: string, actorId: string) {
   if (!Types.ObjectId.isValid(id)) throw notFound('Question not found');
   const result = await Question.updateOne(
     { _id: new Types.ObjectId(id), deletedAt: null },
-    { $set: { deletedAt: new Date(), status: 'draft' } }
+    withVersionBump({ $set: { deletedAt: new Date(), status: 'draft' } })
   );
   if (result.matchedCount === 0) throw notFound('Question not found');
   await writeAudit({ actorId, action: 'question.delete', targetType: 'Question', targetId: id });
@@ -295,7 +296,7 @@ export async function adminDeleteExam(id: string, actorId: string) {
   if (!Types.ObjectId.isValid(id)) throw notFound('Exam not found');
   const result = await Exam.updateOne(
     { _id: new Types.ObjectId(id), deletedAt: null },
-    { $set: { deletedAt: new Date(), status: 'closed' } }
+    withVersionBump({ $set: { deletedAt: new Date(), status: 'closed' } })
   );
   if (result.matchedCount === 0) throw notFound('Exam not found');
   await writeAudit({ actorId, action: 'exam.delete', targetType: 'Exam', targetId: id });

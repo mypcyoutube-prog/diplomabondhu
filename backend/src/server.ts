@@ -3,6 +3,7 @@ import { loadEnv } from './config/env';
 import { createApp } from './app';
 import { logger, setLogLevel } from './core/logger';
 import { processDueAnnouncements } from './modules/notifications/notifications.service';
+import { startReaper } from './modules/home-import/home-import.service';
 
 async function main() {
   const env = loadEnv();
@@ -19,6 +20,8 @@ async function main() {
     );
   }, 60 * 1000);
   scheduler.unref();
+
+  startReaper();
 }
 
 main().catch((err) => {
