@@ -77,6 +77,8 @@
   "resultPractical": "Practical",
   "resultExamCount": "{count, plural, one{1 published exam found for this roll} other{{count} published exams found for this roll}}",
   "rollInvalid": "Enter a valid roll number (6-10 digits)",
+  "registrationOptional": "Registration number (optional)",
+  "registrationInvalid": "Enter a valid registration number (6-15 digits)",
   "retry": "Retry",
   "errorGeneric": "Something went wrong. Please try again.",
   "offlineMessage": "You are offline. Check your connection.",

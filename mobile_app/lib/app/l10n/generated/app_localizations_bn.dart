@@ -244,6 +244,12 @@ class AppLocalizationsBn extends AppLocalizations {
   String get rollInvalid => 'সঠিক রোল নম্বর লিখুন (৬-১০ ডিজিট)';
 
   @override
+  String get registrationOptional => 'রেজিস্ট্রেশন নম্বর (ঐচ্ছিক)';
+
+  @override
+  String get registrationInvalid => 'সঠিক রেজিস্ট্রেশন নম্বর লিখুন (৬-১৫ ডিজিট)';
+
+  @override
   String get retry => 'আবার চেষ্টা করুন';
 
   @override

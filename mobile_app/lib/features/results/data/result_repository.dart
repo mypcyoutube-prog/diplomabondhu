@@ -34,8 +34,12 @@ class ResultRepository {
         .toList();
   }
 
-  Future<ResultTimeline> timeline({required String roll}) async {
-    final res = await _client.getMap('/results/timeline', query: {'roll': roll});
+  Future<ResultTimeline> timeline({required String roll, String? registrationNo}) async {
+    final res = await _client.getMap('/results/timeline', query: {
+      'roll': roll,
+      if (registrationNo != null && registrationNo.isNotEmpty)
+        'registrationNo': registrationNo,
+    });
     return ResultTimeline.fromJson(res.data);
   }
 }

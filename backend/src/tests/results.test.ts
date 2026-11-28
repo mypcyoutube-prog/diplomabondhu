@@ -356,6 +356,23 @@ describe('student result endpoints', () => {
     expect(bad.status).toBe(400);
   });
 
+  it('timeline registrationNo: absent shows by roll, provided must match', async () => {
+    await seedResult();
+    const token = await studentToken(testEnv);
+    const byRoll = await request(app)
+      .get('/api/v1/results/timeline?roll=410123')
+      .set('Authorization', `Bearer ${token}`);
+    expect(byRoll.status).toBe(200);
+    const match = await request(app)
+      .get('/api/v1/results/timeline?roll=410123&registrationNo=1040123456')
+      .set('Authorization', `Bearer ${token}`);
+    expect(match.status).toBe(200);
+    const mismatch = await request(app)
+      .get('/api/v1/results/timeline?roll=410123&registrationNo=9999999999')
+      .set('Authorization', `Bearer ${token}`);
+    expect(mismatch.status).toBe(404);
+  });
+
   it('verifies registrationNo: matching passes, mismatch returns 404, absent stays optional', async () => {
     await seedResult();
     const token = await studentToken(testEnv);

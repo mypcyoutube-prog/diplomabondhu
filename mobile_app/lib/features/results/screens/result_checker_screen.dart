@@ -42,6 +42,7 @@ class ResultCheckerScreen extends ConsumerStatefulWidget {
 
 class _ResultCheckerScreenState extends ConsumerState<ResultCheckerScreen> {
   final _rollController = TextEditingController();
+  final _regController = TextEditingController();
   ResultTimeline? _timeline;
   bool _checking = false;
   bool _notFound = false;
@@ -50,15 +51,25 @@ class _ResultCheckerScreenState extends ConsumerState<ResultCheckerScreen> {
   @override
   void dispose() {
     _rollController.dispose();
+    _regController.dispose();
     super.dispose();
   }
 
   Future<void> _check() async {
     final l10n = AppLocalizations.of(context)!;
     final roll = _rollController.text.trim();
+    final reg = _regController.text.trim();
     if (!RegExp(r'^\d{6,10}$').hasMatch(roll)) {
       setState(() {
         _error = l10n.rollInvalid;
+        _timeline = null;
+        _notFound = false;
+      });
+      return;
+    }
+    if (reg.isNotEmpty && !RegExp(r'^\d{6,15}$').hasMatch(reg)) {
+      setState(() {
+        _error = l10n.registrationInvalid;
         _timeline = null;
         _notFound = false;
       });
@@ -73,7 +84,7 @@ class _ResultCheckerScreenState extends ConsumerState<ResultCheckerScreen> {
     try {
       final timeline = await ref
           .read(resultRepositoryProvider)
-          .timeline(roll: roll);
+          .timeline(roll: roll, registrationNo: reg.isEmpty ? null : reg);
       setState(() => _timeline = timeline);
     } on ApiException catch (e) {
       setState(() {
@@ -117,6 +128,17 @@ class _ResultCheckerScreenState extends ConsumerState<ResultCheckerScreen> {
             label: l10n.rollNumber,
             checking: _checking,
             onCheck: _check,
+          ),
+          const SizedBox(height: DbSpacing.md),
+          TextField(
+            controller: _regController,
+            keyboardType: TextInputType.number,
+            enabled: !_checking,
+            decoration: InputDecoration(
+              labelText: l10n.registrationOptional,
+              prefixIcon: const Icon(Icons.badge_outlined),
+              helperText: '6–15 digits',
+            ),
           ),
           const SizedBox(height: DbSpacing.md),
           FilledButton.icon(

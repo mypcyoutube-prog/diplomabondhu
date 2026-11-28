@@ -47,14 +47,14 @@ export function resultsRoutes(env: Env) {
   router.get('/history', requireAuth(env.JWT_ACCESS_SECRET), checkRateLimit, validate({ query: historyQuerySchema }), async (req, res, next) => {
     try {
       const query = (req as unknown as Validated<HistoryQuery>).validatedQuery!;
-      return ok(res, { records: await svc.resultHistory(env, query.roll) });
+      return ok(res, { records: await svc.resultHistory(env, query.roll, query.registrationNo) });
     } catch (err) { next(err); }
   });
 
   router.get('/timeline', requireAuth(env.JWT_ACCESS_SECRET), checkRateLimit, validate({ query: historyQuerySchema }), async (req, res, next) => {
     try {
       const query = (req as unknown as Validated<HistoryQuery>).validatedQuery!;
-      return ok(res, await svc.resultTimeline(env, query.roll));
+      return ok(res, await svc.resultTimeline(env, query.roll, query.registrationNo));
     } catch (err) { next(err); }
   });
 

@@ -531,6 +531,18 @@ abstract class AppLocalizations {
   /// **'Enter a valid roll number (6-10 digits)'**
   String get rollInvalid;
 
+  /// No description provided for @registrationOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Registration number (optional)'**
+  String get registrationOptional;
+
+  /// No description provided for @registrationInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid registration number (6-15 digits)'**
+  String get registrationInvalid;
+
   /// No description provided for @retry.
   ///
   /// In en, this message translates to:

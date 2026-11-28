@@ -244,6 +244,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get rollInvalid => 'Enter a valid roll number (6-10 digits)';
 
   @override
+  String get registrationOptional => 'Registration number (optional)';
+
+  @override
+  String get registrationInvalid => 'Enter a valid registration number (6-15 digits)';
+
+  @override
   String get retry => 'Retry';
 
   @override

@@ -9,7 +9,8 @@ export const checkQuerySchema = z.object({
 export type CheckQuery = z.infer<typeof checkQuerySchema>;
 
 export const historyQuerySchema = z.object({
-  roll: z.string().regex(/^\d{6,10}$/, 'Roll must be 6-10 digits')
+  roll: z.string().regex(/^\d{6,10}$/, 'Roll must be 6-10 digits'),
+  registrationNo: z.string().regex(/^\d{6,15}$/, 'Registration must be 6-15 digits').optional()
 });
 
 export type HistoryQuery = z.infer<typeof historyQuerySchema>;

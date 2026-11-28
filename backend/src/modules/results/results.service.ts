@@ -133,15 +133,21 @@ export async function checkResult(env: Env, examId: string, roll: string, regist
   };
 }
 
-export async function resultHistory(env: Env, rawRoll: string): Promise<ResultRecord[]> {
+function registrationMatches(doc: Record<string, unknown>, registrationNo?: string): boolean {
+  if (!registrationNo) return true;
+  if (typeof doc.registrationNo !== 'string' || !doc.registrationNo) return true;
+  return doc.registrationNo === registrationNo;
+}
+
+export async function resultHistory(env: Env, rawRoll: string, registrationNo?: string): Promise<ResultRecord[]> {
   const db = resultsDb(env);
   const roll = String(rawRoll);
-  const docs = await db
+  const docs = (await db
     .collection('records')
     .find({ roll })
     .sort({ examSemester: -1, _id: -1 })
     .limit(50)
-    .toArray();
+    .toArray()).filter((doc) => registrationMatches(doc, registrationNo));
   if (docs.length === 0) throw notFound('No published result found for this roll');
   const examIds = [...new Set(docs.map((d) => String(d.examId)))];
   const examDocs = await db
@@ -199,15 +205,15 @@ export async function resultHistory(env: Env, rawRoll: string): Promise<ResultRe
  *  - A referred subject stays listed under its own semester, but renders as
  *    cleared when its cumulative GPA is known in a later sheet AND the code
  *    no longer appears in the latest record's pending subjects. */
-export async function resultTimeline(env: Env, rawRoll: string): Promise<ResultTimeline> {
+export async function resultTimeline(env: Env, rawRoll: string, registrationNo?: string): Promise<ResultTimeline> {
   const db = resultsDb(env);
   const roll = String(rawRoll);
-  const docs = await db
+  const docs = (await db
     .collection('records')
     .find({ roll })
     .sort({ examSemester: -1, _id: -1 })
     .limit(50)
-    .toArray();
+    .toArray()).filter((doc) => registrationMatches(doc, registrationNo));
   if (docs.length === 0) throw notFound('No published result found for this roll');
   const examIds = [...new Set(docs.map((d) => String(d.examId)))];
   const examDocs = await db
