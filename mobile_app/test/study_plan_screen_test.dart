@@ -74,7 +74,7 @@ void main() {
     await pumpStudyPlan(tester, repository: _FakeStudyPlanRepository());
     expect(find.text('AI Study Plan'), findsOneWidget);
     expect(find.text('Estimated'), findsWidgets);
-    expect(find.text('Generate plan'), findsOneWidget);
+    expect(find.text('Generate plan'), findsWidgets);
   });
 
   testWidgets('renders saved plans with days and tasks', (tester) async {

@@ -33,7 +33,7 @@ void main() {
   final scriptDir = File(Platform.script.toFilePath()).parent.path;
   final outPath = _normalize('$scriptDir/../../backend/src/core/icon-whitelist.generated.json');
   final file = File(outPath);
-  file.writeAsStringSync(const JsonEncoder.withIndent('  ').encode({'icons': names}));
+  file.writeAsStringSync(const JsonEncoder.withIndent('  ').convert({'icons': names}));
   stdout.writeln('Wrote ${names.length} icons to $outPath');
 }
 

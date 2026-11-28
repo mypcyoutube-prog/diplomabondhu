@@ -17,7 +17,8 @@ class _FakeResultRepository implements ResultRepository {
   Future<List<ResultExam>> exams() async => const [];
 
   @override
-  Future<ResultRecord> check({required String examId, required String roll}) {
+  Future<ResultRecord> check(
+      {required String examId, String? registrationNo, required String roll}) {
     throw const ApiException('NOT_FOUND', 'No result found');
   }
 
@@ -27,7 +28,8 @@ class _FakeResultRepository implements ResultRepository {
   }
 
   @override
-  Future<ResultTimeline> timeline({required String roll}) {
+  Future<ResultTimeline> timeline(
+      {String? registrationNo, required String roll}) {
     final handler = onTimeline;
     if (handler == null) throw const ApiException('NOT_FOUND', 'No result found');
     return Future.value(handler(roll));
@@ -156,7 +158,7 @@ final cgpaTimeline = ResultTimeline(
 void main() {
   testWidgets('invalid roll shows validation message', (tester) async {
     await pumpChecker(tester);
-    await tester.enterText(find.byType(TextField), 'abc');
+    await tester.enterText(find.byType(TextField).first, 'abc');
     await tester.tap(find.byType(FilledButton));
     await tester.pumpAndSettle();
     expect(find.text('Enter a valid roll number (6-10 digits)'), findsOneWidget);
@@ -166,7 +168,7 @@ void main() {
     await tester.binding.setSurfaceSize(const Size(800, 3200));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await pumpChecker(tester, onTimeline: (_) => passTimeline);
-    await tester.enterText(find.byType(TextField), '700014');
+    await tester.enterText(find.byType(TextField).first, '700014');
     await tester.tap(find.byType(FilledButton));
     await tester.pumpAndSettle();
 
@@ -187,7 +189,7 @@ void main() {
     await tester.binding.setSurfaceSize(const Size(800, 3200));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await pumpChecker(tester, onTimeline: (_) => passTimeline);
-    await tester.enterText(find.byType(TextField), '700014');
+    await tester.enterText(find.byType(TextField).first, '700014');
     await tester.tap(find.byType(FilledButton));
     await tester.pumpAndSettle();
 
@@ -199,7 +201,7 @@ void main() {
     await tester.binding.setSurfaceSize(const Size(800, 3200));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await pumpChecker(tester, onTimeline: (_) => cgpaTimeline);
-    await tester.enterText(find.byType(TextField), '764001');
+    await tester.enterText(find.byType(TextField).first, '764001');
     await tester.tap(find.byType(FilledButton));
     await tester.pumpAndSettle();
 
@@ -211,7 +213,7 @@ void main() {
     await tester.binding.setSurfaceSize(const Size(800, 3200));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await pumpChecker(tester, onTimeline: (_) => referredTimeline);
-    await tester.enterText(find.byType(TextField), '712990');
+    await tester.enterText(find.byType(TextField).first, '712990');
     await tester.tap(find.byType(FilledButton));
     await tester.pumpAndSettle();
 
@@ -224,7 +226,7 @@ void main() {
     await tester.binding.setSurfaceSize(const Size(800, 3200));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await pumpChecker(tester, onTimeline: (_) => referredTimeline);
-    await tester.enterText(find.byType(TextField), '712990');
+    await tester.enterText(find.byType(TextField).first, '712990');
     await tester.tap(find.byType(FilledButton));
     await tester.pumpAndSettle();
 
@@ -237,7 +239,7 @@ void main() {
     await tester.binding.setSurfaceSize(const Size(800, 3200));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await pumpChecker(tester, onTimeline: (_) => clearedTimeline);
-    await tester.enterText(find.byType(TextField), '712981');
+    await tester.enterText(find.byType(TextField).first, '712981');
     await tester.tap(find.byType(FilledButton));
     await tester.pumpAndSettle();
 
@@ -251,7 +253,7 @@ void main() {
     await tester.binding.setSurfaceSize(const Size(800, 3200));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await pumpChecker(tester, onTimeline: (_) => clearedTimeline);
-    await tester.enterText(find.byType(TextField), '712981');
+    await tester.enterText(find.byType(TextField).first, '712981');
     await tester.tap(find.byType(FilledButton));
     await tester.pumpAndSettle();
 
@@ -261,7 +263,7 @@ void main() {
 
   testWidgets('referred semester without GPA shows a red dash', (tester) async {
     await pumpChecker(tester, onTimeline: (_) => referredTimeline);
-    await tester.enterText(find.byType(TextField), '712990');
+    await tester.enterText(find.byType(TextField).first, '712990');
     await tester.tap(find.byType(FilledButton));
     await tester.pumpAndSettle();
 
@@ -270,7 +272,7 @@ void main() {
 
   testWidgets('unknown roll shows not-found state', (tester) async {
     await pumpChecker(tester);
-    await tester.enterText(find.byType(TextField), '999999');
+    await tester.enterText(find.byType(TextField).first, '999999');
     await tester.tap(find.byType(FilledButton));
     await tester.pumpAndSettle();
     expect(

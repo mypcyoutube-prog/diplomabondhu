@@ -130,15 +130,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get searchStartTyping => 'Type at least 2 characters to search';
 
   @override
-  String get examCenter => 'Exam Center';
-
-  @override
-  String get studyResources => 'Study Resources';
-
-  @override
-  String get communityUpdates => 'Community Updates';
-
-  @override
   String get questionsLabel => 'questions';
 
   @override
@@ -146,6 +137,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get quickAccess => 'Quick Access';
+
+  @override
+  String get examCenter => 'Exam Center';
+
+  @override
+  String get studyResources => 'Study Resources';
+
+  @override
+  String get communityUpdates => 'Community Updates';
 
   @override
   String get recentMaterials => 'Recent Materials';
@@ -171,9 +171,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get rollNumber => 'Roll number';
-
-  @override
-  String get registrationNumber => 'Registration number';
 
   @override
   String get checkResult => 'Check result';
@@ -247,7 +244,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get registrationOptional => 'Registration number (optional)';
 
   @override
-  String get registrationInvalid => 'Enter a valid registration number (6-15 digits)';
+  String get registrationInvalid =>
+      'Enter a valid registration number (6-15 digits)';
 
   @override
   String get retry => 'Retry';
@@ -633,9 +631,6 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
-  @override
-
-  @override
 
   @override
   String get workspaceTitle => 'Workspace';
@@ -659,7 +654,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dashboardCustomizeTitle => 'Customize dashboard';
 
   @override
-  String get dashboardCustomizeHint => 'Show, hide or reorder home sections. Changes apply to your account only.';
+  String get dashboardCustomizeHint =>
+      'Show, hide or reorder home sections. Changes apply to your account only.';
 
   @override
   String get dashboardSave => 'Save layout';
@@ -743,10 +739,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get studyPlanDays => 'Days';
 
   @override
-  String get studyPlanNotConfigured => 'AI is not configured yet. Ask the admin to enable it.';
+  String get studyPlanNotConfigured =>
+      'AI is not configured yet. Ask the admin to enable it.';
 
   @override
-  String get studyPlanLimitReached => 'Daily AI limit reached. Try again tomorrow.';
+  String get studyPlanLimitReached =>
+      'Daily AI limit reached. Try again tomorrow.';
 
   @override
   String get commandCenterTitle => 'Command Center';
@@ -756,6 +754,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get syncDevicesTitle => 'Synced devices';
+
+  @override
+  String get searchRecent => 'Recent searches';
 
   @override
   String get quietHoursLabel => 'Quiet hours';
@@ -777,6 +778,45 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get roleStudent => 'Student';
+
+  @override
+  String get loadMore => 'Load more';
+
+  @override
+  String get viewsLabel => 'Views';
+
+  @override
+  String get typeLabel => 'Type';
+
+  @override
+  String get examYearLabel => 'Exam year';
+
+  @override
+  String get pagesLabel => 'Pages';
+
+  @override
+  String get sizeLabel => 'Size';
+
+  @override
+  String get bookmarkAdded => 'Added to bookmarks';
+
+  @override
+  String get bookmarkRemoved => 'Removed from bookmarks';
+
+  @override
+  String get reportTypeLabel => 'Report type';
+
+  @override
+  String get reportWrongInfo => 'Wrong information';
+
+  @override
+  String get reportBrokenLink => 'Broken link';
+
+  @override
+  String get reportInappropriate => 'Inappropriate content';
+
+  @override
+  String get reportOther => 'Other';
 
   @override
   String get filterAll => 'All';
@@ -824,48 +864,57 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tasksDone => 'done';
 
   @override
-  String get loadMore => 'Load more';
-
-  @override
-  String get viewsLabel => 'Views';
-
-  @override
-  String get typeLabel => 'Type';
-
-  @override
-  String get examYearLabel => 'Exam year';
-
-  @override
-  String get pagesLabel => 'Pages';
-
-  @override
-  String get sizeLabel => 'Size';
-
-  @override
-  String get bookmarkAdded => 'Added to bookmarks';
-
-  @override
-  String get bookmarkRemoved => 'Removed from bookmarks';
-
-  @override
-  String get reportTypeLabel => 'Report type';
-
-  @override
-  String get reportWrongInfo => 'Wrong information';
-
-  @override
-  String get reportBrokenLink => 'Broken link';
-
-  @override
-  String get reportInappropriate => 'Inappropriate content';
-
-  @override
-  String get reportOther => 'Other';
-
-  @override
-  String get searchRecent => 'Recent searches';
-  @override
   String get notices => 'Notices';
+
+  @override
+  String get noticeTickerLabel => 'NOTICE';
+
+  @override
+  String get allNotices => 'All notices';
+
+  @override
+  String get viewDetails => 'View details';
+
+  @override
+  String get syllabus => 'Syllabus';
+
+  @override
+  String get services => 'Services';
+
+  @override
+  String get resources => 'Resources';
+
+  @override
+  String get cgpaCalculator => 'CGPA Calculator';
+
+  @override
+  String get addRollHint =>
+      'Save your roll in your profile to see your result here automatically.';
+
+  @override
+  String get noticeEmpty => 'No notices yet.';
+
+  @override
+  String get publishedOn => 'Published';
+
+  @override
+  String get viewPdf => 'View PDF';
+
+  @override
+  String get studyTab => 'Study';
+
+  @override
+  String get resultTab => 'Result';
+
+  @override
+  String get noResultSaved =>
+      'No result found for your roll in this examination.';
+
+  @override
+  String get openProfile => 'Open profile';
+
+  @override
+  String get registrationNumber => 'Registration number';
 
   @override
   String get seeAll => 'See all';
@@ -929,34 +978,4 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get editionLabel => 'Edition';
-  @override
-  String get noticeTickerLabel => 'NOTICE';
-  @override
-  String get allNotices => 'All notices';
-  @override
-  String get viewDetails => 'View details';
-  @override
-  String get syllabus => 'Syllabus';
-  @override
-  String get services => 'Services';
-  @override
-  String get resources => 'Resources';
-  @override
-  String get cgpaCalculator => 'CGPA Calculator';
-  @override
-  String get addRollHint => 'Save your roll in your profile to see your result here automatically.';
-  @override
-  String get noticeEmpty => 'No notices yet.';
-  @override
-  String get publishedOn => 'Published';
-  @override
-  String get viewPdf => 'View PDF';
-  @override
-  String get studyTab => 'Study';
-  @override
-  String get resultTab => 'Result';
-  @override
-  String get noResultSaved => 'No result found for your roll in this examination.';
-  @override
-  String get openProfile => 'Open profile';
 }

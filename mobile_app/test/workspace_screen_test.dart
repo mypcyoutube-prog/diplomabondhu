@@ -8,16 +8,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 class _FakeWorkspaceRepository implements WorkspaceRepository {
-  _FakeWorkspaceRepository({this.notes = const [], this.fail = false});
+  _FakeWorkspaceRepository({this.storedNotes = const [], this.fail = false});
 
-  final List<WorkspaceNote> notes;
+  final List<WorkspaceNote> storedNotes;
   final bool fail;
 
   @override
   Future<List<WorkspaceNote>> notes(
       {String? q, bool archived = false, String? collectionId}) async {
     if (fail) throw StateError('boom');
-    return notes;
+    return storedNotes;
   }
 
   @override
@@ -76,7 +76,7 @@ void main() {
     await pumpWorkspace(
       tester,
       repository: _FakeWorkspaceRepository(
-        notes: [WorkspaceNote(id: 'n1', title: 'Circuit basics', body: 'Ohm law')],
+        storedNotes: [WorkspaceNote(id: 'n1', title: 'Circuit basics', body: 'Ohm law')],
       ),
     );
     expect(find.text('Circuit basics'), findsOneWidget);

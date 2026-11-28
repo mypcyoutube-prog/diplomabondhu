@@ -338,24 +338,6 @@ abstract class AppLocalizations {
   /// **'Type at least 2 characters to search'**
   String get searchStartTyping;
 
-  /// No description provided for @examCenter.
-  ///
-  /// In en, this message translates to:
-  /// **'Exam Center'**
-  String get examCenter;
-
-  /// No description provided for @studyResources.
-  ///
-  /// In en, this message translates to:
-  /// **'Study Resources'**
-  String get studyResources;
-
-  /// No description provided for @communityUpdates.
-  ///
-  /// In en, this message translates to:
-  /// **'Community Updates'**
-  String get communityUpdates;
-
   /// No description provided for @questionsLabel.
   ///
   /// In en, this message translates to:
@@ -373,6 +355,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Quick Access'**
   String get quickAccess;
+
+  /// No description provided for @examCenter.
+  ///
+  /// In en, this message translates to:
+  /// **'Exam Center'**
+  String get examCenter;
+
+  /// No description provided for @studyResources.
+  ///
+  /// In en, this message translates to:
+  /// **'Study Resources'**
+  String get studyResources;
+
+  /// No description provided for @communityUpdates.
+  ///
+  /// In en, this message translates to:
+  /// **'Community Updates'**
+  String get communityUpdates;
 
   /// No description provided for @recentMaterials.
   ///
@@ -421,13 +421,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Roll number'**
   String get rollNumber;
-
-  /// No description provided for @registrationNumber.
-  ///
-  /// In en, this message translates to:
-  /// **'Registration number'**
-  String get registrationNumber;
-
 
   /// No description provided for @checkResult.
   ///
@@ -966,7 +959,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorNetwork.
   ///
   /// In en, this message translates to:
-  /// **'Cannot reach the server. Make sure the backend is running (npm run dev, port 5000) and try again.'**
+  /// **'Cannot reach the server. Make sure the backend is running (npm run dev, port 4100) and try again.'**
   String get errorNetwork;
 
   /// No description provided for @passwordTooShort.
@@ -1209,88 +1202,256 @@ abstract class AppLocalizations {
   /// **'{count, plural, one{1 year ago} other{{count} years ago}}'**
   String resultTimeAgoYears(num count);
 
+  /// No description provided for @workspaceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Workspace'**
   String get workspaceTitle;
 
+  /// No description provided for @workspaceCollections.
+  ///
+  /// In en, this message translates to:
+  /// **'Collections'**
   String get workspaceCollections;
 
+  /// No description provided for @workspaceRecent.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent items'**
   String get workspaceRecent;
 
+  /// No description provided for @workspaceNewNote.
+  ///
+  /// In en, this message translates to:
+  /// **'New note'**
   String get workspaceNewNote;
 
+  /// No description provided for @noteTitleHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Note title'**
   String get noteTitleHint;
 
+  /// No description provided for @noteBodyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Write your note...'**
   String get noteBodyHint;
 
+  /// No description provided for @dashboardCustomizeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Customize dashboard'**
   String get dashboardCustomizeTitle;
 
+  /// No description provided for @dashboardCustomizeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Show, hide or reorder home sections. Changes apply to your account only.'**
   String get dashboardCustomizeHint;
 
+  /// No description provided for @dashboardSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save layout'**
   String get dashboardSave;
 
+  /// No description provided for @dashboardSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Dashboard layout saved'**
   String get dashboardSaved;
 
+  /// No description provided for @dashboardResetLayout.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset layout'**
   String get dashboardResetLayout;
 
+  /// No description provided for @dashboardResetDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Dashboard reset to default'**
   String get dashboardResetDone;
 
+  /// No description provided for @dashboardLockedSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Locked by admin'**
   String get dashboardLockedSection;
 
+  /// No description provided for @exportTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Export my data'**
   String get exportTitle;
 
+  /// No description provided for @exportSelectData.
+  ///
+  /// In en, this message translates to:
+  /// **'Select data to include'**
   String get exportSelectData;
 
+  /// No description provided for @exportCreate.
+  ///
+  /// In en, this message translates to:
+  /// **'Create export'**
   String get exportCreate;
 
+  /// No description provided for @exportCreated.
+  ///
+  /// In en, this message translates to:
+  /// **'Export ready to download'**
   String get exportCreated;
 
+  /// No description provided for @exportHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Export history'**
   String get exportHistory;
 
+  /// No description provided for @exportReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready'**
   String get exportReady;
 
+  /// No description provided for @exportExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Expired'**
   String get exportExpired;
 
+  /// No description provided for @exportFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed'**
   String get exportFailed;
 
+  /// No description provided for @exportProcessing.
+  ///
+  /// In en, this message translates to:
+  /// **'Processing'**
   String get exportProcessing;
 
+  /// No description provided for @exportTooMany.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many active exports. Try again later.'**
   String get exportTooMany;
 
+  /// No description provided for @exportCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Export content copied to clipboard'**
   String get exportCopied;
 
+  /// No description provided for @studyPlanTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'AI Study Plan'**
   String get studyPlanTitle;
 
+  /// No description provided for @studyPlanGenerate.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate plan'**
   String get studyPlanGenerate;
 
+  /// No description provided for @studyPlanGenerated.
+  ///
+  /// In en, this message translates to:
+  /// **'Study plan generated'**
   String get studyPlanGenerated;
 
+  /// No description provided for @studyPlanEstimated.
+  ///
+  /// In en, this message translates to:
+  /// **'Estimated'**
   String get studyPlanEstimated;
 
+  /// No description provided for @studyPlanApply.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply to tasks'**
   String get studyPlanApply;
 
+  /// No description provided for @studyPlanApplyConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Create planner tasks from this plan?'**
   String get studyPlanApplyConfirm;
 
+  /// No description provided for @studyPlanTasksAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'tasks added to planner'**
   String get studyPlanTasksAdded;
 
+  /// No description provided for @studyPlanHoursHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Study hours per day'**
   String get studyPlanHoursHint;
 
+  /// No description provided for @studyPlanGoalHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Study goal (optional)'**
   String get studyPlanGoalHint;
 
+  /// No description provided for @studyPlanSubjectsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Subjects (comma separated)'**
   String get studyPlanSubjectsHint;
 
+  /// No description provided for @studyPlanDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Days'**
   String get studyPlanDays;
 
+  /// No description provided for @studyPlanNotConfigured.
+  ///
+  /// In en, this message translates to:
+  /// **'AI is not configured yet. Ask the admin to enable it.'**
   String get studyPlanNotConfigured;
 
+  /// No description provided for @studyPlanLimitReached.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily AI limit reached. Try again tomorrow.'**
   String get studyPlanLimitReached;
 
+  /// No description provided for @commandCenterTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Command Center'**
   String get commandCenterTitle;
 
+  /// No description provided for @commandSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search features and commands'**
   String get commandSearchHint;
 
+  /// No description provided for @syncDevicesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Synced devices'**
   String get syncDevicesTitle;
 
+  /// No description provided for @searchRecent.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent searches'**
   String get searchRecent;
 
+  /// No description provided for @quietHoursLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Quiet hours'**
   String get quietHoursLabel;
 
   /// No description provided for @editProfile.
@@ -1328,81 +1489,7 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Student'**
   String get roleStudent;
-  /// No description provided for @filterAll.
-  ///
-  /// In en, this message translates to:
-  /// **'All'**
-  String get filterAll;
-  /// No description provided for @examTypeModel.
-  ///
-  /// In en, this message translates to:
-  /// **'Model Test'**
-  String get examTypeModel;
-  /// No description provided for @examTypePrevious.
-  ///
-  /// In en, this message translates to:
-  /// **'Previous'**
-  String get examTypePrevious;
-  /// No description provided for @examTypeChapter.
-  ///
-  /// In en, this message translates to:
-  /// **'Chapter'**
-  String get examTypeChapter;
-  /// No description provided for @examTypeSubject.
-  ///
-  /// In en, this message translates to:
-  /// **'Subject'**
-  String get examTypeSubject;
-  /// No description provided for @examTypeSemester.
-  ///
-  /// In en, this message translates to:
-  /// **'Semester'**
-  String get examTypeSemester;
-  /// No description provided for @minutesLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'min'**
-  String get minutesLabel;
-  /// No description provided for @negativeMarking.
-  ///
-  /// In en, this message translates to:
-  /// **'Negative marking'**
-  String get negativeMarking;
-  /// No description provided for @avgScore.
-  ///
-  /// In en, this message translates to:
-  /// **'Average'**
-  String get avgScore;
-  /// No description provided for @durationLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Duration'**
-  String get durationLabel;
-  /// No description provided for @cgpaGpaHint.
-  ///
-  /// In en, this message translates to:
-  /// **'GPA (0-5)'**
-  String get cgpaGpaHint;
-  /// No description provided for @cgpaCreditsHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Credits'**
-  String get cgpaCreditsHint;
-  /// No description provided for @profileLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Profile'**
-  String get profileLabel;
-  /// No description provided for @todayProgress.
-  ///
-  /// In en, this message translates to:
-  /// **'Today's progress'**
-  String get todayProgress;
-  /// No description provided for @tasksDone.
-  ///
-  /// In en, this message translates to:
-  /// **'done'**
-  String get tasksDone;
+
   /// No description provided for @loadMore.
   ///
   /// In en, this message translates to:
@@ -1481,11 +1568,197 @@ abstract class AppLocalizations {
   /// **'Other'**
   String get reportOther;
 
+  /// No description provided for @filterAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get filterAll;
+
+  /// No description provided for @examTypeModel.
+  ///
+  /// In en, this message translates to:
+  /// **'Model Test'**
+  String get examTypeModel;
+
+  /// No description provided for @examTypePrevious.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous'**
+  String get examTypePrevious;
+
+  /// No description provided for @examTypeChapter.
+  ///
+  /// In en, this message translates to:
+  /// **'Chapter'**
+  String get examTypeChapter;
+
+  /// No description provided for @examTypeSubject.
+  ///
+  /// In en, this message translates to:
+  /// **'Subject'**
+  String get examTypeSubject;
+
+  /// No description provided for @examTypeSemester.
+  ///
+  /// In en, this message translates to:
+  /// **'Semester'**
+  String get examTypeSemester;
+
+  /// No description provided for @minutesLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'min'**
+  String get minutesLabel;
+
+  /// No description provided for @negativeMarking.
+  ///
+  /// In en, this message translates to:
+  /// **'Negative marking'**
+  String get negativeMarking;
+
+  /// No description provided for @avgScore.
+  ///
+  /// In en, this message translates to:
+  /// **'Average'**
+  String get avgScore;
+
+  /// No description provided for @durationLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Duration'**
+  String get durationLabel;
+
+  /// No description provided for @cgpaGpaHint.
+  ///
+  /// In en, this message translates to:
+  /// **'GPA (0-5)'**
+  String get cgpaGpaHint;
+
+  /// No description provided for @cgpaCreditsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Credits'**
+  String get cgpaCreditsHint;
+
+  /// No description provided for @profileLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile'**
+  String get profileLabel;
+
+  /// No description provided for @todayProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s progress'**
+  String get todayProgress;
+
+  /// No description provided for @tasksDone.
+  ///
+  /// In en, this message translates to:
+  /// **'done'**
+  String get tasksDone;
+
   /// No description provided for @notices.
   ///
   /// In en, this message translates to:
   /// **'Notices'**
   String get notices;
+
+  /// No description provided for @noticeTickerLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'NOTICE'**
+  String get noticeTickerLabel;
+
+  /// No description provided for @allNotices.
+  ///
+  /// In en, this message translates to:
+  /// **'All notices'**
+  String get allNotices;
+
+  /// No description provided for @viewDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'View details'**
+  String get viewDetails;
+
+  /// No description provided for @syllabus.
+  ///
+  /// In en, this message translates to:
+  /// **'Syllabus'**
+  String get syllabus;
+
+  /// No description provided for @services.
+  ///
+  /// In en, this message translates to:
+  /// **'Services'**
+  String get services;
+
+  /// No description provided for @resources.
+  ///
+  /// In en, this message translates to:
+  /// **'Resources'**
+  String get resources;
+
+  /// No description provided for @cgpaCalculator.
+  ///
+  /// In en, this message translates to:
+  /// **'CGPA Calculator'**
+  String get cgpaCalculator;
+
+  /// No description provided for @addRollHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Save your roll in your profile to see your result here automatically.'**
+  String get addRollHint;
+
+  /// No description provided for @noticeEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No notices yet.'**
+  String get noticeEmpty;
+
+  /// No description provided for @publishedOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Published'**
+  String get publishedOn;
+
+  /// No description provided for @viewPdf.
+  ///
+  /// In en, this message translates to:
+  /// **'View PDF'**
+  String get viewPdf;
+
+  /// No description provided for @studyTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Study'**
+  String get studyTab;
+
+  /// No description provided for @resultTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Result'**
+  String get resultTab;
+
+  /// No description provided for @noResultSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'No result found for your roll in this examination.'**
+  String get noResultSaved;
+
+  /// No description provided for @openProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Open profile'**
+  String get openProfile;
+
+  /// No description provided for @registrationNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Registration number'**
+  String get registrationNumber;
 
   /// No description provided for @seeAll.
   ///
@@ -1612,100 +1885,7 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Edition'**
   String get editionLabel;
-
-
-  /// No description provided for @noticeTickerLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'NOTICE'**
-  String get noticeTickerLabel;
-
-  /// No description provided for @allNotices.
-  ///
-  /// In en, this message translates to:
-  /// **'All notices'**
-  String get allNotices;
-
-  /// No description provided for @viewDetails.
-  ///
-  /// In en, this message translates to:
-  /// **'View details'**
-  String get viewDetails;
-
-  /// No description provided for @syllabus.
-  ///
-  /// In en, this message translates to:
-  /// **'Syllabus'**
-  String get syllabus;
-
-  /// No description provided for @services.
-  ///
-  /// In en, this message translates to:
-  /// **'Services'**
-  String get services;
-
-  /// No description provided for @resources.
-  ///
-  /// In en, this message translates to:
-  /// **'Resources'**
-  String get resources;
-
-  /// No description provided for @cgpaCalculator.
-  ///
-  /// In en, this message translates to:
-  /// **'CGPA Calculator'**
-  String get cgpaCalculator;
-
-  /// No description provided for @addRollHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Save your roll in your profile to see your result here automatically.'**
-  String get addRollHint;
-
-  /// No description provided for @noticeEmpty.
-  ///
-  /// In en, this message translates to:
-  /// **'No notices yet.'**
-  String get noticeEmpty;
-
-  /// No description provided for @publishedOn.
-  ///
-  /// In en, this message translates to:
-  /// **'Published'**
-  String get publishedOn;
-
-  /// No description provided for @viewPdf.
-  ///
-  /// In en, this message translates to:
-  /// **'View PDF'**
-  String get viewPdf;
-
-  /// No description provided for @studyTab.
-  ///
-  /// In en, this message translates to:
-  /// **'Study'**
-  String get studyTab;
-
-  /// No description provided for @resultTab.
-  ///
-  /// In en, this message translates to:
-  /// **'Result'**
-  String get resultTab;
-
-  /// No description provided for @noResultSaved.
-  ///
-  /// In en, this message translates to:
-  /// **'No result found for your roll in this examination.'**
-  String get noResultSaved;
-
-  /// No description provided for @openProfile.
-  ///
-  /// In en, this message translates to:
-  /// **'Open profile'**
-  String get openProfile;
-
 }
-
 
 class _AppLocalizationsDelegate
     extends LocalizationsDelegate<AppLocalizations> {

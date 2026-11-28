@@ -89,7 +89,6 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final theme = Theme.of(context);
     final canSearch = _submitted.length >= 2;
 
     return Scaffold(
@@ -110,19 +109,17 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           const SizedBox(height: DbSpacing.sm + 4),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: DbSpacing.md),
-            child: Row(
+            child: Wrap(
+              spacing: DbSpacing.sm,
               children: [
                 for (final (type, icon) in _types)
-                  Padding(
-                    padding: const EdgeInsets.only(right: DbSpacing.sm),
-                    child: _TypeChip(
-                      label: type == null
-                          ? l10n.searchAll
-                          : _typeLabel(l10n, type),
-                      icon: icon,
-                      selected: _type == type,
-                      onTap: () => setState(() => _type = type),
-                    ),
+                  _TypeChip(
+                    label: type == null
+                        ? l10n.searchAll
+                        : _typeLabel(l10n, type),
+                    icon: icon,
+                    selected: _type == type,
+                    onTap: () => setState(() => _type = type),
                   ),
               ],
             ),
@@ -269,7 +266,6 @@ class _ResultCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final icon = switch (hit.type) {
       'material' => Icons.menu_book_rounded,
       'exam' => Icons.quiz_rounded,
@@ -277,6 +273,7 @@ class _ResultCard extends StatelessWidget {
       'subject' => Icons.category_rounded,
       _ => Icons.search_rounded,
     };
+    final theme = Theme.of(context);
     final accent = switch (hit.type) {
       'material' => DbColors.teal,
       'exam' => DbColors.warningLight,

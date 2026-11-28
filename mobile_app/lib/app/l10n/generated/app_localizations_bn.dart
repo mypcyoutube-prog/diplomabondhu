@@ -112,7 +112,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get goodEvening => 'শুভ সন্ধ্যা';
 
   @override
-  String get searchHint => 'ম্যাটেরিয়াल, পরীক্ষা খুঁজুন...';
+  String get searchHint => 'ম্যাটেরিয়াল, পরীক্ষা খুঁজুন...';
 
   @override
   String get searchTitle => 'সব কিছু খুঁজুন';
@@ -130,15 +130,6 @@ class AppLocalizationsBn extends AppLocalizations {
   String get searchStartTyping => 'খুঁজতে অন্তত ২ অক্ষর লিখুন';
 
   @override
-  String get examCenter => 'পরীক্ষা কেন্দ্র';
-
-  @override
-  String get studyResources => 'স্টাডি রিসোর্স';
-
-  @override
-  String get communityUpdates => 'কমিউনিটি আপডেট';
-
-  @override
   String get questionsLabel => 'প্রশ্ন';
 
   @override
@@ -146,6 +137,15 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get quickAccess => 'দ্রুত অ্যাক্সেস';
+
+  @override
+  String get examCenter => 'পরীক্ষা কেন্দ্র';
+
+  @override
+  String get studyResources => 'স্টাডি রিসোর্স';
+
+  @override
+  String get communityUpdates => 'কমিউনিটি আপডেট';
 
   @override
   String get recentMaterials => 'সাম্প্রতিক ম্যাটেরিয়াল';
@@ -171,9 +171,6 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get rollNumber => 'রোল নম্বর';
-
-  @override
-  String get registrationNumber => 'রেজিস্ট্রেশন নম্বর';
 
   @override
   String get checkResult => 'রেজাল্ট দেখুন';
@@ -247,7 +244,8 @@ class AppLocalizationsBn extends AppLocalizations {
   String get registrationOptional => 'রেজিস্ট্রেশন নম্বর (ঐচ্ছিক)';
 
   @override
-  String get registrationInvalid => 'সঠিক রেজিস্ট্রেশন নম্বর লিখুন (৬-১৫ ডিজিট)';
+  String get registrationInvalid =>
+      'সঠিক রেজিস্ট্রেশন নম্বর লিখুন (৬-১৫ ডিজিট)';
 
   @override
   String get retry => 'আবার চেষ্টা করুন';
@@ -633,11 +631,6 @@ class AppLocalizationsBn extends AppLocalizations {
     );
     return '$_temp0';
   }
-  @override
-  String get marksTheory => 'থিওরি {marks}';
-
-  @override
-  String get marksPractical => 'প্র্যাকটিক্যাল {marks}';
 
   @override
   String get workspaceTitle => 'ব্যাকসপেস';
@@ -661,7 +654,8 @@ class AppLocalizationsBn extends AppLocalizations {
   String get dashboardCustomizeTitle => 'ড্যাশবোর্ড কাস্টমাইজ';
 
   @override
-  String get dashboardCustomizeHint => 'হোম সেকশন দেখান, লুকান বা এলোমালো করুন। পরিবর্তন শুধু আপনার অ্যাকাউন্টে প্রযুক হবে।';
+  String get dashboardCustomizeHint =>
+      'হোম সেকশন দেখান, লুকান বা এলোমালো করুন। পরিবর্তন শুধু আপনার অ্যাকাউন্টে প্রযুক হবে।';
 
   @override
   String get dashboardSave => 'লেআউট সাইভ করুন';
@@ -748,7 +742,8 @@ class AppLocalizationsBn extends AppLocalizations {
   String get studyPlanNotConfigured => 'এআই এখনো চালূ হয়নি। অ্যাডমিনকে জানান।';
 
   @override
-  String get studyPlanLimitReached => 'দৈনিক এআই সীমা শেষ। আগামীকাল চেষ্টা করুন।';
+  String get studyPlanLimitReached =>
+      'দৈনিক এআই সীমা শেষ। আগামীকাল চেষ্টা করুন।';
 
   @override
   String get commandCenterTitle => 'কমান্ড সেন্টার';
@@ -758,6 +753,9 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get syncDevicesTitle => 'সিংক্রনীত ডিভাইস';
+
+  @override
+  String get searchRecent => 'সাম্প্রতিক সর্চ';
 
   @override
   String get quietHoursLabel => 'ক্যুআইয়েট হাউর্স';
@@ -779,6 +777,45 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get roleStudent => 'শিক্ষার্থী';
+
+  @override
+  String get loadMore => 'আরও দেখুন';
+
+  @override
+  String get viewsLabel => 'ভিউ';
+
+  @override
+  String get typeLabel => 'ধরন';
+
+  @override
+  String get examYearLabel => 'পরীক্ষার বছর';
+
+  @override
+  String get pagesLabel => 'পৃষ্ঠা';
+
+  @override
+  String get sizeLabel => 'সাইজ';
+
+  @override
+  String get bookmarkAdded => 'বুকমার্কে যোগ হয়েছে';
+
+  @override
+  String get bookmarkRemoved => 'বুকমার্ক থেকে সরানো হয়েছে';
+
+  @override
+  String get reportTypeLabel => 'রিপোর্টের ধরন';
+
+  @override
+  String get reportWrongInfo => 'ভুল তথ্য';
+
+  @override
+  String get reportBrokenLink => 'লিংক নষ্ট';
+
+  @override
+  String get reportInappropriate => 'অনুপযুক্ত কনটেন্ট';
+
+  @override
+  String get reportOther => 'অন্যান্য';
 
   @override
   String get filterAll => 'সব';
@@ -826,48 +863,57 @@ class AppLocalizationsBn extends AppLocalizations {
   String get tasksDone => 'সম্পন্ন';
 
   @override
-  String get loadMore => 'আরও দেখুন';
-
-  @override
-  String get viewsLabel => 'ভিউ';
-
-  @override
-  String get typeLabel => 'ধরন';
-
-  @override
-  String get examYearLabel => 'পরীক্ষার বছর';
-
-  @override
-  String get pagesLabel => 'পৃষ্ঠা';
-
-  @override
-  String get sizeLabel => 'সাইজ';
-
-  @override
-  String get bookmarkAdded => 'বুকমার্কে যোগ হয়েছে';
-
-  @override
-  String get bookmarkRemoved => 'বুকমার্ক থেকে সরানো হয়েছে';
-
-  @override
-  String get reportTypeLabel => 'রিপোর্টের ধরন';
-
-  @override
-  String get reportWrongInfo => 'ভুল তথ্য';
-
-  @override
-  String get reportBrokenLink => 'লিংক নষ্ট';
-
-  @override
-  String get reportInappropriate => 'অনুপযুক্ত কনটেন্ট';
-
-  @override
-  String get reportOther => 'অন্যান্য';
-
-  @override
-  String get searchRecent => 'সাম্প্রতিক সর্চ';
-  @override
   String get notices => 'নোটিশ';
+
+  @override
+  String get noticeTickerLabel => 'নোটিশ';
+
+  @override
+  String get allNotices => 'সব নোটিশ';
+
+  @override
+  String get viewDetails => 'বিস্তারিত দেখুন';
+
+  @override
+  String get syllabus => 'সিলেবাস';
+
+  @override
+  String get services => 'সেবা';
+
+  @override
+  String get resources => 'রিসোর্স';
+
+  @override
+  String get cgpaCalculator => 'সিজিপিএ ক্যালকুলেটর';
+
+  @override
+  String get addRollHint =>
+      'প্রোফাইলে নিজের রোল সেভ করলে রেজাল্ট এখানে অটোমেটিক দেখা যাবে।';
+
+  @override
+  String get noticeEmpty => 'এখনো কোনো নোটিশ নেই।';
+
+  @override
+  String get publishedOn => 'প্রকাশিত';
+
+  @override
+  String get viewPdf => 'পিডিএফ দেখুন';
+
+  @override
+  String get studyTab => 'পড়াশোনা';
+
+  @override
+  String get resultTab => 'রেজাল্ট';
+
+  @override
+  String get noResultSaved =>
+      'এই পরীক্ষায় আপনার রোলে কোনো রেজাল্ট পাওয়া যায়নি।';
+
+  @override
+  String get openProfile => 'প্রোফাইল খুলুন';
+
+  @override
+  String get registrationNumber => 'রেজিস্ট্রেশন নম্বর';
 
   @override
   String get seeAll => 'সব দেখুন';
@@ -931,34 +977,4 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get editionLabel => 'সংস্করণ';
-  @override
-  String get noticeTickerLabel => 'নোটিশ';
-  @override
-  String get allNotices => 'সব নোটিশ';
-  @override
-  String get viewDetails => 'বিস্তারিত দেখুন';
-  @override
-  String get syllabus => 'সিলেবাস';
-  @override
-  String get services => 'সেবা';
-  @override
-  String get resources => 'রিসোর্স';
-  @override
-  String get cgpaCalculator => 'সিজিপিএ ক্যালকুলেটর';
-  @override
-  String get addRollHint => 'প্রোফাইলে নিজের রোল সেভ করলে রেজাল্ট এখানে অটোমেটিক দেখা যাবে।';
-  @override
-  String get noticeEmpty => 'এখনো কোনো নোটিশ নেই।';
-  @override
-  String get publishedOn => 'প্রকাশিত';
-  @override
-  String get viewPdf => 'পিডিএফ দেখুন';
-  @override
-  String get studyTab => 'পড়াশোনা';
-  @override
-  String get resultTab => 'রেজাল্ট';
-  @override
-  String get noResultSaved => 'এই পরীক্ষায় আপনার রোলে কোনো রেজাল্ট পাওয়া যায়নি।';
-  @override
-  String get openProfile => 'প্রোফাইল খুলুন';
 }

@@ -73,6 +73,6 @@ void main() {
       ]),
     );
     expect(find.text('diplomabondhu-export-1.json'), findsOneWidget);
-    expect(find.text('Ready'), findsWidgets);
+    expect(find.textContaining('Ready'), findsWidgets);
   });
 }

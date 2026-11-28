@@ -8,7 +8,6 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../app/l10n/generated/app_localizations.dart';
 import '../../../app/theme/theme.dart';
 import '../../../shared/widgets/async_value_view.dart';
-import '../../../shared/widgets/states.dart';
 import '../data/material.dart';
 import '../providers/library_providers.dart';
 

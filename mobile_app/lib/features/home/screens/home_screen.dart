@@ -396,7 +396,7 @@ class HomeScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 6),
             Text(
-              title,
+              item.title,
               textAlign: TextAlign.center,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
@@ -419,34 +419,37 @@ class HomeScreen extends ConsumerWidget {
           borderRadius: BorderRadius.circular(DbRadius.card),
           boxShadow: DbShadows.card,
         ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.65),
-                borderRadius: BorderRadius.circular(DbRadius.input),
-              ),
-              child: Icon(item.icon, color: item.fg, size: 20),
-            ),
-            const SizedBox(height: 8),
-            Text(item.title,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontWeight: FontWeight.w700)),
-            if (item.count > 0)
-              Text(
-                '${item.count}',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: item.fg,
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.65),
+                  borderRadius: BorderRadius.circular(DbRadius.input),
                 ),
+                child: Icon(item.icon, color: item.fg, size: 20),
               ),
-          ],
+              const SizedBox(height: 8),
+              Text(item.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontWeight: FontWeight.w700)),
+              if (item.count > 0)
+                Text(
+                  '${item.count}',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: item.fg,
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );

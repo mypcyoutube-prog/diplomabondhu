@@ -9,7 +9,6 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../app/l10n/generated/app_localizations.dart';
 import '../../../app/theme/theme.dart';
-import '../../../core/api/api_client.dart';
 import '../../../core/providers.dart';
 import '../../../shared/widgets/async_value_view.dart';
 import '../data/material.dart';

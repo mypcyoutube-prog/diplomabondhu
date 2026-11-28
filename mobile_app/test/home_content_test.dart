@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:diplomabondhu/app/l10n/generated/app_localizations.dart';
 import 'package:diplomabondhu/features/auth/data/user.dart';
 import 'package:diplomabondhu/features/auth/providers/auth_controller.dart';
@@ -100,7 +98,7 @@ AppSettingsData _settings() => AppSettingsData(
 
 class _FakeAuthController extends AuthController {
   @override
-  FutureOr<User?> build() => null;
+  Future<User?> build() async => null;
 }
 
 Future<void> pumpHome(WidgetTester tester, {HomeContent? content}) async {
