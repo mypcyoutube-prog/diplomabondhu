@@ -7,6 +7,7 @@ import { User } from '../models/user.model';
 import { AuditLog } from '../models/audit-log.model';
 import { StudyMaterial } from '../models/study-material.model';
 import { QuickAccessItem } from '../models/quick-access-item.model';
+import { CommunityPost } from '../models/community-post.model';
 
 const app = createApp(testEnv);
 
@@ -256,6 +257,25 @@ describe('BTEB announcement integrity', () => {
     const bad = await request(app).post(`${ADMIN_NOTIF}/announcements/${id}/visibility`)
       .set('Authorization', `Bearer ${at}`).send({ visible: 'yes', extra: 1 });
     expect(bad.status).toBe(400);
+  });
+
+  it('public content maps featured posts with author name', async () => {
+    const st = await studentToken();
+    const author = await User.create({
+      name: 'Rakib', email: 'rakib@d.com',
+      passwordHash: await bcrypt.hash('Password123', 4), role: 'student'
+    });
+    await CommunityPost.create({
+      authorId: author._id, title: 'Tips', body: 'Body',
+      tags: [], type: 'discussion', featured: true, featuredAt: new Date()
+    });
+    const pub = await request(app).get('/api/v1/home/content').set('Authorization', `Bearer ${st}`);
+    expect(pub.status).toBe(200);
+    const posts = pub.body.data.featuredPosts as Array<{ title: string; authorName: string; likeCount: number }>;
+    expect(posts).toHaveLength(1);
+    expect(posts[0].title).toBe('Tips');
+    expect(posts[0].authorName).toBe('Rakib');
+    expect(posts[0].likeCount).toBe(0);
   });
 
   it('BTEB publish flow remains allowed (sync compatibility)', async () => {

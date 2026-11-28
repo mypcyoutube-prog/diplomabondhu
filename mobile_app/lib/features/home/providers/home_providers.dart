@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/providers.dart';
 import '../../auth/providers/auth_controller.dart';
+import '../data/home_content.dart';
 import '../../results/data/result.dart';
 import '../../results/data/result_repository.dart';
 
@@ -139,6 +140,18 @@ final homeBannersProvider = FutureProvider<List<HomeBanner>>((ref) async {
   return items
       .map((e) => HomeBanner.fromJson(e as Map<String, dynamic>))
       .toList();
+});
+
+/**
+ * Database-driven home content: quick access tiles, study resource categories
+ * (with real computed counts), notices, upcoming exams, featured community
+ * posts and the welcome configuration — all admin-controlled from the Home
+ * Management panel. Absent section keys mean the section is hidden.
+ */
+final homeContentProvider = FutureProvider.autoDispose<HomeContent>((ref) async {
+  final client = ref.watch(apiClientProvider);
+  final res = await client.getMap('/home/content');
+  return HomeContent.fromJson(res.data);
 });
 
 /// Auto-matched result for the home bar: admin activates a display window for

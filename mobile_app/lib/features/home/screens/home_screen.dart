@@ -9,11 +9,10 @@ import '../../../app/l10n/generated/app_localizations.dart';
 import '../../../app/theme/theme.dart';
 import '../../auth/data/user.dart';
 import '../../auth/providers/auth_controller.dart';
-import '../../community/data/community_models.dart';
-import '../../community/providers/community_providers.dart';
+import '../data/home_content.dart';
+import '../data/home_icon_map.dart';
 import '../../dashboard_customize/data/dashboard_prefs_repository.dart';
 import '../../dashboard_customize/providers/dashboard_prefs_providers.dart';
-import '../../exams/providers/exam_providers.dart';
 import '../../library/providers/library_providers.dart';
 import '../../notices/data/notice.dart';
 import '../../notices/providers/notice_providers.dart';
@@ -302,14 +301,20 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
-  Widget _welcomeCard(BuildContext context, User? user) {
+  Widget _welcomeCard(BuildContext context, User? user, HomeWelcome? welcome) {
     final l10n = AppLocalizations.of(context)!;
+    final isBn = Localizations.localeOf(context).languageCode == 'bn';
     final hour = DateTime.now().hour;
     final greeting = hour < 12
         ? l10n.goodMorning
         : hour < 17
             ? l10n.goodAfternoon
             : l10n.goodEvening;
+    String adminMessage = '';
+    if (welcome != null && welcome.visible) {
+      adminMessage = isBn ? welcome.messageBn : welcome.messageEn;
+      if (adminMessage.isEmpty) adminMessage = welcome.messageEn;
+    }
     return Container(
       padding: const EdgeInsets.all(DbSpacing.md),
       decoration: BoxDecoration(
@@ -352,7 +357,7 @@ class HomeScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  l10n.welcomeSubtitle,
+                  adminMessage.isNotEmpty ? adminMessage : l10n.welcomeSubtitle,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
@@ -406,7 +411,7 @@ class HomeScreen extends ConsumerWidget {
 
   Widget _resourceCountTile(BuildContext context, _ResourceCardItem item) {
     return PressableScale(
-      onTap: () => context.push('/library'),
+      onTap: () => context.push(item.route),
       child: Container(
         padding: const EdgeInsets.all(DbSpacing.md),
         decoration: BoxDecoration(
@@ -447,7 +452,7 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
-  Widget _communityUpdateCard(BuildContext context, Post post) {
+  Widget _communityUpdateCard(BuildContext context, HomeFeaturedPost post) {
     return PressableScale(
       onTap: () => context.push('/community/${post.id}'),
       child: Container(
@@ -549,107 +554,100 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
+  String _pickTitle(bool isBn, String en, String bn) {
+    if (isBn && bn.isNotEmpty) return bn;
+    return en.isNotEmpty ? en : bn;
+  }
+
+  String _formatDate(DateTime date) {
+    const months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    ];
+    return '${date.day} ${months[date.month - 1]} ${date.year}';
+  }
+
+  Widget _homeContentErrorCard(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    return Card(
+      child: ListTile(
+        leading: const Icon(Icons.info_rounded, color: DbColors.warningLight),
+        title: Text(l10n.errorNetwork),
+        trailing: TextButton(
+          onPressed: () => ref.invalidate(homeContentProvider),
+          child: Text(l10n.retry),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final settings = ref.watch(appSettingsProvider);
     final recent = ref.watch(recentMaterialsProvider);
-    final resourceCounts = ref.watch(resourceCountsProvider);
-    final examList = ref.watch(examListControllerProvider);
-    final communityFeed = ref.watch(communityFeedProvider);
+    final homeContent = ref.watch(homeContentProvider);
+    final content = homeContent.asData?.value;
     final dashPrefs = ref.watch(dashboardPrefsProvider);
     final notices = ref.watch(publishedNoticesProvider('all'));
     final user = ref.watch(authControllerProvider).value;
+    final isBn = Localizations.localeOf(context).languageCode == 'bn';
 
     Widget sectionWidget(String key) {
       switch (key) {
         case 'services':
           return const SizedBox.shrink();
         case 'resources':
+          final resourceCards = <_ResourceCardItem>[
+            for (final r in (content?.studyResources ?? const <HomeResource>[]))
+              if (homeIconMap.containsKey(r.icon) &&
+                  isHomeRouteAllowed(r.route) &&
+                  parseHomeColor(r.bgColor) != null &&
+                  parseHomeColor(r.fgColor) != null)
+                _ResourceCardItem(
+                    _pickTitle(isBn, r.titleEn, r.titleBn),
+                    homeIconMap[r.icon]!,
+                    r.count,
+                    parseHomeColor(r.bgColor)!,
+                    parseHomeColor(r.fgColor)!,
+                    r.route),
+          ];
+          if (resourceCards.isEmpty) return const SizedBox.shrink();
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _sectionHeader(
                   context, l10n.studyResources, '/library',
                   (link) => _openLink(context, link)),
-              resourceCounts.maybeWhen(
-                data: (counts) {
-                  final cards = <_ResourceCardItem>[
-                    _ResourceCardItem(
-                        l10n.books,
-                        Icons.auto_stories_rounded,
-                        counts['book'] ?? 0,
-                        const Color(0xFFE0F2F1),
-                        const Color(0xFF00897B)),
-                    _ResourceCardItem(
-                        l10n.notes,
-                        Icons.edit_note_rounded,
-                        counts['note'] ?? 0,
-                        const Color(0xFFE3F2FD),
-                        const Color(0xFF1565C0)),
-                    _ResourceCardItem(
-                        l10n.videos,
-                        Icons.play_circle_rounded,
-                        counts['video'] ?? 0,
-                        const Color(0xFFF3E5F5),
-                        const Color(0xFF6A1B9A)),
-                    _ResourceCardItem(
-                        l10n.subjectMaterials,
-                        Icons.folder_special_rounded,
-                        counts['subject_material'] ?? 0,
-                        const Color(0xFFFFF3E0),
-                        const Color(0xFFE65100)),
-                  ];
-                  return SizedBox(
-                    height: 96,
-                    child: ListView.separated(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: cards.length,
-                      separatorBuilder: (_, _) => const SizedBox(width: 10),
-                      itemBuilder: (context, i) => SizedBox(
-                        width: 150,
-                        child: _resourceCountTile(context, cards[i]),
-                      ),
-                    ),
-                  );
-                },
-                orElse: () => const SizedBox.shrink(),
+              SizedBox(
+                height: 96,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: resourceCards.length,
+                  separatorBuilder: (_, _) => const SizedBox(width: 10),
+                  itemBuilder: (context, i) => SizedBox(
+                    width: 150,
+                    child: _resourceCountTile(context, resourceCards[i]),
+                  ),
+                ),
               ),
             ],
           );
         case 'quick_access':
           final quickItems = <_QuickItem>[
-            _QuickItem(
-                l10n.studyTab,
-                Icons.menu_book_rounded,
-                '/library',
-                const Color(0xFFE0F2F1),
-                const Color(0xFF00897B)),
-            _QuickItem(
-                l10n.examCenter,
-                Icons.quiz_rounded,
-                '/exams',
-                const Color(0xFFE3F2FD),
-                const Color(0xFF1565C0)),
-            _QuickItem(
-                l10n.cgpa,
-                Icons.functions_rounded,
-                '/gpa/cgpa',
-                const Color(0xFFF3E5F5),
-                const Color(0xFF6A1B9A)),
-            _QuickItem(
-                l10n.community,
-                Icons.groups_rounded,
-                '/community',
-                const Color(0xFFFFF3E0),
-                const Color(0xFFE65100)),
-            _QuickItem(
-                l10n.notices,
-                Icons.campaign_rounded,
-                '/notices',
-                const Color(0xFFFCE4EC),
-                const Color(0xFFAD1457)),
+            for (final q in (content?.quickAccess ?? const <HomeQuickItem>[]))
+              if (homeIconMap.containsKey(q.icon) &&
+                  isHomeRouteAllowed(q.route) &&
+                  parseHomeColor(q.bgColor) != null &&
+                  parseHomeColor(q.fgColor) != null)
+                _QuickItem(
+                    _pickTitle(isBn, q.titleEn, q.titleBn),
+                    homeIconMap[q.icon]!,
+                    q.route,
+                    parseHomeColor(q.bgColor)!,
+                    parseHomeColor(q.fgColor)!),
           ];
+          if (quickItems.isEmpty) return const SizedBox.shrink();
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -708,28 +706,22 @@ class HomeScreen extends ConsumerWidget {
             ],
           );
         case 'community':
+          final featured = content?.featuredPosts ?? const <HomeFeaturedPost>[];
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _sectionHeader(
                   context, l10n.communityUpdates, '/community',
                   (link) => _openLink(context, link)),
-              communityFeed.maybeWhen(
-                data: (posts) {
-                  if (posts.isEmpty) return const SizedBox.shrink();
-                  final post = posts.first;
-                  return _communityUpdateCard(context, post);
-                },
-                orElse: () => const SizedBox.shrink(),
-              ),
+              if (featured.isNotEmpty)
+                _communityUpdateCard(context, featured.first),
             ],
           );
         case 'exams':
-          return examList.maybeWhen(
-            data: (page) {
-              if (page.items.isEmpty) return const SizedBox.shrink();
-              final exam = page.items.first;
-              return PressableScale(
+          final exams = content?.upcomingExams ?? const <HomeExamItem>[];
+          if (exams.isEmpty) return const SizedBox.shrink();
+          final exam = exams.first;
+          return PressableScale(
                 onTap: () => context.push('/exams'),
                 child: Container(
                   padding: const EdgeInsets.all(DbSpacing.md),
@@ -766,7 +758,9 @@ class HomeScreen extends ConsumerWidget {
                             ),
                             const SizedBox(height: 2),
                             Text(
-                              '${exam.questionCount} ${l10n.questionsLabel}',
+                              exam.scheduledAt != null
+                                  ? _formatDate(exam.scheduledAt!)
+                                  : exam.type,
                               style: const TextStyle(
                                 fontSize: 12,
                                 color: DbColors.textSecondaryLight,
@@ -781,9 +775,6 @@ class HomeScreen extends ConsumerWidget {
                   ),
                 ),
               );
-            },
-            orElse: () => const SizedBox.shrink(),
-          );
         case 'gpa_calculator':
         case 'result_checker':
           return const SizedBox.shrink();
@@ -860,6 +851,7 @@ class HomeScreen extends ConsumerWidget {
           ref.invalidate(recentMaterialsProvider);
           ref.invalidate(dashboardPrefsProvider);
           ref.invalidate(homeBannersProvider);
+          ref.invalidate(homeContentProvider);
           ref.invalidate(publishedNoticesProvider('all'));
           ref.invalidate(homeResultProvider);
         },
@@ -884,12 +876,16 @@ class HomeScreen extends ConsumerWidget {
               _bannersStrip(ref, (link) => _openLink(context, link)),
               const SizedBox(height: 12),
             ],
-            _welcomeCard(context, user),
+            _welcomeCard(context, user, content?.welcome),
             const SizedBox(height: 12),
             _resultOrNoticeBar(context, ref),
             const SizedBox(height: 12),
             _NoticeTicker(notices: notices),
             const SizedBox(height: 18),
+            if (homeContent.hasError) ...[
+              _homeContentErrorCard(context, ref),
+              const SizedBox(height: 18),
+            ],
             ...sectionChildren,
           ],
         ),
@@ -899,12 +895,13 @@ class HomeScreen extends ConsumerWidget {
 }
 
 class _ResourceCardItem {
-  const _ResourceCardItem(this.title, this.icon, this.count, this.bg, this.fg);
+  const _ResourceCardItem(this.title, this.icon, this.count, this.bg, this.fg, this.route);
   final String title;
   final IconData icon;
   final int count;
   final Color bg;
   final Color fg;
+  final String route;
 }
 
 class _QuickItem {

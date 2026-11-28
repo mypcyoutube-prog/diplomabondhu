@@ -315,7 +315,7 @@ export async function getPublicHomeContent() {
     AppSettings.findOne(),
     Announcement.find({ status: 'published', deletedAt: null, visible: { $ne: false } }).sort({ publishedAt: -1, createdAt: -1 }).limit(10).select('title body source pdfUrl publishedAt createdAt').lean(),
     Exam.find({ status: 'published', deletedAt: null, scheduledAt: { $ne: null, $gte: new Date() } }).sort({ scheduledAt: 1 }).limit(5).select('title description type durationSec scheduledAt').lean(),
-    CommunityPost.find({ featured: true, status: 'visible', deletedAt: null }).sort({ featuredAt: -1 }).limit(5).select('title body tags type likeCount commentCount featuredAt createdAt authorId').lean()
+    CommunityPost.find({ featured: true, status: 'visible', deletedAt: null }).sort({ featuredAt: -1 }).limit(5).select('title body tags type likeCount commentCount featuredAt createdAt authorId').populate<{ authorId: { name?: string } | null }>('authorId', 'name').lean()
   ]);
 
   const quickAccess = quickAccessItems.filter((i) => isLive(i.status, i.scheduledAt));
@@ -355,7 +355,18 @@ export async function getPublicHomeContent() {
     content.upcomingExams = exams;
   }
   if (sectionVisible('community') && featured.length > 0) {
-    content.featuredPosts = featured;
+    content.featuredPosts = (featured as unknown as Array<Record<string, unknown>>).map((p) => ({
+      _id: p._id,
+      title: p.title,
+      body: p.body,
+      tags: p.tags,
+      type: p.type,
+      likeCount: p.likeCount,
+      commentCount: p.commentCount,
+      featuredAt: p.featuredAt,
+      createdAt: p.createdAt,
+      authorName: (p.authorId as { name?: string } | null)?.name ?? ''
+    }));
   }
   content.welcome = settings
     ? settings.welcome
